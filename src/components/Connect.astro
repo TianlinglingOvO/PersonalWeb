@@ -1,11 +1,19 @@
 ---
-import { site, social, type SocialItem } from '../lib/site';
+import { site, social, type SocialGroup, type SocialItem } from '../lib/site';
 import Icon from './Icon.astro';
 
+const groups: { id: SocialGroup; title: string }[] = [
+	{ id: 'im', title: '即时通讯' },
+	{ id: 'social', title: '社交' },
+	{ id: 'dev', title: '邮箱与开发' },
+];
+
+function itemsIn(group: SocialGroup) {
+	return social.primary.filter((item) => item.group === group);
+}
+
 function hint(item: SocialItem) {
-	if (item.action === 'copy') return '点击复制';
-	if (item.action === 'qr') return '展开查看二维码';
-	return '打开主页';
+	return item.action === 'copy' ? '点击复制' : '打开主页';
 }
 ---
 
@@ -17,77 +25,48 @@ function hint(item: SocialItem) {
 		</div>
 	</div>
 	<div class="split">
-		<div>
-			<div class="contact-grid">
-				{
-					social.primary.map((item) => {
-						if (item.action === 'qr') {
-							return (
-								<details class="card contact-card contact-expand">
-									<summary class="contact-summary">
+		<div class="contact-groups">
+			{
+				groups.map((group) => (
+					<div class="contact-group">
+						<p class="contact-group-title">{group.title}</p>
+						<div class="contact-grid">
+							{itemsIn(group.id).map((item) =>
+								item.action === 'link' && item.href ? (
+									<a
+										class="card contact-card contact-link"
+										href={item.href}
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-label={`在新标签打开 ${item.label}`}
+									>
 										<span class="contact-main">
 											<Icon name={item.id} />
 											<span class="contact-id">{item.label}</span>
 										</span>
+										<span class="contact-value">{item.value}</span>
 										<span class="contact-action">{hint(item)}</span>
-									</summary>
-									<div class="contact-panel">
-										{item.qr && (
-											<div class="qr contact-qr">
-												<img
-													src={item.qr}
-													alt={`${item.label}占位二维码`}
-													width="220"
-													height="220"
-												/>
-											</div>
-										)}
-										<div class="contact-id-row">
-											<code class="contact-value">{item.value}</code>
-											<button class="btn btn-ghost btn-sm" type="button" data-copy={item.value}>
-												复制 ID
-											</button>
-										</div>
-									</div>
-								</details>
-							);
-						}
-						if (item.action === 'link' && item.href) {
-							return (
-								<a
-									class="card contact-card contact-link"
-									href={item.href}
-									target="_blank"
-									rel="noopener noreferrer"
-									aria-label={`在新标签打开 ${item.label}`}
-								>
-									<span class="contact-main">
-										<Icon name={item.id} />
-										<span class="contact-id">{item.label}</span>
-									</span>
-									<span class="contact-value">{item.value}</span>
-									<span class="contact-action">{hint(item)}</span>
-								</a>
-							);
-						}
-						return (
-							<button
-								class="card contact-card contact-copy"
-								type="button"
-								data-copy={item.value}
-								aria-label={`复制${item.label} ${item.value}`}
-							>
-								<span class="contact-main">
-									<Icon name={item.id} />
-									<span class="contact-id">{item.label}</span>
-								</span>
-								<span class="contact-value">{item.value}</span>
-								<span class="contact-action">{hint(item)}</span>
-							</button>
-						);
-					})
-				}
-			</div>
+									</a>
+								) : (
+									<button
+										class="card contact-card contact-copy"
+										type="button"
+										data-copy={item.value}
+										aria-label={`复制${item.label} ${item.value}`}
+									>
+										<span class="contact-main">
+											<Icon name={item.id} />
+											<span class="contact-id">{item.label}</span>
+										</span>
+										<span class="contact-value">{item.value}</span>
+										<span class="contact-action">{hint(item)}</span>
+									</button>
+								),
+							)}
+						</div>
+					</div>
+				))
+			}
 		</div>
 		<div class="side-art">
 			<img src={site.connectImage} alt={site.connectImageAlt} width="990" height="1400" />

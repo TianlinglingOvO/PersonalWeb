@@ -1,7 +1,8 @@
 import siteJson from '../../content/site.json';
 import socialJson from '../../content/social.json';
 
-export type SocialAction = 'link' | 'copy' | 'qr';
+export type SocialAction = 'link' | 'copy';
+export type SocialGroup = 'im' | 'social' | 'dev';
 
 export type SocialItem = {
 	id: string;
@@ -9,7 +10,7 @@ export type SocialItem = {
 	value: string;
 	href?: string;
 	action: SocialAction;
-	qr?: string;
+	group: SocialGroup;
 };
 
 export const site = siteJson;

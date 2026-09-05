@@ -65,11 +65,12 @@ order: 1
 
 `content/social.json` 的 `primary` 是六个主联系：QQ、微信、X、Telegram、Gmail、GitHub。
 
+按 `group` 分成三块：即时通讯（QQ / 微信）、社交（X / Telegram）、邮箱与开发（Gmail / GitHub）。
+
 每条可以是：
 
 - `"action": "link"`：打开 `href`
 - `"action": "copy"`：点击复制 `value`
-- `"action": "qr"`：弹出二维码（微信用），`qr` 指向 `public/images/` 里的图片
 
 第一期请继续用假 ID / 假链接。不要把真实微信号写进仓库，除非你确定要公开。
 
@@ -84,7 +85,7 @@ order: 1
 | `bedroom.jpg` | 关于我 |
 | `rain.jpg` | 联系 |
 | `cake.jpg` | 404 页 |
-| `wechat-qr.svg` | 微信占位二维码 |
+| `bg-doodle.svg` | 联系区浅色涂鸦底 |
 | `favicon.svg` | 浏览器小图标 |
 
 把同名文件换成你的图即可。建议头像接近正方形；插画用竖图也没问题。

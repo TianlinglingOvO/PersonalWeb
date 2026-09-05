@@ -4,42 +4,46 @@
       "id": "qq",
       "label": "QQ",
       "value": "100000000",
-      "action": "qr",
-      "qr": "/images/qq-qr.svg"
+      "action": "copy",
+      "group": "im"
     },
     {
       "id": "wechat",
       "label": "微信",
       "value": "wechat-placeholder",
-      "action": "qr",
-      "qr": "/images/wechat-qr.svg"
+      "action": "copy",
+      "group": "im"
     },
     {
       "id": "x",
       "label": "X",
       "value": "@handle_placeholder",
       "href": "https://x.com/handle_placeholder",
-      "action": "link"
+      "action": "link",
+      "group": "social"
     },
     {
       "id": "telegram",
       "label": "Telegram",
       "value": "@tg_placeholder",
       "href": "https://t.me/tg_placeholder",
-      "action": "link"
+      "action": "link",
+      "group": "social"
     },
     {
       "id": "gmail",
       "label": "Gmail",
       "value": "hello.placeholder@gmail.com",
-      "action": "copy"
+      "action": "copy",
+      "group": "dev"
     },
     {
       "id": "github",
       "label": "GitHub",
       "value": "github-placeholder",
       "href": "https://github.com/github-placeholder",
-      "action": "link"
+      "action": "link",
+      "group": "dev"
     }
   ]
 }
