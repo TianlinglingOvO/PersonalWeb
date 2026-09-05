@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges" role="img" aria-label="QQ placeholder QR">
+  <path fill="#ffffff" d="M0 0h33v33H0z"/>
+  <path fill="#111111" d="M2 2h11v11H2zm18 0h11v11H20zM2 20h11v11H2z"/>
+  <path fill="#ffffff" d="M4 4h7v7H4zm18 0h7v7h-7zM4 22h7v7H4z"/>
+  <path fill="#111111" d="M5 5h5v5H5zm19 0h5v5h-5zM5 23h5v5H5z"/>
+  <path fill="#111111" d="M14 2h2v2h-2zm3 0h2v2h-2zm3 3h2v2h-2zm-6 3h2v2h-2zm3 0h2v2h-2zm6 3h2v2h-2zm-9 3h2v2h-2zm3 0h2v2h-2zm3 0h2v2h-2zm3 0h2v2h-2zm-9 3h2v2h-2zm6 0h2v2h-2zm3 0h2v2h-2zm-6 3h2v2h-2zm3 0h2v2h-2zm6 0h2v2h-2zm-3 3h2v2h-2zm3 0h2v2h-2zm3 3h2v2h-2zm-9 0h2v2h-2zm14-14h2v2h-2zm0 6h2v2h-2zm-3 3h2v2h-2zm3 3h2v2h-2zm0 6h2v2h-2zM14 27h2v2h-2zm3 0h2v2h-2z"/>
+  <text x="16.5" y="17.2" text-anchor="middle" font-family="sans-serif" font-size="3.4" font-weight="700" fill="#e25c7a">QQ</text>
+</svg>

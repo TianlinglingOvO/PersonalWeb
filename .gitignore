@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 # Original full-size art kept locally; the site uses public/images/
 *_p0.jpg
+
+# Local Grok build notes (not part of the site)
+fix-plan-for-grok-build.md

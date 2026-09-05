@@ -388,11 +388,13 @@ a:hover {
 }
 
 .kicker {
-	margin: 0 0 0.25rem;
+	margin: 0 0 0.45rem;
 	color: var(--accent);
-	font-size: 0.8rem;
-	font-weight: 700;
-	letter-spacing: 0.14em;
+	font-size: clamp(2.2rem, 5vw, 2.75rem);
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	line-height: 0.95;
+	font-variant-numeric: tabular-nums;
 }
 
 .section h2 {
@@ -574,6 +576,67 @@ a:hover {
 	color: inherit;
 }
 
+.contact-main {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+}
+
+.contact-summary {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.35rem;
+	width: 100%;
+	list-style: none;
+	cursor: pointer;
+}
+
+.contact-summary::-webkit-details-marker {
+	display: none;
+}
+
+.contact-expand {
+	cursor: default;
+}
+
+.contact-expand[open] {
+	border-color: var(--accent);
+}
+
+.contact-panel {
+	width: 100%;
+	margin-top: 0.75rem;
+	padding-top: 0.75rem;
+	border-top: 1px dashed var(--line);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.contact-qr {
+	width: min(180px, 100%);
+	height: auto;
+	aspect-ratio: 1;
+	margin: 0;
+}
+
+.contact-id-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.55rem;
+	width: 100%;
+}
+
+.btn-sm {
+	min-height: 36px;
+	padding: 0.35rem 0.8rem;
+	font-size: 0.86rem;
+}
+
 .contact-id {
 	font-weight: 700;
 }
@@ -585,7 +648,7 @@ a:hover {
 }
 
 .contact-action {
-	margin-top: 0.4rem;
+	margin-top: 0.25rem;
 	color: var(--accent-2);
 	font-size: 0.86rem;
 	font-weight: 600;
@@ -594,11 +657,15 @@ a:hover {
 .icon {
 	width: 22px;
 	height: 22px;
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 1.8;
-	stroke-linecap: round;
-	stroke-linejoin: round;
+	flex: none;
+	fill: currentColor;
+	stroke: none;
+}
+
+.contact-main .icon,
+.chip .icon {
+	width: 26px;
+	height: 26px;
 }
 
 .secondary-box {
@@ -846,7 +913,17 @@ html.js .reveal.is-visible {
 	}
 
 	.hero-art img {
-		max-height: 420px;
+		max-height: 220px;
+	}
+
+	.about-art img,
+	.side-art img {
+		max-height: 200px;
+	}
+
+	.avatar {
+		width: 72px;
+		height: 72px;
 	}
 
 	.nav-toggle {

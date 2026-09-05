@@ -4,7 +4,8 @@
       "id": "qq",
       "label": "QQ",
       "value": "100000000",
-      "action": "copy"
+      "action": "qr",
+      "qr": "/images/qq-qr.svg"
     },
     {
       "id": "wechat",
@@ -31,7 +32,6 @@
       "id": "gmail",
       "label": "Gmail",
       "value": "hello.placeholder@gmail.com",
-      "href": "mailto:hello.placeholder@gmail.com",
       "action": "copy"
     },
     {

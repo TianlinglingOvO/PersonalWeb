@@ -21,7 +21,7 @@ export const social = socialJson as {
 
 export const nav = [
 	{ href: '/#about', label: '关于', section: 'about' },
-	{ href: '/#projects', label: '项目', section: 'projects' },
+	{ href: '/#projects', label: '活动', section: 'projects' },
 	{ href: '/#articles', label: '文章', section: 'articles' },
 	{ href: '/#services', label: '服务', section: 'services' },
 	{ href: '/#connect', label: '联系', section: 'connect' },

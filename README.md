@@ -1,6 +1,6 @@
 # 个人 About me 站点（第一期）
 
-这是一个**静态**个人简介站：自我介绍、项目、文章、服务占位和联系方式。第一期全部是中文占位，风格认可后再把内容换成真实信息。
+这是一个**静态**个人简介站：自我介绍、活动、文章、服务占位和联系方式。第一期全部是中文占位，风格认可后再把内容换成真实信息。
 
 - 技术：Astro，构建后是普通 HTML/CSS/JS
 - 托管：Cloudflare Pages（连 Git 仓库，推送即部署）
@@ -32,21 +32,21 @@ npm run preview
 | --- | --- |
 | 昵称、一句话、网页标题/简介、用哪张图 | `content/site.json` |
 | 关于我 | `content/about.md` |
-| 项目卡片 | `content/projects/` 下的 `.md`（增删文件即可） |
+| 活动卡片 | `content/projects/` 下的 `.md`（增删文件即可） |
 | 文章 | `content/articles/` 下的 `.md` |
 | 服务卡片 | `content/services/` 下的 `.md` |
 | 联系方式（主联系 / 次要） | `content/social.json` |
 | 头像、插画、微信二维码 | `public/images/` |
 
-### 项目 / 文章 / 服务怎么写
+### 活动 / 文章 / 服务怎么写
 
 每个 Markdown 文件开头是一段 YAML（两行 `---` 之间），后面才是正文。
 
-项目示例：
+活动示例：
 
 ```md
 ---
-title: 项目名称
+title: 活动名称
 summary: 一两句简介
 tags:
   - 标签

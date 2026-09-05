@@ -12,7 +12,7 @@ const { projects } = Astro.props;
 	<div class="section-head">
 		<div>
 			<p class="kicker">02</p>
-			<h2>项目 / 经历 / 特长</h2>
+			<h2>活动 / 经历 / 特长</h2>
 		</div>
 	</div>
 	<div class="card-grid">
@@ -32,7 +32,7 @@ const { projects } = Astro.props;
 					</>
 				);
 				return project.data.url ? (
-					<a class="card card-link" href={project.data.url} target="_blank" rel="noreferrer">
+					<a class="card card-link" href={project.data.url} target="_blank" rel="noopener noreferrer">
 						{inner}
 					</a>
 				) : (
