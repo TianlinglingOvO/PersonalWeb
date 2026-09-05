@@ -16,7 +16,6 @@ export const site = siteJson;
 
 export const social = socialJson as {
 	primary: SocialItem[];
-	secondary: SocialItem[];
 };
 
 export const nav = [

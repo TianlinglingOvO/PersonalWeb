@@ -41,28 +41,5 @@
       "href": "https://github.com/github-placeholder",
       "action": "link"
     }
-  ],
-  "secondary": [
-    {
-      "id": "xiaoheihe",
-      "label": "小黑盒",
-      "value": "小黑盒占位",
-      "href": "https://www.xiaoheihe.cn/",
-      "action": "link"
-    },
-    {
-      "id": "steam",
-      "label": "Steam",
-      "value": "steam-placeholder",
-      "href": "https://steamcommunity.com/id/steam-placeholder",
-      "action": "link"
-    },
-    {
-      "id": "douyin",
-      "label": "抖音",
-      "value": "抖音占位",
-      "href": "https://www.douyin.com/",
-      "action": "link"
-    }
   ]
 }

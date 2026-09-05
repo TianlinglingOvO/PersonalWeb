@@ -63,10 +63,7 @@ order: 1
 
 ### 联系方式
 
-`content/social.json` 分两组：
-
-- `primary`：QQ、微信、X、Telegram、Gmail、GitHub
-- `secondary`：小黑盒、Steam、抖音（首页里折叠显示）
+`content/social.json` 的 `primary` 是六个主联系：QQ、微信、X、Telegram、Gmail、GitHub。
 
 每条可以是：
 
