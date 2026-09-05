@@ -1,0 +1,68 @@
+{
+  "primary": [
+    {
+      "id": "qq",
+      "label": "QQ",
+      "value": "100000000",
+      "action": "copy"
+    },
+    {
+      "id": "wechat",
+      "label": "微信",
+      "value": "wechat-placeholder",
+      "action": "qr",
+      "qr": "/images/wechat-qr.svg"
+    },
+    {
+      "id": "x",
+      "label": "X",
+      "value": "@handle_placeholder",
+      "href": "https://x.com/handle_placeholder",
+      "action": "link"
+    },
+    {
+      "id": "telegram",
+      "label": "Telegram",
+      "value": "@tg_placeholder",
+      "href": "https://t.me/tg_placeholder",
+      "action": "link"
+    },
+    {
+      "id": "gmail",
+      "label": "Gmail",
+      "value": "hello.placeholder@gmail.com",
+      "href": "mailto:hello.placeholder@gmail.com",
+      "action": "copy"
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "value": "github-placeholder",
+      "href": "https://github.com/github-placeholder",
+      "action": "link"
+    }
+  ],
+  "secondary": [
+    {
+      "id": "xiaoheihe",
+      "label": "小黑盒",
+      "value": "小黑盒占位",
+      "href": "https://www.xiaoheihe.cn/",
+      "action": "link"
+    },
+    {
+      "id": "steam",
+      "label": "Steam",
+      "value": "steam-placeholder",
+      "href": "https://steamcommunity.com/id/steam-placeholder",
+      "action": "link"
+    },
+    {
+      "id": "douyin",
+      "label": "抖音",
+      "value": "抖音占位",
+      "href": "https://www.douyin.com/",
+      "action": "link"
+    }
+  ]
+}

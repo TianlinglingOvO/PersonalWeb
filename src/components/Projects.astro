@@ -1,0 +1,44 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+	projects: CollectionEntry<'projects'>[];
+}
+
+const { projects } = Astro.props;
+---
+
+<section id="projects" class="section wrap reveal">
+	<div class="section-head">
+		<div>
+			<p class="kicker">02</p>
+			<h2>项目 / 经历 / 特长</h2>
+		</div>
+	</div>
+	<div class="card-grid">
+		{
+			projects.map((project) => {
+				const inner = (
+					<>
+						<h3>{project.data.title}</h3>
+						<p>{project.data.summary}</p>
+						{project.data.tags.length > 0 && (
+							<div class="tags">
+								{project.data.tags.map((tag) => (
+									<span class="tag">{tag}</span>
+								))}
+							</div>
+						)}
+					</>
+				);
+				return project.data.url ? (
+					<a class="card card-link" href={project.data.url} target="_blank" rel="noreferrer">
+						{inner}
+					</a>
+				) : (
+					<article class="card">{inner}</article>
+				);
+			})
+		}
+	</div>
+</section>

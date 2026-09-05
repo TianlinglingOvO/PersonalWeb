@@ -1,0 +1,43 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+
+interface Props {
+	services: CollectionEntry<'services'>[];
+}
+
+const { services } = Astro.props;
+const rendered = await Promise.all(
+	services.map(async (service) => ({
+		service,
+		Content: (await render(service)).Content,
+	})),
+);
+---
+
+<section id="services" class="section wrap reveal">
+	<div class="section-head">
+		<div>
+			<p class="kicker">04</p>
+			<h2>服务</h2>
+		</div>
+	</div>
+	<div class="card-grid">
+		{
+			rendered.map(({ service, Content }) => (
+				<article class="card service-card">
+					<h3>{service.data.title}</h3>
+					<p>{service.data.summary}</p>
+					<a class="btn btn-primary btn-tiny" href={service.data.ctaHref}>
+						{service.data.ctaLabel}
+					</a>
+					<details>
+						<summary>展开说明</summary>
+						<div class="prose">
+							<Content />
+						</div>
+					</details>
+				</article>
+			))
+		}
+	</div>
+</section>

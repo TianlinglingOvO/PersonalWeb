@@ -1,0 +1,28 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import { site } from '../lib/site';
+
+interface Props {
+	entry: CollectionEntry<'about'>;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<section id="about" class="section wrap reveal">
+	<div class="section-head">
+		<div>
+			<p class="kicker">01</p>
+			<h2>{entry.data.title ?? '关于我'}</h2>
+		</div>
+	</div>
+	<div class="split">
+		<div class="prose">
+			<Content />
+		</div>
+		<div class="about-art">
+			<img src={site.aboutImage} alt={site.aboutImageAlt} width="990" height="1400" loading="lazy" />
+		</div>
+	</div>
+</section>

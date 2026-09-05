@@ -1,0 +1,20 @@
+---
+import { site } from '../lib/site';
+---
+
+<section id="top" class="hero wrap">
+	<div class="hero-copy">
+		<img class="avatar" src={site.avatar} alt={`${site.name} 的头像占位`} width="88" height="88" />
+		<p class="eyebrow">{site.eyebrow}</p>
+		<h1>{site.name}</h1>
+		<p class="tagline">{site.tagline}</p>
+		<div class="hero-actions">
+			<a class="btn btn-primary" href="/#about">了解我</a>
+			<a class="btn btn-ghost" href="/#projects">看项目</a>
+			<a class="btn btn-ghost" href="/#connect">联系我</a>
+		</div>
+	</div>
+	<div class="hero-art">
+		<img src={site.heroImage} alt={site.heroImageAlt} width="990" height="1400" />
+	</div>
+</section>

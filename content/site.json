@@ -1,0 +1,17 @@
+{
+  "name": "昵称占位",
+  "tagline": "用一句话介绍自己（占位）",
+  "title": "昵称占位 · About me",
+  "description": "自我介绍、项目、文章与联系方式。这是一份可替换的占位站点。",
+  "eyebrow": "你好，我是",
+  "avatar": "/images/avatar.jpg",
+  "heroImage": "/images/welcome.jpg",
+  "heroImageAlt": "欢迎插画占位",
+  "aboutImage": "/images/bedroom.jpg",
+  "aboutImageAlt": "关于我插画占位",
+  "connectImage": "/images/rain.jpg",
+  "connectImageAlt": "联系插画占位",
+  "notFoundImage": "/images/cake.jpg",
+  "notFoundImageAlt": "未找到页面插画占位",
+  "footerNote": "占位站点 · 把 content/ 和 public/images/ 换成你的真实信息即可"
+}

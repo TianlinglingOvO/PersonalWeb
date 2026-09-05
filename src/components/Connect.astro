@@ -1,0 +1,110 @@
+---
+import { site, social, type SocialItem } from '../lib/site';
+import Icon from './Icon.astro';
+
+function actionLabel(item: SocialItem) {
+	if (item.action === 'copy') return '点击复制';
+	if (item.action === 'qr') return '查看二维码 / 复制';
+	return '打开链接';
+}
+---
+
+<section id="connect" class="section wrap reveal">
+	<div class="section-head">
+		<div>
+			<p class="kicker">05</p>
+			<h2>联系我</h2>
+		</div>
+	</div>
+	<div class="split">
+		<div>
+			<p class="meta">主联系</p>
+			<div class="contact-grid">
+				{
+					social.primary.map((item) => {
+						const inner = (
+							<>
+								<Icon name={item.id} />
+								<span class="contact-id">{item.label}</span>
+								<span class="contact-value">{item.value}</span>
+								<span class="contact-action">{actionLabel(item)}</span>
+							</>
+						);
+						if (item.action === 'link' && item.href) {
+							return (
+								<a class="card contact-card" href={item.href} target="_blank" rel="noreferrer">
+									{inner}
+								</a>
+							);
+						}
+						if (item.action === 'qr') {
+							return (
+								<button
+									class="card contact-card"
+									type="button"
+									data-dialog-open={`dialog-${item.id}`}
+								>
+									{inner}
+								</button>
+							);
+						}
+						return (
+							<button class="card contact-card" type="button" data-copy={item.value}>
+								{inner}
+							</button>
+						);
+					})
+				}
+			</div>
+			<div class="secondary-box">
+				<details>
+					<summary>兴趣 / 游戏（次要联系）</summary>
+					<div class="secondary-list">
+						{
+							social.secondary.map((item) =>
+								item.href ? (
+									<a class="chip" href={item.href} target="_blank" rel="noreferrer">
+										<Icon name={item.id} />
+										{item.label}
+									</a>
+								) : (
+									<button class="chip" type="button" data-copy={item.value}>
+										<Icon name={item.id} />
+										{item.label}
+									</button>
+								),
+							)
+						}
+					</div>
+				</details>
+			</div>
+		</div>
+		<div class="side-art">
+			<img src={site.connectImage} alt={site.connectImageAlt} width="990" height="1400" />
+		</div>
+	</div>
+</section>
+
+{
+	social.primary
+		.filter((item) => item.action === 'qr' && item.qr)
+		.map((item) => (
+			<dialog id={`dialog-${item.id}`} aria-labelledby={`dialog-${item.id}-title`}>
+				<h3 class="dialog-title" id={`dialog-${item.id}-title`}>
+					{item.label}占位
+				</h3>
+				<p class="dialog-note">这是占位二维码，请不要扫真实联系。也可复制下方假 ID。</p>
+				<div class="qr">
+					<img src={item.qr} alt={`${item.label}占位二维码`} width="220" height="220" />
+				</div>
+				<div class="dialog-actions">
+					<button class="btn btn-ghost" type="button" data-copy={item.value}>
+						复制 {item.value}
+					</button>
+					<button class="btn btn-primary" type="button" data-dialog-close>
+						关闭
+					</button>
+				</div>
+			</dialog>
+		))
+}

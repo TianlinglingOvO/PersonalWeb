@@ -1,0 +1,30 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import Projects from '../components/Projects.astro';
+import Articles from '../components/Articles.astro';
+import Services from '../components/Services.astro';
+import Connect from '../components/Connect.astro';
+
+const aboutEntry = (await getCollection('about'))[0];
+if (!aboutEntry) throw new Error('缺少 content/about.md');
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const articles = (await getCollection('articles')).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout>
+	<div class="bg-wash">
+		<Hero />
+		<About entry={aboutEntry} />
+	</div>
+	<Projects projects={projects} />
+	<Articles articles={articles} />
+	<Services services={services} />
+	<Connect />
+</BaseLayout>

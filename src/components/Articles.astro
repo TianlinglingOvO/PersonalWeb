@@ -1,0 +1,30 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatDate } from '../lib/site';
+
+interface Props {
+	articles: CollectionEntry<'articles'>[];
+}
+
+const { articles } = Astro.props;
+---
+
+<section id="articles" class="section wrap reveal">
+	<div class="section-head">
+		<div>
+			<p class="kicker">03</p>
+			<h2>文章</h2>
+		</div>
+	</div>
+	<div class="card-grid">
+		{
+			articles.map((article) => (
+				<a class="card card-link" href={`/articles/${article.id}/`}>
+					<p class="meta">{formatDate(article.data.date)}</p>
+					<h3>{article.data.title}</h3>
+					<p>{article.data.description}</p>
+				</a>
+			))
+		}
+	</div>
+</section>
