@@ -75,4 +75,33 @@
 - 提取 `image/Hello.jpg` 至 [public/images/brand-avatar.jpg](file:///home/sutady/PersonalWeb/public/images/brand-avatar.jpg)；
 - 在 [src/components/Header.astro](file:///home/sutady/PersonalWeb/src/components/Header.astro) 中将原本的粉色方框「S」SVG 替换为可爱的圆形少女头像徽标，并添加微粉高光柔边。
 
+---
+
+# PersonalWeb 图片勘误与信息完善实施总结 (v8)
+
+根据 `updata_plan/Updata-v8.md` 的图片勘误标注与信息配置要求，本次已全部修改完成，并通过静态构建。
+
+## 本次修改内容说明
+
+### 1. 图片使用勘误与对齐
+- **浏览器标签页图标（Favicon）**：用户期望的「网站图标」指的是浏览器标签页上的 Favicon 图标。
+  - 从 [image/Hello.jpg](file:///home/sutady/PersonalWeb/image/Hello.jpg)（打招呼少女）精准裁切出头像与蝴蝶结区域；
+  - 自动生成了多规格高清图标：`public/favicon.ico`、`public/favicon.png`（48px/32px）、`public/apple-touch-icon.png`（180px）以及内嵌超清数据的 `public/favicon.svg`；
+  - 在 [src/layouts/BaseLayout.astro](file:///home/sutady/PersonalWeb/src/layouts/BaseLayout.astro) 中以 `?v=8` 引入，彻底清除并击穿此前粉色「S」图标的浏览器缓存。
+- **顶栏左侧品牌头像（Header Avatar）**：
+  - 替换为 [image/avatar_square.jpg](file:///home/sutady/PersonalWeb/image/avatar_square.jpg)（双马尾玩手机少女），并生成高质量微缩图 [public/images/brand-avatar.jpg](file:///home/sutady/PersonalWeb/public/images/brand-avatar.jpg)；
+  - 在 [src/styles/global.css](file:///home/sutady/PersonalWeb/src/styles/global.css) 中将 `object-position` 调整为 `50% 30%`，确保在圆形 32px 容器中居中对齐面部。
+- **Hero 个人卡片圆形头像（Hero Avatar）**：
+  - 将 [content/site.json](file:///home/sutady/PersonalWeb/content/site.json) 的头像路径切换为 `/images/avatar_square.jpg?v=8`，避免旧图 `avatar.jpg` 客户端浏览器强缓存导致依旧显示女仆旧图的问题。
+
+### 2. 填写联系方式与社交账号
+在 [content/social.json](file:///home/sutady/PersonalWeb/content/social.json) 中更新了 6 项真实信息：
+1. **QQ**：`2353583393`（点击一键复制）
+2. **微信**：`Sutady_official`（点击一键复制）
+3. **X**：`@SutadyOvO`（跳转链接 `https://x.com/SutadyOvO`）
+4. **Telegram**：`@SutadyOvO`（跳转链接 `https://t.me/SutadyOvO`）
+5. **Gmail**：`sutady235@gmail.com`（点击一键复制）
+6. **GitHub**：`TianlinglingOvO`（跳转链接 `https://github.com/TianlinglingOvO`）
+
+
 

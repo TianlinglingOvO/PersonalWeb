@@ -4,7 +4,7 @@
   "title": "昵称占位 · About me",
   "description": "自我介绍、活动、文章与联系方式。这是一份可替换的占位站点。",
   "eyebrow": "你好，我是",
-  "avatar": "/images/avatar.jpg",
+  "avatar": "/images/avatar_square.jpg?v=8",
   "heroImage": "/images/welcome.jpg",
   "heroImageAlt": "欢迎插画占位",
   "aboutImage": "/images/bedroom.jpg",

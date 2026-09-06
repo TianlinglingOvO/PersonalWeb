@@ -168,7 +168,7 @@ a:hover {
 	flex: none;
 	border-radius: 50%;
 	object-fit: cover;
-	object-position: 50% 12%;
+	object-position: 50% 30%;
 	border: 1.5px solid var(--accent-soft);
 	box-shadow: 0 2px 6px rgba(226, 92, 122, 0.16);
 	display: inline-block;

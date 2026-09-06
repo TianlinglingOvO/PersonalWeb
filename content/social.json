@@ -3,45 +3,45 @@
     {
       "id": "qq",
       "label": "QQ",
-      "value": "100000000",
+      "value": "2353583393",
       "action": "copy",
       "group": "im"
     },
     {
       "id": "wechat",
       "label": "微信",
-      "value": "wechat-placeholder",
+      "value": "Sutady_official",
       "action": "copy",
       "group": "im"
     },
     {
       "id": "x",
       "label": "X",
-      "value": "@handle_placeholder",
-      "href": "https://x.com/handle_placeholder",
+      "value": "@SutadyOvO",
+      "href": "https://x.com/SutadyOvO",
       "action": "link",
       "group": "social"
     },
     {
       "id": "telegram",
       "label": "Telegram",
-      "value": "@tg_placeholder",
-      "href": "https://t.me/tg_placeholder",
+      "value": "@SutadyOvO",
+      "href": "https://t.me/SutadyOvO",
       "action": "link",
       "group": "social"
     },
     {
       "id": "gmail",
       "label": "Gmail",
-      "value": "hello.placeholder@gmail.com",
+      "value": "sutady235@gmail.com",
       "action": "copy",
       "group": "dev"
     },
     {
       "id": "github",
       "label": "GitHub",
-      "value": "github-placeholder",
-      "href": "https://github.com/github-placeholder",
+      "value": "TianlinglingOvO",
+      "href": "https://github.com/TianlinglingOvO",
       "action": "link",
       "group": "dev"
     }
