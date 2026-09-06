@@ -5,8 +5,8 @@ dist/
 
 # dependencies
 node_modules/
-image/
 my_image/
+update_plan/
 
 # logs
 npm-debug.log*
@@ -37,4 +37,5 @@ fix-plan-contacts-v2.md
 fix-plan-contacts-v3.md
 fix-plan-v4.md
 update
+update_plan/
 
