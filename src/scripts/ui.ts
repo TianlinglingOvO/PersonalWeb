@@ -190,9 +190,13 @@ function initArticleFilter(signal: AbortSignal) {
 			cards.forEach((card) => {
 				const match = value === 'all' || card.getAttribute('data-category') === value;
 				card.hidden = !match;
+				card.style.display = match ? '' : 'none';
 				if (match) visible += 1;
 			});
-			if (empty) empty.hidden = visible > 0;
+			if (empty) {
+				empty.hidden = visible > 0;
+				empty.style.display = visible > 0 ? 'none' : '';
+			}
 		};
 
 		toolbar.addEventListener(

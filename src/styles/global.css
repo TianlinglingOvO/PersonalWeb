@@ -28,6 +28,10 @@
 	box-sizing: border-box;
 }
 
+[hidden] {
+	display: none !important;
+}
+
 html {
 	scroll-behavior: smooth;
 	scroll-padding-top: calc(var(--header-h) + 20px);
@@ -57,7 +61,7 @@ body {
 		radial-gradient(1000px 700px at 88% 18%, rgba(237, 240, 252, 0.7), transparent 65%),
 		radial-gradient(1100px 800px at 15% 70%, rgba(254, 237, 243, 0.6), transparent 70%),
 		radial-gradient(1300px 750px at 85% 88%, rgba(243, 235, 250, 0.65), transparent 65%),
-		url("/images/bg-anime-cute.svg?v=6");
+		url("/images/bg-anime-cute.svg?v=7");
 	background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
 	background-attachment: fixed, fixed, fixed, fixed, scroll;
 	background-size: auto, auto, auto, auto, 520px 520px;
@@ -157,10 +161,17 @@ a:hover {
 	color: var(--accent-deep);
 }
 
-.brand-mark {
-	width: 28px;
-	height: 28px;
+.brand-mark,
+.brand-avatar {
+	width: 32px;
+	height: 32px;
 	flex: none;
+	border-radius: 50%;
+	object-fit: cover;
+	object-position: 50% 12%;
+	border: 1.5px solid var(--accent-soft);
+	box-shadow: 0 2px 6px rgba(226, 92, 122, 0.16);
+	display: inline-block;
 }
 
 .nav-toggle {
@@ -926,6 +937,87 @@ dialog::backdrop {
 	line-height: 1.25;
 }
 
+.article-nav {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 1rem;
+	margin-top: 2.8rem;
+	padding-top: 1.8rem;
+	border-top: 1px dashed var(--line);
+}
+
+.article-nav-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	padding: 1.1rem 1.2rem;
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	text-decoration: none;
+	color: inherit;
+	box-shadow: var(--shadow);
+	transition:
+		transform 0.2s ease,
+		border-color 0.2s ease,
+		box-shadow 0.2s ease;
+}
+
+.article-nav-card:hover {
+	transform: translateY(-2px);
+	border-color: var(--accent);
+	box-shadow: var(--shadow-hover);
+}
+
+.article-nav-card.next {
+	text-align: right;
+}
+
+.nav-direction {
+	font-size: 0.82rem;
+	color: var(--accent-deep);
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}
+
+.nav-title {
+	font-size: 0.98rem;
+	font-weight: 600;
+	color: var(--ink);
+	line-height: 1.4;
+}
+
+/* View Transition: 类似书本翻页的轻柔滑入淡出效果 */
+@keyframes pageTurnOut {
+	from {
+		opacity: 1;
+		transform: translateX(0) scale(1);
+	}
+	to {
+		opacity: 0;
+		transform: translateX(-24px) scale(0.97);
+	}
+}
+
+@keyframes pageTurnIn {
+	from {
+		opacity: 0;
+		transform: translateX(24px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0) scale(1);
+	}
+}
+
+::view-transition-old(root) {
+	animation: 0.28s cubic-bezier(0.16, 1, 0.3, 1) both pageTurnOut;
+}
+
+::view-transition-new(root) {
+	animation: 0.28s cubic-bezier(0.16, 1, 0.3, 1) both pageTurnIn;
+}
+
 .not-found {
 	text-align: center;
 	padding: 3rem 0 4rem;
@@ -973,6 +1065,10 @@ html.js .reveal.is-visible {
 }
 
 @media (max-width: 860px) {
+	.page-bg {
+		background-size: auto, auto, auto, auto, 340px 340px;
+	}
+
 	.hero,
 	.split,
 	.card-grid,

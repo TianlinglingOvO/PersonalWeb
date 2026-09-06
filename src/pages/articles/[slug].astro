@@ -5,18 +5,26 @@ import Icon from '../../components/Icon.astro';
 import { formatDate, site } from '../../lib/site';
 
 export async function getStaticPaths() {
-	const posts = await getCollection('articles');
-	return posts.map((post) => ({
+	const posts = (await getCollection('articles')).sort(
+		(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+	);
+	return posts.map((post, index) => ({
 		params: { slug: post.id },
-		props: { post },
+		props: {
+			post,
+			prevPost: index < posts.length - 1 ? posts[index + 1] : null,
+			nextPost: index > 0 ? posts[index - 1] : null,
+		},
 	}));
 }
 
 interface Props {
 	post: CollectionEntry<'articles'>;
+	prevPost?: CollectionEntry<'articles'> | null;
+	nextPost?: CollectionEntry<'articles'> | null;
 }
 
-const { post } = Astro.props;
+const { post, prevPost, nextPost } = Astro.props;
 const { Content } = await render(post);
 ---
 
@@ -31,5 +39,27 @@ const { Content } = await render(post);
 		<div class="prose">
 			<Content />
 		</div>
+		<nav class="article-nav" aria-label="文章上下篇导航">
+			{
+				prevPost ? (
+					<a class="article-nav-card prev" href={`/articles/${prevPost.id}/`}>
+						<span class="nav-direction">← 上一篇</span>
+						<span class="nav-title">{prevPost.data.title}</span>
+					</a>
+				) : (
+					<div />
+				)
+			}
+			{
+				nextPost ? (
+					<a class="article-nav-card next" href={`/articles/${nextPost.id}/`}>
+						<span class="nav-direction">下一篇 →</span>
+						<span class="nav-title">{nextPost.data.title}</span>
+					</a>
+				) : (
+					<div />
+				)
+			}
+		</nav>
 	</article>
 </BaseLayout>

@@ -31,7 +31,7 @@
 
 ---
 
-## 验证与提交记录
+## 验证与提交记录 (v6)
 
 1. **本地构建测试**：
    ```bash
@@ -41,4 +41,38 @@
 2. **Git 提交与推送**：
    - 提交信息：`UI & interaction: cute anime motifs, instant nav highlight, smooth service accordion, and copy update`
    - 推送分支：`main` -> `origin/main` (commit `06facf5`)
+
+---
+
+# PersonalWeb UI 交互与视觉优化实施总结 (v7)
+
+本次 v7 优化已全部实施并完成构建测试，核心解决文章分类筛选 Bug、手机及高倍缩放下背景过淡、头像更新、书本翻页「软加载」过渡及文章上下篇翻页导航、顶栏头像徽标替换。
+
+## 本次修改内容说明
+
+### 1. 修复文章分类筛选失效 Bug
+- **原因**：样式表中 `.card-link { display: flex; }` 具有更高的作者特异性，覆盖了 HTML 原生 `[hidden]` 隐藏属性。
+- **解决**：
+  - 在 [src/styles/global.css](file:///home/sutady/PersonalWeb/src/styles/global.css) 中加入 `[hidden] { display: none !important; }`；
+  - 在 [src/scripts/ui.ts](file:///home/sutady/PersonalWeb/src/scripts/ui.ts) 的 `initArticleFilter` 中额外设置 `card.style.display = match ? '' : 'none'` 做双重兜底保障；
+  - 现在点击「教程」、「科普」等标签即可即时准确过滤显示对应文章。
+
+### 2. 增强手机端与高倍缩放下的背景可见度
+- 在 [public/images/bg-anime-cute.svg](file:///home/sutady/PersonalWeb/public/images/bg-anime-cute.svg) 中：
+  - 描边线宽由 `1.15px` 提高至 `1.85px`；
+  - 线条不透明度从 `0.28` 提高到 `0.48`；
+  - 猫肉垫、蝴蝶结飘带、樱花花瓣和爱心增加了马卡龙粉与香芋紫柔和填充；
+  - 在 [src/styles/global.css](file:///home/sutady/PersonalWeb/src/styles/global.css) 增加 `@media (max-width: 860px)` 移动端 `340px 340px` 平铺比例，并在链接后增加版本号 `?v=7` 击穿缓存。在 250% 缩放和手机视网膜屏上清晰明快。
+
+### 3. 更新头像资产
+- 将 `image/avatar_square.jpg` 部署至 [public/images/avatar.jpg](file:///home/sutady/PersonalWeb/public/images/avatar.jpg) 和 [public/images/avatar_square.jpg](file:///home/sutady/PersonalWeb/public/images/avatar_square.jpg)，首页 Hero 卡片头像已同步生效。
+
+### 4. 文章页「软加载」（书本翻页感）与上下篇跳转卡片
+- **软加载**：在 [src/layouts/BaseLayout.astro](file:///home/sutady/PersonalWeb/src/layouts/BaseLayout.astro) 中引入 `<ClientRouter />`（基于浏览器 View Transitions API），配合 [src/styles/global.css](file:///home/sutady/PersonalWeb/src/styles/global.css) 的 `pageTurnIn` 与 `pageTurnOut` 关键帧，实现点击文章时平滑翻页滑入，无需刷新整页闪白；
+- **上下篇卡片**：在 [src/pages/articles/[slug].astro](file:///home/sutady/PersonalWeb/src/pages/articles/[slug].astro) 自动按时间排序注入 `prevPost` 和 `nextPost`，正文底部提供优雅的双列或单列卡片直接切换上一篇/下一篇。
+
+### 5. 顶栏更换为打招呼少女头像徽标
+- 提取 `image/Hello.jpg` 至 [public/images/brand-avatar.jpg](file:///home/sutady/PersonalWeb/public/images/brand-avatar.jpg)；
+- 在 [src/components/Header.astro](file:///home/sutady/PersonalWeb/src/components/Header.astro) 中将原本的粉色方框「S」SVG 替换为可爱的圆形少女头像徽标，并添加微粉高光柔边。
+
 

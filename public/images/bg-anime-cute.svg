@@ -2,59 +2,56 @@
   <defs>
     <!-- 软萌猫爪 (Cat Paw) -->
     <g id="cat-paw">
-      <ellipse cx="0" cy="3" rx="5.2" ry="4.2" />
-      <circle cx="-5.2" cy="-2.5" r="1.8" />
-      <circle cx="-1.8" cy="-5" r="1.9" />
-      <circle cx="1.8" cy="-5" r="1.9" />
-      <circle cx="5.2" cy="-2.5" r="1.8" />
+      <ellipse cx="0" cy="3" rx="5.4" ry="4.4" />
+      <circle cx="-5.4" cy="-2.6" r="2.0" />
+      <circle cx="-1.9" cy="-5.2" r="2.1" />
+      <circle cx="1.9" cy="-5.2" r="2.1" />
+      <circle cx="5.4" cy="-2.6" r="2.0" />
     </g>
 
     <!-- 少女蝴蝶结 (Ribbon Bow) -->
     <g id="ribbon-bow">
-      <!-- 左右翅膀 -->
-      <path d="M0,-0.5 C-3,-5 -10,-4 -10,0 C-10,4 -3,3 0,-0.5 Z" />
-      <path d="M0,-0.5 C3,-5 10,-4 10,0 C10,4 3,3 0,-0.5 Z" />
-      <!-- 中心结 -->
-      <circle cx="0" cy="-0.5" r="1.8" />
-      <!-- 飘带 -->
-      <path d="M-1,1.2 C-3,4 -6,6 -8,8 M1,1.2 C3,4 6,6 8,8" />
+      <path d="M0,-0.5 C-3,-5.2 -10.5,-4.2 -10.5,0 C-10.5,4.2 -3,3.2 0,-0.5 Z" />
+      <path d="M0,-0.5 C3,-5.2 10.5,-4.2 10.5,0 C10.5,4.2 3,3.2 0,-0.5 Z" />
+      <circle cx="0" cy="-0.5" r="2.0" />
+      <path d="M-1.2,1.5 C-3.5,4.5 -6.5,7 -8.5,9.2 M1.2,1.5 C3.5,4.5 6.5,7 8.5,9.2" />
     </g>
 
     <!-- 日系キラキラ大闪光 (Large Sparkle) -->
-    <path id="sparkle-lg" d="M0,-15 C0,-3 3,0 15,0 C3,0 0,3 0,15 C0,3 -3,0 -15,0 C-3,0 0,-3 0,-15 Z" />
+    <path id="sparkle-lg" d="M0,-16 C0,-3.2 3.2,0 16,0 C3.2,0 0,3.2 0,16 C0,3.2 -3.2,0 -16,0 C-3.2,0 0,-3.2 0,-16 Z" />
 
     <!-- 日系キラキラ小闪光 (Small Sparkle) -->
-    <path id="sparkle-sm" d="M0,-8 C0,-2 2,0 8,0 C2,0 0,2 0,8 C0,2 -2,0 -8,0 C-2,0 0,-2 0,-8 Z" />
+    <path id="sparkle-sm" d="M0,-8.5 C0,-2.2 2.2,0 8.5,0 C2.2,0 0,2.2 0,8.5 C0,2.2 -2.2,0 -8.5,0 C-2.2,0 0,-2.2 0,-8.5 Z" />
 
     <!-- 飘散樱花瓣 (Sakura Petal) -->
-    <path id="sakura-petal" d="M0,-10 C5,-7 8,-1 7,5 C6,10 1.5,12 0,11.5 C-1.5,12 -6,10 -7,5 C-8,-1 -5,-7 0,-10 Z" />
+    <path id="sakura-petal" d="M0,-10.5 C5.2,-7.4 8.5,-1 7.4,5.2 C6.3,10.5 1.6,12.6 0,12.1 C-1.6,12.6 -6.3,10.5 -7.4,5.2 C-8.5,-1 -5.2,-7.4 0,-10.5 Z" />
 
     <!-- 软萌饱满心 (Cute Heart) -->
-    <path id="cute-heart" d="M0,2.5 C-1.5,-1.5 -6.5,-1.5 -6.5,2.5 C-6.5,7 0,10.5 0,10.5 C0,10.5 6.5,7 6.5,2.5 C6.5,-1.5 1.5,-1.5 0,2.5 Z" />
+    <path id="cute-heart" d="M0,2.6 C-1.6,-1.6 -6.8,-1.6 -6.8,2.6 C-6.8,7.4 0,11 0,11 C0,11 6.8,7.4 6.8,2.6 C6.8,-1.6 1.6,-1.6 0,2.6 Z" />
 
     <!-- 细微星尘十字 (Twinkle Cross) -->
-    <path id="twinkle-cross" d="M-4.5,0 L4.5,0 M0,-4.5 L0,4.5" />
+    <path id="twinkle-cross" d="M-5,0 L5,0 M0,-5 L0,5" />
 
     <!-- 梦幻微弯月 (Mini Crescent Moon) -->
-    <path id="mini-moon" d="M2.5,-6.5 A6.5,6.5 0 1,0 2.5,6.5 A5,5 0 1,1 2.5,-6.5 Z" />
+    <path id="mini-moon" d="M2.8,-7 A7,7 0 1,0 2.8,7 A5.4,5.4 0 1,1 2.8,-7 Z" />
   </defs>
 
-  <!-- 粉红少女调微元素 (Soft Strawberry Pink) -->
-  <g fill="none" stroke="#f28da4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.30">
+  <!-- 粉红少女调微元素 (Soft Strawberry Pink) - 增强清晰度与填充感 -->
+  <g fill="none" stroke="#e86e88" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" opacity="0.48">
     <!-- 猫爪印 -->
     <g transform="translate(80, 70) rotate(-12)">
-      <use href="#cat-paw" fill="#f28da4" fill-opacity="0.10" />
+      <use href="#cat-paw" fill="#e86e88" fill-opacity="0.18" />
     </g>
     <g transform="translate(360, 310) rotate(18)">
-      <use href="#cat-paw" fill="#f28da4" fill-opacity="0.10" />
+      <use href="#cat-paw" fill="#e86e88" fill-opacity="0.18" />
     </g>
 
     <!-- 蝴蝶结 -->
     <g transform="translate(270, 80) rotate(8)">
-      <use href="#ribbon-bow" fill="#f28da4" fill-opacity="0.08" />
+      <use href="#ribbon-bow" fill="#e86e88" fill-opacity="0.16" />
     </g>
     <g transform="translate(130, 440) rotate(-15)">
-      <use href="#ribbon-bow" fill="#f28da4" fill-opacity="0.08" />
+      <use href="#ribbon-bow" fill="#e86e88" fill-opacity="0.16" />
     </g>
 
     <!-- 大星芒 -->
@@ -64,34 +61,34 @@
 
     <!-- 樱花瓣 -->
     <g transform="translate(180, 160) rotate(32)">
-      <use href="#sakura-petal" fill="#f28da4" fill-opacity="0.09" />
+      <use href="#sakura-petal" fill="#e86e88" fill-opacity="0.18" />
     </g>
     <g transform="translate(450, 200) rotate(-28)">
-      <use href="#sakura-petal" fill="#f28da4" fill-opacity="0.09" />
+      <use href="#sakura-petal" fill="#e86e88" fill-opacity="0.18" />
     </g>
     <g transform="translate(60, 330) rotate(45)">
-      <use href="#sakura-petal" fill="#f28da4" fill-opacity="0.09" />
+      <use href="#sakura-petal" fill="#e86e88" fill-opacity="0.18" />
     </g>
 
     <!-- 萌萌小爱心 -->
-    <g transform="translate(330, 190) scale(0.9)">
-      <use href="#cute-heart" fill="#f28da4" fill-opacity="0.10" />
+    <g transform="translate(330, 190) scale(0.95)">
+      <use href="#cute-heart" fill="#e86e88" fill-opacity="0.18" />
     </g>
-    <g transform="translate(250, 470) scale(0.85)">
-      <use href="#cute-heart" fill="#f28da4" fill-opacity="0.10" />
+    <g transform="translate(250, 470) scale(0.9)">
+      <use href="#cute-heart" fill="#e86e88" fill-opacity="0.18" />
     </g>
 
     <!-- 微星点 -->
-    <circle cx="130" cy="270" r="1.8" fill="#f28da4" />
-    <circle cx="490" cy="130" r="1.6" fill="#f28da4" />
-    <circle cx="390" cy="410" r="1.7" fill="#f28da4" />
+    <circle cx="130" cy="270" r="2.2" fill="#e86e88" />
+    <circle cx="490" cy="130" r="2.0" fill="#e86e88" />
+    <circle cx="390" cy="410" r="2.1" fill="#e86e88" />
   </g>
 
-  <!-- 薰衣草仙女紫微调 (Fairy Lilac / Periwinkle) -->
-  <g fill="none" stroke="#8c99e6" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" opacity="0.26">
+  <!-- 薰衣草仙女紫微调 (Fairy Lilac / Periwinkle) - 增强清晰度与填充感 -->
+  <g fill="none" stroke="#7280d4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.44">
     <!-- 仙女紫猫爪 -->
     <g transform="translate(210, 380) rotate(-22)">
-      <use href="#cat-paw" fill="#8c99e6" fill-opacity="0.09" />
+      <use href="#cat-paw" fill="#7280d4" fill-opacity="0.16" />
     </g>
 
     <!-- 小闪光 -->
@@ -108,21 +105,21 @@
 
     <!-- 弯月 -->
     <g transform="translate(240, 130) rotate(-18)">
-      <use href="#mini-moon" fill="#8c99e6" fill-opacity="0.08" />
+      <use href="#mini-moon" fill="#7280d4" fill-opacity="0.15" />
     </g>
     <g transform="translate(420, 240) rotate(14)">
-      <use href="#mini-moon" fill="#8c99e6" fill-opacity="0.08" />
+      <use href="#mini-moon" fill="#7280d4" fill-opacity="0.15" />
     </g>
 
     <!-- 紫色樱花瓣 -->
     <g transform="translate(300, 350) rotate(-40)">
-      <use href="#sakura-petal" fill="#8c99e6" fill-opacity="0.08" />
+      <use href="#sakura-petal" fill="#7280d4" fill-opacity="0.16" />
     </g>
 
     <!-- 微点 -->
-    <circle cx="50" cy="130" r="1.6" fill="#8c99e6" />
-    <circle cx="200" cy="40" r="1.5" fill="#8c99e6" />
-    <circle cx="340" cy="270" r="1.6" fill="#8c99e6" />
-    <circle cx="430" cy="380" r="1.5" fill="#8c99e6" />
+    <circle cx="50" cy="130" r="2.0" fill="#7280d4" />
+    <circle cx="200" cy="40" r="1.9" fill="#7280d4" />
+    <circle cx="340" cy="270" r="2.0" fill="#7280d4" />
+    <circle cx="430" cy="380" r="1.9" fill="#7280d4" />
   </g>
 </svg>
