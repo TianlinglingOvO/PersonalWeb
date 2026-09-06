@@ -642,6 +642,72 @@ a:hover {
 	color: var(--muted);
 }
 
+.prose blockquote p:last-child {
+	margin-bottom: 0;
+}
+
+.prose img {
+	max-width: 100%;
+	height: auto;
+	border-radius: var(--radius-sm);
+	display: block;
+	margin: 1.4rem auto 0.4rem;
+	box-shadow: var(--shadow);
+}
+
+.prose figure {
+	margin: 1.6rem 0;
+	text-align: center;
+}
+
+.prose figure img {
+	margin: 0 auto;
+}
+
+.prose figcaption,
+.prose .caption {
+	font-size: 0.86rem;
+	color: var(--muted);
+	margin-top: 0.4rem;
+	text-align: center;
+	display: block;
+}
+
+/* 如果在图片紧接着下一行写 *图说明*，自动识别为居中小字注释 */
+.prose p:has(> img) + p:has(> em:only-child) {
+	text-align: center;
+	font-size: 0.86rem;
+	color: var(--muted);
+	margin-top: -0.6rem;
+	margin-bottom: 1.4rem;
+}
+
+.prose code {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.88em;
+	background: rgba(226, 92, 122, 0.08);
+	color: var(--accent-deep);
+	padding: 0.15rem 0.4rem;
+	border-radius: 4px;
+}
+
+.prose pre {
+	padding: 1rem 1.2rem;
+	background: #252830;
+	color: #e6edf3;
+	border-radius: var(--radius-sm);
+	overflow-x: auto;
+	margin: 1.2rem 0;
+	font-size: 0.9rem;
+	line-height: 1.5;
+}
+
+.prose pre code {
+	background: none;
+	color: inherit;
+	padding: 0;
+}
+
 .about-art img,
 .side-art img {
 	aspect-ratio: 3 / 4;

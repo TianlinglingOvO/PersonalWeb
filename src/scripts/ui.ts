@@ -270,6 +270,13 @@ function onClick(event: Event) {
 
 	if (target.closest('[data-back-to-top]')) {
 		window.scrollTo({ top: 0, behavior: 'smooth' });
+		return;
+	}
+
+	const anchor = target.closest('a');
+	if (anchor && anchor.origin && anchor.origin !== window.location.origin) {
+		anchor.target = '_blank';
+		anchor.rel = 'noopener noreferrer';
 	}
 }
 

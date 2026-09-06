@@ -4,6 +4,15 @@ import { site } from '../lib/site';
 ---
 
 <BaseLayout title={`页面不存在 · ${site.name}`} description="这个地址没有对应的页面。">
+	<script is:inline>
+		// 自动容错：如果输入的链接包含大写或缺少末尾斜杠，自动尝试跳转到标准的小写文章地址
+		const pathname = window.location.pathname;
+		const lower = pathname.toLowerCase();
+		const normalized = lower.endsWith('/') ? lower : lower + '/';
+		if (pathname !== normalized && !pathname.includes('.')) {
+			window.location.replace(normalized + window.location.search + window.location.hash);
+		}
+	</script>
 	<div class="not-found wrap">
 		<img src={site.notFoundImage} alt={site.notFoundImageAlt} width="280" height="396" loading="lazy" />
 		<p class="eyebrow">404</p>
