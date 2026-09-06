@@ -72,12 +72,32 @@ function initScrollSpy(signal: AbortSignal) {
 		});
 	};
 
+	let lockUntil = 0;
+
+	// Instant feedback on click: switch active pill immediately and lock during smooth scroll
+	links.forEach((link) => {
+		link.addEventListener(
+			'click',
+			() => {
+				const href = link.getAttribute('href') ?? '';
+				const id = href.split('#')[1];
+				if (id) {
+					setActive(id);
+					lockUntil = Date.now() + 850;
+				}
+			},
+			{ signal },
+		);
+	});
+
 	let ticking = false;
 	const onScroll = () => {
 		if (ticking) return;
 		ticking = true;
 		requestAnimationFrame(() => {
 			ticking = false;
+			if (Date.now() < lockUntil) return;
+
 			const scrollY = window.scrollY;
 			const docHeight = document.documentElement.scrollHeight;
 			const winHeight = window.innerHeight;
@@ -253,6 +273,85 @@ function onKeydown(event: KeyboardEvent) {
 	if (event.key === 'Escape') setNavOpen(false);
 }
 
+function initDetailsAnimation(signal: AbortSignal) {
+	const detailsList = $all<HTMLDetailsElement>('.service-card details');
+	if (!detailsList.length) return;
+
+	detailsList.forEach((details) => {
+		const summary = details.querySelector('summary');
+		const prose = details.querySelector('.prose') as HTMLElement | null;
+		if (!summary || !prose) return;
+
+		let animation: Animation | null = null;
+		let isClosing = false;
+		let isExpanding = false;
+
+		summary.addEventListener(
+			'click',
+			(e) => {
+				e.preventDefault();
+				if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+					details.open = !details.open;
+					return;
+				}
+
+				if (isClosing || !details.open) {
+					if (isClosing && animation) animation.cancel();
+					isClosing = false;
+					isExpanding = true;
+
+					details.open = true;
+					const startHeight = 0;
+					const endHeight = prose.scrollHeight;
+
+					animation = prose.animate(
+						[
+							{ height: `${startHeight}px`, opacity: 0, transform: 'translateY(-6px)' },
+							{ height: `${endHeight}px`, opacity: 1, transform: 'translateY(0)' },
+						],
+						{
+							duration: 300,
+							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+						},
+					);
+
+					animation.onfinish = () => {
+						isExpanding = false;
+						animation = null;
+						prose.style.height = '';
+					};
+				} else if (isExpanding || details.open) {
+					if (isExpanding && animation) animation.cancel();
+					isExpanding = false;
+					isClosing = true;
+
+					const startHeight = prose.offsetHeight;
+					const endHeight = 0;
+
+					animation = prose.animate(
+						[
+							{ height: `${startHeight}px`, opacity: 1, transform: 'translateY(0)' },
+							{ height: `${endHeight}px`, opacity: 0, transform: 'translateY(-6px)' },
+						],
+						{
+							duration: 260,
+							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+						},
+					);
+
+					animation.onfinish = () => {
+						details.open = false;
+						isClosing = false;
+						animation = null;
+						prose.style.height = '';
+					};
+				}
+			},
+			{ signal },
+		);
+	});
+}
+
 function initPage() {
 	pageAbort?.abort();
 	pageAbort = new AbortController();
@@ -261,6 +360,7 @@ function initPage() {
 	initScrollSpy(signal);
 	initReveal(signal);
 	initArticleFilter(signal);
+	initDetailsAnimation(signal);
 	initBackToTop(signal);
 	scrollToHash();
 }

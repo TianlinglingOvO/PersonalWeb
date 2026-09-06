@@ -76,7 +76,7 @@ category: 教程
 
 `content/social.json` 的 `primary` 是六个主联系：QQ、微信、X、Telegram、Gmail、GitHub。
 
-按 `group` 分成三块：即时通讯（QQ / 微信）、社交（X / Telegram）、邮箱与开发（Gmail / GitHub）。
+按 `group` 分成三块：社交账号（QQ / 微信）、海外账号（X / Telegram）、其他方式（Gmail / GitHub）。
 
 每条可以是：
 
@@ -96,7 +96,7 @@ category: 教程
 | `bedroom.jpg` | 关于我 |
 | `rain.jpg` | 联系 |
 | `cake.jpg` | 404 页 |
-| `bg-doodle.svg` | 全页二次元微纹理（梦幻闪烁星芒、飘落樱花瓣与星尘点缀） |
+| `bg-anime-cute.svg` | 全页二次元可爱纹理（软萌猫爪、少女蝴蝶结、闪烁星芒、飘落樱花瓣与梦幻爱心） |
 | `favicon.svg` | 浏览器小图标 |
 
 把同名文件换成你的图即可。建议头像接近正方形；插画用竖图也没问题。
