@@ -1,0 +1,41 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { articleCategories, formatDate } from '../lib/site';
+
+interface Props {
+	articles: CollectionEntry<'articles'>[];
+}
+
+const { articles } = Astro.props;
+const filters = ['全部', ...articleCategories] as const;
+---
+
+<div class="filter-chips" data-article-filter role="group" aria-label="按分类筛选文章">
+	{
+		filters.map((label, index) => (
+			<button
+				class:list={['filter-chip', { 'is-active': index === 0 }]}
+				type="button"
+				data-filter={label === '全部' ? 'all' : label}
+				aria-pressed={index === 0 ? 'true' : 'false'}
+			>
+				{label}
+			</button>
+		))
+	}
+</div>
+<div class="card-grid" data-article-list>
+	{
+		articles.map((article) => (
+			<a class="card card-link" href={`/articles/${article.id}/`} data-category={article.data.category}>
+				<p class="meta">
+					<span class="badge">{article.data.category}</span>
+					{formatDate(article.data.date)}
+				</p>
+				<h3>{article.data.title}</h3>
+				<p>{article.data.description}</p>
+			</a>
+		))
+	}
+</div>
+<p class="filter-empty" data-article-empty hidden>这一类暂时没有文章。</p>

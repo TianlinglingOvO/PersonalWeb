@@ -27,6 +27,9 @@ export const nav = [
 	{ href: '/#connect', label: '联系', section: 'connect' },
 ] as const;
 
+export const articleCategories = ['教程', '科普'] as const;
+export type ArticleCategory = (typeof articleCategories)[number];
+
 export function formatDate(date: Date) {
 	return date.toLocaleDateString('zh-CN', {
 		year: 'numeric',

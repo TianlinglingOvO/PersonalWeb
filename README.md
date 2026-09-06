@@ -33,7 +33,7 @@ npm run preview
 | 昵称、一句话、网页标题/简介、用哪张图 | `content/site.json` |
 | 关于我 | `content/about.md` |
 | 活动卡片 | `content/projects/` 下的 `.md`（增删文件即可） |
-| 文章 | `content/articles/` 下的 `.md` |
+| 文章 | `content/articles/` 下的 `.md`（必填 `category: 教程` 或 `科普`） |
 | 服务卡片 | `content/services/` 下的 `.md` |
 | 联系方式（主联系 / 次要） | `content/social.json` |
 | 头像、插画、微信二维码 | `public/images/` |
@@ -57,9 +57,20 @@ order: 1
 
 `url` 可以删掉，卡片就不可点击。`order` 数字越小越靠前。
 
-文章必须有 `title`、`date`、`description`，正文用普通 Markdown。文件名会变成网址，例如 `hello-site.md` → `/articles/hello-site/`。
+文章必须有 `title`、`date`、`description`、`category`。`category` 只能是 `教程` 或 `科普`。正文用普通 Markdown。文件名会变成网址，例如 `hello-site.md` → `/articles/hello-site/`。
 
-服务卡片的按钮默认指向联系区块。`ctaHref` 请继续用 `/#connect`，第一期不要接到支付或下单。
+```md
+---
+title: 文章标题
+date: 2026-04-01
+description: 一两句摘要
+category: 教程
+---
+```
+
+首页文章区和 `/articles/` 列表都有「全部 / 教程 / 科普」筛选。文章页会显示分类徽章。
+
+服务卡片的按钮默认指向联系区块。`ctaHref` 请继续用 `/#connect`，第一期不要接到支付或下单。在电脑上点「展开说明」时，只有当前卡片变高，旁边的卡片保持原来的高度。
 
 ### 联系方式
 
@@ -85,7 +96,7 @@ order: 1
 | `bedroom.jpg` | 关于我 |
 | `rain.jpg` | 联系 |
 | `cake.jpg` | 404 页 |
-| `bg-doodle.svg` | 联系区浅色涂鸦底 |
+| `bg-doodle.svg` | 全页浅色涂鸦墙纸（Telegram 聊天背景那种重复小图案） |
 | `favicon.svg` | 浏览器小图标 |
 
 把同名文件换成你的图即可。建议头像接近正方形；插画用竖图也没问题。

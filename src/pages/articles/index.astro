@@ -1,0 +1,24 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleList from '../../components/ArticleList.astro';
+import Icon from '../../components/Icon.astro';
+import { site } from '../../lib/site';
+
+const articles = (await getCollection('articles')).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<BaseLayout title={`文章 · ${site.name}`} description="教程与科普文章列表。">
+	<section class="section wrap">
+		<a class="back-link" href="/#articles"><Icon name="arrow" /> 返回首页</a>
+		<div class="section-head">
+			<div>
+				<p class="eyebrow">文章</p>
+				<h1 class="page-title">全部文章</h1>
+			</div>
+		</div>
+		<ArticleList articles={articles} />
+	</section>
+</BaseLayout>

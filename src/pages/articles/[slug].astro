@@ -23,7 +23,10 @@ const { Content } = await render(post);
 <BaseLayout title={`${post.data.title} · ${site.name}`} description={post.data.description}>
 	<article class="article-page wrap-narrow">
 		<a class="back-link" href="/#articles"><Icon name="arrow" /> 返回首页</a>
-		<p class="meta">{formatDate(post.data.date)}</p>
+		<p class="meta">
+			<span class="badge">{post.data.category}</span>
+			{formatDate(post.data.date)}
+		</p>
 		<h1>{post.data.title}</h1>
 		<div class="prose">
 			<Content />

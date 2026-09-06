@@ -108,6 +108,44 @@ function initReveal(signal: AbortSignal) {
 	signal.addEventListener('abort', () => io.disconnect());
 }
 
+function initArticleFilter(signal: AbortSignal) {
+	const toolbars = $all('[data-article-filter]');
+	if (!toolbars.length) return;
+
+	toolbars.forEach((toolbar) => {
+		const root = toolbar.closest('section') ?? toolbar.parentElement;
+		if (!root) return;
+		const cards = $all<HTMLElement>('[data-article-list] [data-category]', root);
+		const empty = $('[data-article-empty]', root) as HTMLElement | null;
+		const chips = $all<HTMLButtonElement>('[data-filter]', toolbar);
+
+		const apply = (value: string) => {
+			chips.forEach((chip) => {
+				const on = chip.getAttribute('data-filter') === value;
+				chip.classList.toggle('is-active', on);
+				chip.setAttribute('aria-pressed', String(on));
+			});
+			let visible = 0;
+			cards.forEach((card) => {
+				const match = value === 'all' || card.getAttribute('data-category') === value;
+				card.hidden = !match;
+				if (match) visible += 1;
+			});
+			if (empty) empty.hidden = visible > 0;
+		};
+
+		toolbar.addEventListener(
+			'click',
+			(event) => {
+				const chip = (event.target as HTMLElement | null)?.closest('[data-filter]');
+				if (!chip) return;
+				apply(chip.getAttribute('data-filter') ?? 'all');
+			},
+			{ signal },
+		);
+	});
+}
+
 function initBackToTop(signal: AbortSignal) {
 	const btn = $('[data-back-to-top]') as HTMLButtonElement | null;
 	if (!btn) return;
@@ -181,6 +219,7 @@ function initPage() {
 	initHeader(signal);
 	initScrollSpy(signal);
 	initReveal(signal);
+	initArticleFilter(signal);
 	initBackToTop(signal);
 	scrollToHash();
 }

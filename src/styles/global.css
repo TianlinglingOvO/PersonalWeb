@@ -31,6 +31,7 @@
 html {
 	scroll-behavior: smooth;
 	scroll-padding-top: calc(var(--header-h) + 20px);
+	overflow-x: clip;
 }
 
 html,
@@ -46,6 +47,14 @@ body {
 	line-height: 1.7;
 	min-height: 100%;
 	text-rendering: optimizeLegibility;
+	overflow-x: clip;
+}
+
+.page-bg {
+	background-color: var(--bg);
+	background-image: url("/images/bg-doodle.svg");
+	background-repeat: repeat;
+	background-size: 300px 300px;
 }
 
 body.nav-open {
@@ -283,7 +292,8 @@ a:hover {
 	gap: 0.7rem;
 }
 
-.hero-art {
+.hero-art,
+.about-art {
 	position: relative;
 }
 
@@ -307,7 +317,7 @@ a:hover {
 .about-art::after {
 	content: "";
 	position: absolute;
-	inset: auto -18px -18px auto;
+	inset: auto 8% -12% auto;
 	width: 42%;
 	height: 28%;
 	background: radial-gradient(circle, var(--accent-soft), transparent 70%);
@@ -397,10 +407,77 @@ a:hover {
 	font-variant-numeric: tabular-nums;
 }
 
-.section h2 {
+.section h2,
+.page-title {
 	margin: 0;
 	font-size: 1.7rem;
 	letter-spacing: 0.03em;
+}
+
+.page-title {
+	font-size: clamp(1.7rem, 3vw, 2.1rem);
+}
+
+.section-more {
+	color: var(--accent-2);
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 0.92rem;
+	white-space: nowrap;
+	align-self: flex-end;
+}
+
+.section-more:hover {
+	color: var(--accent-deep);
+}
+
+.filter-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-bottom: 1.1rem;
+}
+
+.filter-chip {
+	min-height: 36px;
+	padding: 0.28rem 0.9rem;
+	border-radius: 999px;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	color: var(--muted);
+	font: inherit;
+	font-weight: 600;
+	font-size: 0.9rem;
+	cursor: pointer;
+}
+
+.filter-chip:hover {
+	border-color: var(--accent);
+	color: var(--accent-deep);
+}
+
+.filter-chip.is-active {
+	background: var(--accent-soft);
+	color: var(--accent-deep);
+	border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+
+.badge {
+	display: inline-block;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--accent-deep);
+	background: var(--accent-soft);
+	border-radius: 999px;
+	padding: 0.12rem 0.5rem;
+	margin-right: 0.45rem;
+	vertical-align: 0.06em;
+}
+
+.filter-empty {
+	margin: 0.4rem 0 0;
+	color: var(--muted);
 }
 
 .card-grid {
@@ -515,10 +592,16 @@ a:hover {
 	object-position: 50% 18%;
 }
 
+.services-grid {
+	align-items: start;
+}
+
 .service-card {
 	display: flex;
 	flex-direction: column;
 	gap: 0.75rem;
+	height: auto;
+	align-self: start;
 }
 
 .service-card .btn {
@@ -549,28 +632,6 @@ a:hover {
 
 .service-card details[open] summary::after {
 	content: "－";
-}
-
-#connect {
-	position: relative;
-	isolation: isolate;
-}
-
-#connect::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	z-index: 0;
-	pointer-events: none;
-	background-image: url("/images/bg-doodle.svg");
-	background-repeat: repeat;
-	background-size: 320px 320px;
-	opacity: 0.55;
-}
-
-#connect > * {
-	position: relative;
-	z-index: 1;
 }
 
 .contact-groups {
@@ -667,6 +728,11 @@ a:hover {
 	justify-content: space-between;
 	gap: 1rem;
 	flex-wrap: wrap;
+	min-width: 0;
+}
+
+.footer-inner span {
+	min-width: 0;
 }
 
 .toast-host {
@@ -773,7 +839,12 @@ dialog::backdrop {
 }
 
 .article-page {
-	padding: 2.2rem 0 4rem;
+	padding: 2.2rem 1.5rem 3rem;
+	margin-block: 1.4rem 3rem;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
 }
 
 .back-link {
@@ -839,6 +910,7 @@ html.js .reveal.is-visible {
 		radial-gradient(700px 280px at 100% 0%, var(--accent-2-soft), transparent 55%);
 	pointer-events: none;
 	z-index: 0;
+	opacity: 0.55;
 }
 
 @media (max-width: 860px) {
