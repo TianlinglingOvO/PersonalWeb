@@ -33,10 +33,10 @@ npm run preview
 | 昵称、一句话、网页标题/简介、用哪张图 | `content/site.json` |
 | 关于我 | `content/about.md` |
 | 活动卡片 | `content/projects/` 下的 `.md`（增删文件即可） |
-| 文章 | `content/articles/` 下的 `.md`（必填 `category: 教程` 或 `科普`） |
+| 文章 | `content/articles/` 下的 `.md`（支持自定义 `category`，如教程、科普、日常等，会自动生成标签筛选） |
 | 服务卡片 | `content/services/` 下的 `.md` |
 | 联系方式（主联系 / 次要） | `content/social.json` |
-| 头像、插画、微信二维码 | `public/images/` |
+| 头像、插画、矢量纹理 | `public/images/` |
 
 ### 活动 / 文章 / 服务怎么写
 
@@ -57,7 +57,7 @@ order: 1
 
 `url` 可以删掉，卡片就不可点击。`order` 数字越小越靠前。
 
-文章必须有 `title`、`date`、`description`、`category`。`category` 只能是 `教程` 或 `科普`。正文用普通 Markdown。文件名会变成网址，例如 `hello-site.md` → `/articles/hello-site/`。
+文章必须有 `title`、`date`、`description`、`category`。`category` 可以填写如 `教程`、`科普`、`日常`、`随笔` 等。正文用普通 Markdown。文件名会变成网址，例如 `hello-site.md` → `/articles/hello-site/`。
 
 ```md
 ---
@@ -68,9 +68,9 @@ category: 教程
 ---
 ```
 
-首页文章区和 `/articles/` 列表都有「全部 / 教程 / 科普」筛选。文章页会显示分类徽章。
+首页文章区和 `/articles/` 列表会自动根据已有文章聚合出分类筛选标签，文章详情页底部提供「上一篇 / 下一篇」翻页卡片与书本翻页软加载过渡。
 
-服务卡片的按钮默认指向联系区块。`ctaHref` 请继续用 `/#connect`，第一期不要接到支付或下单。在电脑上点「展开说明」时，只有当前卡片变高，旁边的卡片保持原来的高度。
+服务卡片的按钮默认指向联系区块。`ctaHref` 请继续用 `/#connect`，第一期不要接到支付或下单。在电脑上点「展开说明」时，只有当前卡片平滑展开，旁边的卡片保持原来的高度。
 
 ### 联系方式
 
@@ -83,30 +83,22 @@ category: 教程
 - `"action": "link"`：打开 `href`
 - `"action": "copy"`：点击复制 `value`
 
-第一期请继续用假 ID / 假链接。不要把真实微信号写进仓库，除非你确定要公开。
-
 ## 图片
 
-站点使用的图在 `public/images/`：
+站点使用的静态资源在 `public/images/`（以及 `public/` 根目录下的图标）：
 
 | 文件 | 用途 |
 | --- | --- |
-| `avatar.jpg` | Hero 头像 |
+| `avatar_square.jpg` | 个人头像（Hero 圆形头像） |
+| `brand-avatar.jpg` | 顶栏左侧圆形微缩头像 |
 | `welcome.jpg` | 首页右侧欢迎插画 |
-| `bedroom.jpg` | 关于我 |
-| `rain.jpg` | 联系 |
-| `cake.jpg` | 404 页 |
-| `bg-anime-cute.svg` | 全页二次元可爱纹理（软萌猫爪、少女蝴蝶结、闪烁星芒、飘落樱花瓣与梦幻爱心） |
-| `favicon.svg` | 浏览器小图标 |
+| `bedroom.jpg` | 关于我插画 |
+| `rain.jpg` | 联系方式插画 |
+| `cake.jpg` | 404 页插画 |
+| `bg-anime-cute.svg` | 全页可爱二次元纹理背景（猫爪、蝴蝶结、樱花、星芒、爱心） |
+| `favicon.png` / `favicon.ico` / `favicon.svg` | 浏览器标签栏图标（裁切自 Hello.jpg） |
 
-把同名文件换成你的图即可。建议头像接近正方形；插画用竖图也没问题。
-
-当前这几张插画来自你放进项目的原图（已压缩，方便网页加载）：
-
-- `welcome.jpg` / `avatar.jpg` ← `145439295_p0.jpg`
-- `bedroom.jpg` ← `142904287_p0.jpg`
-- `rain.jpg` ← `146003357_p0.jpg`
-- `cake.jpg` ← `131402156_p0.jpg`
+把同名文件换成你的图即可。建议头像使用 1:1 正方形图；插画使用竖图即可。如果修改了图片，建议在引用路径后加上 `?v=9` 等参数避免浏览器本地强缓存。
 
 ## 推到 GitHub
 

@@ -7,7 +7,10 @@ interface Props {
 }
 
 const { articles } = Astro.props;
-const filters = ['全部', ...articleCategories] as const;
+const dynamicCategories = Array.from(
+	new Set(articles.map((a) => a.data.category).filter(Boolean)),
+);
+const filters = ['全部', ...(dynamicCategories.length ? dynamicCategories : articleCategories)];
 ---
 
 <div class="filter-chips" data-article-filter role="group" aria-label="按分类筛选文章">

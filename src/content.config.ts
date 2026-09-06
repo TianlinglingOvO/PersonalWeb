@@ -26,7 +26,7 @@ const articles = defineCollection({
 		title: z.string(),
 		date: z.coerce.date(),
 		description: z.string(),
-		category: z.enum(['教程', '科普']),
+		category: z.string().default('教程'),
 	}),
 });
 
