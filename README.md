@@ -96,7 +96,7 @@ category: 教程
 | `bedroom.jpg` | 关于我 |
 | `rain.jpg` | 联系 |
 | `cake.jpg` | 404 页 |
-| `bg-doodle.svg` | 全页浅色涂鸦墙纸（Telegram 聊天背景那种重复小图案） |
+| `bg-doodle.svg` | 全页二次元微纹理（梦幻闪烁星芒、飘落樱花瓣与星尘点缀） |
 | `favicon.svg` | 浏览器小图标 |
 
 把同名文件换成你的图即可。建议头像接近正方形；插画用竖图也没问题。

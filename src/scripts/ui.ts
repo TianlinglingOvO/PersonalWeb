@@ -56,34 +56,60 @@ function initHeader(signal: AbortSignal) {
 
 function initScrollSpy(signal: AbortSignal) {
 	const links = $all<HTMLAnchorElement>('[data-nav-panel] [data-nav-link]');
-	const sections = links
+	const sectionItems = links
 		.map((link) => {
 			const href = link.getAttribute('href') ?? '';
 			const id = href.split('#')[1];
-			return id ? document.getElementById(id) : null;
+			const el = id ? document.getElementById(id) : null;
+			return el ? { id, el, link } : null;
 		})
-		.filter((el): el is HTMLElement => Boolean(el));
-	if (!sections.length) return;
+		.filter((item): item is { id: string; el: HTMLElement; link: HTMLAnchorElement } => Boolean(item));
+	if (!sectionItems.length) return;
 
 	const setActive = (id: string) => {
-		links.forEach((link) => {
-			const href = link.getAttribute('href') ?? '';
-			link.classList.toggle('is-active', href.endsWith(`#${id}`));
+		sectionItems.forEach((item) => {
+			item.link.classList.toggle('is-active', item.id === id);
 		});
 	};
 
-	const io = new IntersectionObserver(
-		(entries) => {
-			const visible = entries
-				.filter((entry) => entry.isIntersecting)
-				.sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-			if (visible?.target.id) setActive(visible.target.id);
-		},
-		{ rootMargin: '-28% 0px -58% 0px', threshold: [0, 0.2, 0.5, 1] },
-	);
+	let ticking = false;
+	const onScroll = () => {
+		if (ticking) return;
+		ticking = true;
+		requestAnimationFrame(() => {
+			ticking = false;
+			const scrollY = window.scrollY;
+			const docHeight = document.documentElement.scrollHeight;
+			const winHeight = window.innerHeight;
 
-	sections.forEach((section) => io.observe(section));
-	signal.addEventListener('abort', () => io.disconnect());
+			// Reached bottom of page: highlight last section (Connect)
+			if (winHeight + scrollY >= docHeight - 40) {
+				setActive(sectionItems[sectionItems.length - 1].id);
+				return;
+			}
+
+			// Reading line offset accounting for sticky header
+			const readingLine = 120;
+			let activeId = '';
+
+			for (const item of sectionItems) {
+				const rect = item.el.getBoundingClientRect();
+				if (rect.top <= readingLine) {
+					activeId = item.id;
+				}
+			}
+
+			if (activeId) {
+				setActive(activeId);
+			} else if (scrollY < 100) {
+				setActive('');
+			}
+		});
+	};
+
+	onScroll();
+	window.addEventListener('scroll', onScroll, { passive: true, signal });
+	window.addEventListener('resize', onScroll, { passive: true, signal });
 }
 
 function initReveal(signal: AbortSignal) {
@@ -93,6 +119,16 @@ function initReveal(signal: AbortSignal) {
 		els.forEach((el) => el.classList.add('is-visible'));
 		return;
 	}
+
+	// Immediately mark elements already in viewport as visible to avoid first-paint flash
+	const winHeight = window.innerHeight;
+	els.forEach((el) => {
+		const rect = el.getBoundingClientRect();
+		if (rect.top < winHeight - 20 && rect.bottom > 0) {
+			el.classList.add('is-visible');
+		}
+	});
+
 	const io = new IntersectionObserver(
 		(entries, obs) => {
 			entries.forEach((entry) => {
@@ -102,9 +138,14 @@ function initReveal(signal: AbortSignal) {
 				}
 			});
 		},
-		{ threshold: 0.08, rootMargin: '0px 0px 20% 0px' },
+		{ threshold: 0.05, rootMargin: '0px 0px -30px 0px' },
 	);
-	els.forEach((el) => io.observe(el));
+
+	els.forEach((el) => {
+		if (!el.classList.contains('is-visible')) {
+			io.observe(el);
+		}
+	});
 	signal.addEventListener('abort', () => io.disconnect());
 }
 

@@ -52,9 +52,15 @@ body {
 
 .page-bg {
 	background-color: var(--bg);
-	background-image: url("/images/bg-doodle.svg");
-	background-repeat: repeat;
-	background-size: 300px 300px;
+	background-image:
+		radial-gradient(1200px 700px at 12% 5%, rgba(251, 232, 238, 0.65), transparent 70%),
+		radial-gradient(1000px 700px at 88% 18%, rgba(237, 240, 252, 0.7), transparent 65%),
+		radial-gradient(1100px 800px at 15% 70%, rgba(254, 237, 243, 0.6), transparent 70%),
+		radial-gradient(1300px 750px at 85% 88%, rgba(243, 235, 250, 0.65), transparent 65%),
+		url("/images/bg-doodle.svg");
+	background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+	background-attachment: fixed, fixed, fixed, fixed, scroll;
+	background-size: auto, auto, auto, auto, 480px 480px;
 }
 
 body.nav-open {
@@ -419,16 +425,39 @@ a:hover {
 }
 
 .section-more {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.32rem;
+	min-height: 36px;
+	padding: 0.3rem 0.95rem;
+	border-radius: 999px;
+	border: 1px solid var(--line);
+	background: var(--surface);
 	color: var(--accent-2);
 	text-decoration: none;
 	font-weight: 600;
-	font-size: 0.92rem;
+	font-size: 0.88rem;
 	white-space: nowrap;
 	align-self: flex-end;
+	box-shadow: 0 2px 8px rgba(90, 50, 70, 0.04);
+	transition:
+		color 0.2s ease,
+		border-color 0.2s ease,
+		background 0.2s ease,
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
 }
 
 .section-more:hover {
+	border-color: var(--accent);
 	color: var(--accent-deep);
+	background: var(--accent-soft);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(226, 92, 122, 0.16);
+}
+
+.section-more:active {
+	transform: translateY(0);
 }
 
 .filter-chips {
@@ -476,8 +505,14 @@ a:hover {
 }
 
 .filter-empty {
-	margin: 0.4rem 0 0;
+	margin: 1rem 0;
+	padding: 2rem 1.5rem;
+	text-align: center;
 	color: var(--muted);
+	background: var(--surface);
+	border: 1px dashed var(--line);
+	border-radius: var(--radius);
+	font-size: 0.95rem;
 }
 
 .card-grid {
@@ -886,15 +921,15 @@ dialog::backdrop {
 
 html.js .reveal:not(.is-visible) {
 	opacity: 0;
-	transform: translateY(16px);
+	transform: translateY(14px);
 }
 
 html.js .reveal.is-visible {
 	opacity: 1;
 	transform: none;
 	transition:
-		opacity 0.55s ease,
-		transform 0.55s ease;
+		opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+		transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .bg-wash {
