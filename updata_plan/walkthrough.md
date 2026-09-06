@@ -1,34 +1,33 @@
-# PersonalWeb UI 交互与视觉优化实施总结 (v5)
+# PersonalWeb UI 交互与视觉优化实施总结 (v6)
 
-所有针对界面视觉、交互动画、导航高亮及配置的改动已全部完成，并通过了静态构建验证，已成功推送至 GitHub 仓库 `TianlinglingOvO/PersonalWeb` 主分支。Cloudflare Pages 将自动触发构建并部署至 [sutady.top](https://sutady.top)。
+根据你提出的要求，本次改动已全部完成，并通过了静态构建验证，并成功推送到 GitHub 仓库 `TianlinglingOvO/PersonalWeb` 主分支。Cloudflare Pages 将在 1~2 分钟内自动完成部署。
 
 ---
 
-## 核心改动概览
+## 本次修改内容说明
 
-### 1. 背景气质升级（二次元少女感）
-- **告别 Telegram 密集聊天壁纸**：重构了 [public/images/bg-doodle.svg](file:///home/sutady/PersonalWeb/public/images/bg-doodle.svg)，由原本密集的飞机、手柄、便签等生活线条，替换为 480×480 大尺寸、宽间距、低透明度的**四角闪耀星芒（キラキラ）、飘落樱花瓣、微风星尘十字与月牙微饰**。
-- **全页环境柔焦光晕（Ambient Glow）**：在 [src/styles/global.css](file:///home/sutady/PersonalWeb/src/styles/global.css) 的 `.page-bg` 中叠加入固定的多点平滑柔光辐射渐变（奶油米白 `#fcf8f5`、淡樱粉 `#fbe8ee` 与薰衣草淡紫 `#edf0fc`）。
-- **可读性保证**：内容卡片继续保持纯净实色白底（`--surface`），既烘托出轻盈梦幻的 ACG 氛围，又保证正文阅读清晰舒适。
+### 1. 背景彻底可爱化（消除旧图缓存 + 纯正少女风）
+- **全新独立矢量资产**：新建了 [public/images/bg-anime-cute.svg](file:///home/sutady/PersonalWeb/public/images/bg-anime-cute.svg)，并在 [src/styles/global.css](file:///home/sutady/PersonalWeb/src/styles/global.css) 中以 `url("/images/bg-anime-cute.svg?v=6")` 引入，彻底避免之前浏览器强缓存旧图导致看到公文包/笑脸的问题。
+- **纯正可爱元素**：采用**软萌猫肉垫爪爪 🐾、少女飘带蝴蝶结 🎀、日系闪烁星芒 ✨、柔美樱花瓣 🌸 与梦幻爱心 💖**，低饱和马卡龙樱粉与仙女紫，宽间隙大画布排布，彻底移除所有公文包、便签、笑脸、飞机等不相干杂物。
 
-### 2. 「全部文章」升级为精致药丸按钮
-- 在 [src/components/Articles.astro](file:///home/sutady/PersonalWeb/src/components/Articles.astro) 中将右上角链接调整为 `全部文章 →`。
-- 在 [src/styles/global.css](file:///home/sutady/PersonalWeb/src/styles/global.css) 中为 `.section-more` 赋予了胶囊药丸形状（`border-radius: 999px`）、轻微边框、底色微阴影与悬停微上浮效果（`translateY(-1px)`），与左侧的分类 chip 和全局按钮语言完美统一。
+### 2. 修复顶栏点击跳转高亮卡死问题
+- 在 [src/scripts/ui.ts](file:///home/sutady/PersonalWeb/src/scripts/ui.ts) 的 `initScrollSpy` 中：
+  - 点击任何顶栏导航项（如「活动」、「文章」），**立即点亮该项重点色**，无需等待漫长的页面滚动结束；
+  - 启动 850ms 的平滑滚动锁，避免在滑动过程中被中间的「关于」或「顶部」误触发拉回；
+  - 滚动到达后平稳过渡回正常阅读线判定。
 
-### 3. 滚动渐入动效（Scroll Reveal）调优
-- **动画曲线**：在 [src/styles/global.css](file:///home/sutady/PersonalWeb/src/styles/global.css) 中将过渡曲线精细化为 `0.38s cubic-bezier(0.16, 1, 0.3, 1)`，初始位移克制在 `14px`，手感轻巧干脆。
-- **视口感知与首屏防闪烁**：在 [src/scripts/ui.ts](file:///home/sutady/PersonalWeb/src/scripts/ui.ts) 中调整了 `IntersectionObserver` 的负边距为 `0px 0px -30px 0px`（元素露头时自然淡入），并在初始化阶段对已在视口内的首屏元素直接展示，避免刷新白屏闪烁。
-- **无障碍兼容**：在系统开启 `prefers-reduced-motion: reduce` 时自动免去位移和渐变延迟。
+### 3. 服务卡片「展开说明」丝滑交互动效
+- 在 [src/scripts/ui.ts](file:///home/sutady/PersonalWeb/src/scripts/ui.ts) 中通过原生 Web Animations API 为 `.service-card details` 添加了平滑折叠动画：
+  - 点击「展开说明」：高度从 0 渐进展开到自适应真实高度，透明度伴随 `0 -> 1` 平滑浮现（`cubic-bezier(0.16, 1, 0.3, 1)`）；
+  - 再次点击：高度与透明度平滑向上收起至 0，告别原生硬生生的瞬间突变；
+  - 右侧的 `＋` / `－` 指示符号添加了平滑旋转和颜色过渡。
 
-### 4. 彻底修复 Sticky Nav 导航高亮
-- 针对滚到页面最底部 `#connect`（联系我）时导航错停在「服务」的问题，在 [src/scripts/ui.ts](file:///home/sutady/PersonalWeb/src/scripts/ui.ts) 的 `initScrollSpy` 中重构了滚动监听：
-  1. 增加了**触底阈值保护**：当页面滚动接近文档最底部时，无条件将当前高亮直接赋予最后一个导航项「联系」；
-  2. 结合 **120px 阅读基准线算法**，让关于、活动、文章、服务、联系在各种屏幕尺寸与滚动速度下均能丝滑精准切换。
-
-### 5. 其它设置与文档完善
-- **Astro 站点配置**：在 [astro.config.mjs](file:///home/sutady/PersonalWeb/astro.config.mjs) 中补充了 `site: 'https://sutady.top'`，使静态页面生成的规范链接（Canonical URL）准确指向你的线上域名。
-- **分类筛选空状态**：优化了 [src/styles/global.css](file:///home/sutady/PersonalWeb/src/styles/global.css) 中的 `.filter-empty`，居中卡片展示更友好。
-- **文档同步**：更新了 [README.md](file:///home/sutady/PersonalWeb/README.md) 中关于背景素材的描述，并在 [updata_plan/fix-plan-v5.md](file:///home/sutady/PersonalWeb/updata_plan/fix-plan-v5.md) 中勾选全部已完成项。
+### 4. 联系板块文案调整
+- 在 [src/components/Connect.astro](file:///home/sutady/PersonalWeb/src/components/Connect.astro) 中将分组标题修改为：
+  - 「即时通讯」 → **「社交账号」**
+  - 「社交」 → **「海外账号」**
+  - 「邮箱与开发」 → **「其他方式」**
+- 同步更新了 [README.md](file:///home/sutady/PersonalWeb/README.md) 中的相关说明。
 
 ---
 
@@ -38,7 +37,8 @@
    ```bash
    npm run build
    ```
-   ✓ 5 个静态路由（首页、404、文章列表、各文章详情）全部在 1.05s 内秒级静态生成，0 告警，0 错误。
+   ✓ 5 个静态路由全部在 1.28s 内构建完成，0 报错。
 2. **Git 提交与推送**：
-   - 提交信息：`UI overhaul: Anime pastel ambient background, pill button for articles, smooth scroll reveal, and nav scrollspy fix`
-   - 推送分支：`main` -> `origin/main`
+   - 提交信息：`UI & interaction: cute anime motifs, instant nav highlight, smooth service accordion, and copy update`
+   - 推送分支：`main` -> `origin/main` (commit `06facf5`)
+
