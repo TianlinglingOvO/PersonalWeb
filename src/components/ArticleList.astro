@@ -9,65 +9,70 @@ interface Props {
 	showExpand?: boolean;
 }
 
-const { articles, limit, showExpand = false } = Astro.props;
+const { articles, limit = 0, showExpand = false } = Astro.props;
 const dynamicCategories = Array.from(
 	new Set(articles.map((a) => a.data.category).filter(Boolean)),
 );
 const filters = ['全部', ...(dynamicCategories.length ? dynamicCategories : articleCategories)];
-const hasOverflow = Boolean(showExpand && limit && articles.length > limit);
+const hasOverflow = Boolean(showExpand && limit > 0 && articles.length > limit);
 ---
 
-<div class="filter-chips" data-article-filter role="group" aria-label="按分类筛选文章">
-	{
-		filters.map((label, index) => (
-			<button
-				class:list={['filter-chip', { 'is-active': index === 0 }]}
-				type="button"
-				data-filter={label === '全部' ? 'all' : label}
-				aria-pressed={index === 0 ? 'true' : 'false'}
-			>
-				{label}
-			</button>
-		))
-	}
-</div>
-<div class="card-grid card-scroll-mobile" data-article-list>
-	{
-		articles.map((article, index) => {
-			const isOverflow = hasOverflow && index >= (limit ?? 4);
-			return (
-				<a
-					class:list={['card card-link', { 'article-card-overflow': isOverflow }]}
-					href={`/articles/${article.id}/`}
-					data-category={article.data.category}
-					data-overflow={isOverflow ? 'true' : undefined}
+<div class="article-list-controller" data-article-controller data-limit={limit}>
+	<div class="filter-chips" data-article-filter role="group" aria-label="按分类筛选文章">
+		{
+			filters.map((label, index) => (
+				<button
+					class:list={['filter-chip', { 'is-active': index === 0 }]}
+					type="button"
+					data-filter={label === '全部' ? 'all' : label}
+					aria-pressed={index === 0 ? 'true' : 'false'}
 				>
-					<p class="meta">
-						<span class="badge">{article.data.category}</span>
-						{formatDate(article.data.date)}
-					</p>
-					<h3>{article.data.title}</h3>
-					<p>{article.data.description}</p>
-				</a>
-			);
-		})
+					{label}
+				</button>
+			))
+		}
+	</div>
+
+	<div class="card-grid" data-article-list>
+		{
+			articles.map((article, index) => {
+				const isInitialOverflow = hasOverflow && index >= limit;
+				return (
+					<a
+						class:list={['card card-link', { 'article-card-overflow': isInitialOverflow }]}
+						href={`/articles/${article.id}/`}
+						data-category={article.data.category}
+						data-overflow={isInitialOverflow ? 'true' : undefined}
+						style={isInitialOverflow ? 'display: none;' : undefined}
+					>
+						<p class="meta">
+							<span class="badge">{article.data.category}</span>
+							{formatDate(article.data.date)}
+						</p>
+						<h3>{article.data.title}</h3>
+						<p>{article.data.description}</p>
+					</a>
+				);
+			})
+		}
+	</div>
+
+	{
+		hasOverflow && (
+			<div class="articles-expand-row" data-articles-expand-row>
+				<button
+					class="btn-expand-articles"
+					type="button"
+					data-articles-toggle
+					aria-expanded="false"
+				>
+					<span class="expand-btn-text">展开更多文章 (还有 {articles.length - limit} 篇) ↓</span>
+					<Icon name="chevron-down" class="expand-btn-icon" />
+				</button>
+			</div>
+		)
 	}
+
+	<p class="filter-empty" data-article-empty hidden>这一类暂时没有文章。</p>
 </div>
-{
-	hasOverflow && (
-		<div class="articles-expand-row">
-			<button
-				class="btn-expand-articles"
-				type="button"
-				data-articles-toggle
-				data-remaining={articles.length - (limit ?? 4)}
-				aria-expanded="false"
-			>
-				<span class="expand-btn-text">展开更多文章 (还有 {articles.length - (limit ?? 4)} 篇)</span>
-				<Icon name="chevron-down" class="expand-btn-icon" />
-			</button>
-		</div>
-	)
-}
-<p class="filter-empty" data-article-empty hidden>这一类暂时没有文章。</p>
 

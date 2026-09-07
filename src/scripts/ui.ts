@@ -263,75 +263,106 @@ function initReveal(signal: AbortSignal) {
 	signal.addEventListener('abort', () => io.disconnect());
 }
 
-function initArticleFilter(signal: AbortSignal) {
-	const toolbars = $all('[data-article-filter]');
-	if (!toolbars.length) return;
+function initArticleController(signal: AbortSignal) {
+	const controllers = $all<HTMLElement>('[data-article-controller]');
+	if (!controllers.length) return;
 
-	toolbars.forEach((toolbar) => {
-		const root = toolbar.closest('section') ?? toolbar.parentElement;
-		if (!root) return;
-		const cards = $all<HTMLElement>('[data-article-list] [data-category]', root);
-		const empty = $('[data-article-empty]', root) as HTMLElement | null;
-		const chips = $all<HTMLButtonElement>('[data-filter]', toolbar);
+	controllers.forEach((ctrl) => {
+		const limit = parseInt(ctrl.getAttribute('data-limit') || '0', 10);
+		const cards = $all<HTMLElement>('[data-article-list] [data-category]', ctrl);
+		const empty = $('[data-article-empty]', ctrl) as HTMLElement | null;
+		const chips = $all<HTMLButtonElement>('[data-filter]', ctrl);
+		const expandRow = $('[data-articles-expand-row]', ctrl) as HTMLElement | null;
+		const toggleBtn = $('[data-articles-toggle]', ctrl) as HTMLButtonElement | null;
+		const textSpan = toggleBtn?.querySelector('.expand-btn-text') as HTMLElement | null;
 
-		const apply = (value: string) => {
-			chips.forEach((chip) => {
-				const on = chip.getAttribute('data-filter') === value;
-				chip.classList.toggle('is-active', on);
-				chip.setAttribute('aria-pressed', String(on));
+		let currentFilter = 'all';
+		let isExpanded = false;
+
+		const render = () => {
+			const matchedCards = cards.filter((card) => {
+				const cat = card.getAttribute('data-category');
+				return currentFilter === 'all' || cat === currentFilter;
 			});
-			let visible = 0;
-			cards.forEach((card) => {
-				const match = value === 'all' || card.getAttribute('data-category') === value;
-				card.hidden = !match;
-				card.style.display = match ? '' : 'none';
-				if (match) visible += 1;
+
+			cards.forEach((c) => {
+				c.hidden = true;
+				c.style.display = 'none';
+				c.classList.remove('article-card-overflow');
 			});
+
+			const total = matchedCards.length;
 			if (empty) {
-				empty.hidden = visible > 0;
-				empty.style.display = visible > 0 ? 'none' : '';
+				empty.hidden = total > 0;
+				empty.style.display = total > 0 ? 'none' : '';
+			}
+
+			if (limit > 0 && total > limit) {
+				if (expandRow) {
+					expandRow.hidden = false;
+					expandRow.style.display = 'flex';
+				}
+				const visibleCount = isExpanded ? total : limit;
+				matchedCards.forEach((card, idx) => {
+					const show = idx < visibleCount;
+					card.hidden = !show;
+					card.style.display = show ? '' : 'none';
+					if (!show) card.classList.add('article-card-overflow');
+				});
+
+				if (toggleBtn) {
+					toggleBtn.setAttribute('aria-expanded', String(isExpanded));
+					toggleBtn.classList.toggle('is-active', isExpanded);
+				}
+				if (textSpan) {
+					const remaining = total - limit;
+					textSpan.textContent = isExpanded
+						? '收起文章 ↑'
+						: `展开更多文章 (还有 ${remaining} 篇) ↓`;
+				}
+			} else {
+				if (expandRow) {
+					expandRow.hidden = true;
+					expandRow.style.display = 'none';
+				}
+				matchedCards.forEach((card) => {
+					card.hidden = false;
+					card.style.display = '';
+				});
+				if (toggleBtn) {
+					toggleBtn.setAttribute('aria-expanded', 'false');
+					toggleBtn.classList.remove('is-active');
+				}
 			}
 		};
 
-		toolbar.addEventListener(
-			'click',
-			(event) => {
-				const chip = (event.target as HTMLElement | null)?.closest('[data-filter]');
-				if (!chip) return;
-				apply(chip.getAttribute('data-filter') ?? 'all');
-			},
-			{ signal },
-		);
-	});
-}
+		chips.forEach((chip) => {
+			chip.addEventListener(
+				'click',
+				() => {
+					chips.forEach((c) => {
+						const on = c === chip;
+						c.classList.toggle('is-active', on);
+						c.setAttribute('aria-pressed', String(on));
+					});
+					currentFilter = chip.getAttribute('data-filter') ?? 'all';
+					isExpanded = false;
+					render();
+				},
+				{ signal },
+			);
+		});
 
-function initHomepageArticleExpand(signal: AbortSignal) {
-	const toggleBtns = $all<HTMLButtonElement>('[data-articles-toggle]');
-	if (!toggleBtns.length) return;
-
-	toggleBtns.forEach((btn) => {
-		const root = btn.closest('section') ?? btn.parentElement;
-		if (!root) return;
-		const grid = root.querySelector('[data-article-list]') as HTMLElement | null;
-		if (!grid) return;
-
-		const remaining = btn.getAttribute('data-remaining') ?? '';
-		const textSpan = btn.querySelector('.expand-btn-text') as HTMLElement | null;
-
-		btn.addEventListener(
+		toggleBtn?.addEventListener(
 			'click',
 			() => {
-				const isExpanded = grid.classList.toggle('is-expanded');
-				btn.setAttribute('aria-expanded', String(isExpanded));
-				btn.classList.toggle('is-active', isExpanded);
-				if (textSpan) {
-					textSpan.textContent = isExpanded
-						? '收起文章 ↑'
-						: `展开更多文章${remaining ? ` (还有 ${remaining} 篇)` : ''} ↓`;
-				}
+				isExpanded = !isExpanded;
+				render();
 			},
 			{ signal },
 		);
+
+		render();
 	});
 }
 
@@ -339,30 +370,90 @@ function initSidebarNavFilterAndCollapse(signal: AbortSignal) {
 	const layout = $('[data-article-layout]') as HTMLElement | null;
 	const collapseBtn = $('[data-sidebar-collapse]') as HTMLButtonElement | null;
 	const expandBtn = $('[data-sidebar-expand]') as HTMLButtonElement | null;
-	const select = $('[data-sidebar-category-filter]') as HTMLSelectElement | null;
+	const dropdown = $('[data-sidebar-category-dropdown]') as HTMLElement | null;
 	const items = $all<HTMLElement>('[data-sidebar-item]');
 	const emptyHint = $('[data-sidebar-empty]') as HTMLElement | null;
 
-	// 1. 下拉分类筛选
-	if (select && items.length) {
-		select.addEventListener(
-			'change',
-			() => {
-				const selectedCat = select.value;
-				let visible = 0;
-				items.forEach((item) => {
-					const match = selectedCat === 'all' || item.getAttribute('data-sidebar-category') === selectedCat;
-					item.hidden = !match;
-					item.style.display = match ? '' : 'none';
-					if (match) visible++;
-				});
-				if (emptyHint) {
-					emptyHint.hidden = visible > 0;
-					emptyHint.style.display = visible > 0 ? 'none' : 'block';
+	// 1. 自定义马卡龙圆角下拉菜单
+	if (dropdown) {
+		const trigger = $('[data-dropdown-trigger]', dropdown) as HTMLButtonElement | null;
+		const triggerText = $('[data-dropdown-text]', dropdown) as HTMLElement | null;
+		const panel = $('[data-dropdown-panel]', dropdown) as HTMLElement | null;
+		const options = $all<HTMLButtonElement>('[role="option"]', panel ?? dropdown);
+
+		const setDropdownOpen = (open: boolean) => {
+			if (!panel || !trigger) return;
+			panel.hidden = !open;
+			panel.classList.toggle('is-open', open);
+			trigger.setAttribute('aria-expanded', String(open));
+			trigger.classList.toggle('is-active', open);
+		};
+
+		trigger?.addEventListener(
+			'click',
+			(e) => {
+				e.stopPropagation();
+				const isOpen = panel?.classList.contains('is-open') ?? false;
+				setDropdownOpen(!isOpen);
+			},
+			{ signal },
+		);
+
+		// 点击外部收起下拉
+		document.addEventListener(
+			'click',
+			(e) => {
+				if (!dropdown.contains(e.target as Node)) {
+					setDropdownOpen(false);
 				}
 			},
 			{ signal },
 		);
+
+		// 按 Esc 收起下拉
+		document.addEventListener(
+			'keydown',
+			(e) => {
+				if (e.key === 'Escape') {
+					setDropdownOpen(false);
+				}
+			},
+			{ signal },
+		);
+
+		options.forEach((opt) => {
+			opt.addEventListener(
+				'click',
+				(e) => {
+					e.stopPropagation();
+					const val = opt.getAttribute('data-value') ?? 'all';
+					const label = opt.querySelector('.dropdown-option-label')?.textContent ?? '全部分类';
+
+					options.forEach((o) => {
+						const on = o === opt;
+						o.classList.toggle('is-selected', on);
+						o.setAttribute('aria-selected', String(on));
+					});
+
+					if (triggerText) triggerText.textContent = label;
+					setDropdownOpen(false);
+
+					let visible = 0;
+					items.forEach((item) => {
+						const match = val === 'all' || item.getAttribute('data-sidebar-category') === val;
+						item.hidden = !match;
+						item.style.display = match ? '' : 'none';
+						if (match) visible++;
+					});
+
+					if (emptyHint) {
+						emptyHint.hidden = visible > 0;
+						emptyHint.style.display = visible > 0 ? 'none' : 'block';
+					}
+				},
+				{ signal },
+			);
+		});
 	}
 
 	// 2. 侧栏展开与收起联动
@@ -545,8 +636,7 @@ function initPage() {
 	initScrollSpy(signal);
 	initTableOfContents(signal);
 	initReveal(signal);
-	initArticleFilter(signal);
-	initHomepageArticleExpand(signal);
+	initArticleController(signal);
 	initSidebarNavFilterAndCollapse(signal);
 	initDetailsAnimation(signal);
 	initBackToTop(signal);

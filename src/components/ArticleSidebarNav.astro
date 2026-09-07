@@ -30,12 +30,50 @@ const categories = Array.from(new Set(posts.map((p) => p.data.category).filter(B
 			<span>切换文章</span>
 		</div>
 		<div class="sidebar-heading-actions">
-			<div class="sidebar-select-wrapper">
-				<select class="sidebar-category-select" data-sidebar-category-filter aria-label="按分类筛选文章">
-					<option value="all">全部分类</option>
-					{categories.map((cat) => <option value={cat}>{cat}</option>)}
-				</select>
+			<!-- 自定义马卡龙圆角分类下拉选择器 -->
+			<div class="sidebar-category-dropdown" data-sidebar-category-dropdown>
+				<button
+					type="button"
+					class="sidebar-dropdown-trigger"
+					data-dropdown-trigger
+					aria-haspopup="listbox"
+					aria-expanded="false"
+					title="按分类筛选文章"
+				>
+					<span class="dropdown-trigger-text" data-dropdown-text>全部分类</span>
+					<Icon name="chevron-down" class="dropdown-trigger-icon" />
+				</button>
+				<div class="sidebar-dropdown-panel" data-dropdown-panel role="listbox" hidden>
+					<button
+						type="button"
+						class="sidebar-dropdown-option is-selected"
+						role="option"
+						data-value="all"
+						aria-selected="true"
+					>
+						<span class="dropdown-option-label">全部分类</span>
+						<span class="dropdown-option-badge">{posts.length}</span>
+					</button>
+					{
+						categories.map((cat) => {
+							const count = posts.filter((p) => p.data.category === cat).length;
+							return (
+								<button
+									type="button"
+									class="sidebar-dropdown-option"
+									role="option"
+									data-value={cat}
+									aria-selected="false"
+								>
+									<span class="dropdown-option-label">{cat}</span>
+									<span class="dropdown-option-badge">{count}</span>
+								</button>
+							);
+						})
+					}
+				</div>
 			</div>
+
 			<button
 				class="sidebar-collapse-btn"
 				type="button"

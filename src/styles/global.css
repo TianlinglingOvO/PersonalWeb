@@ -544,12 +544,21 @@ a:hover {
 
 .card-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
-	gap: 1rem;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1.15rem;
 }
 
-.card-grid:not(.is-expanded) .article-card-overflow {
-	display: none !important;
+@media (max-width: 960px) {
+	.card-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 640px) {
+	.card-grid {
+		grid-template-columns: 1fr;
+		gap: 0.9rem;
+	}
 }
 
 .articles-expand-row {
@@ -1214,32 +1223,120 @@ dialog::backdrop {
 	gap: 0.35rem;
 }
 
-.sidebar-select-wrapper {
+/* Sidebar Category Custom Dropdown */
+.sidebar-category-dropdown {
 	position: relative;
 }
 
-.sidebar-category-select {
-	appearance: none;
-	-webkit-appearance: none;
+.sidebar-dropdown-trigger {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
 	background: var(--bg-soft);
 	border: 1px solid var(--line);
-	border-radius: 8px;
-	padding: 0.22rem 1.45rem 0.22rem 0.55rem;
-	font-size: 0.74rem;
+	border-radius: 999px;
+	padding: 0.22rem 0.65rem;
+	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--ink);
 	cursor: pointer;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236d6570' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-	background-repeat: no-repeat;
-	background-position: right 0.35rem center;
-	background-size: 10px;
-	transition: border-color 0.15s ease, background-color 0.15s ease;
+	transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+	user-select: none;
 }
 
-.sidebar-category-select:hover,
-.sidebar-category-select:focus {
-	border-color: var(--accent);
-	outline: none;
+.sidebar-dropdown-trigger:hover,
+.sidebar-dropdown-trigger.is-active {
+	background: var(--accent-soft);
+	border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+	color: var(--accent-deep);
+}
+
+.dropdown-trigger-icon {
+	width: 12px;
+	height: 12px;
+	color: var(--muted);
+	transition: transform 0.2s ease;
+}
+
+.sidebar-dropdown-trigger.is-active .dropdown-trigger-icon {
+	transform: rotate(180deg);
+	color: var(--accent);
+}
+
+.sidebar-dropdown-panel {
+	position: absolute;
+	top: calc(100% + 6px);
+	right: 0;
+	min-width: 135px;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	padding: 0.35rem;
+	box-shadow:
+		0 10px 28px rgba(226, 92, 122, 0.14),
+		0 2px 8px rgba(34, 25, 36, 0.06);
+	z-index: 50;
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-4px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+.sidebar-dropdown-option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	width: 100%;
+	padding: 0.35rem 0.65rem;
+	border-radius: 8px;
+	border: none;
+	background: transparent;
+	font-size: 0.78rem;
+	font-weight: 500;
+	color: var(--ink);
+	cursor: pointer;
+	text-align: left;
+	transition: all 0.15s ease;
+}
+
+.sidebar-dropdown-option:hover {
+	background: var(--accent-soft);
+	color: var(--accent-deep);
+	transform: translateX(2px);
+}
+
+.sidebar-dropdown-option.is-selected {
+	background: var(--accent-soft);
+	color: var(--accent-deep);
+	font-weight: 700;
+}
+
+.dropdown-option-badge {
+	font-size: 0.7rem;
+	padding: 0.05rem 0.4rem;
+	border-radius: 999px;
+	background: var(--bg-soft);
+	color: var(--muted);
+	font-weight: 600;
+}
+
+.sidebar-dropdown-option.is-selected .dropdown-option-badge {
+	background: var(--surface);
+	color: var(--accent-deep);
 }
 
 .sidebar-collapse-btn {
@@ -1664,30 +1761,6 @@ html.js .reveal.is-visible {
 	.card-grid,
 	.contact-grid {
 		grid-template-columns: 1fr;
-	}
-
-	.card-scroll-mobile {
-		display: flex !important;
-		overflow-x: auto !important;
-		scroll-snap-type: x mandatory;
-		scroll-behavior: smooth;
-		-webkit-overflow-scrolling: touch;
-		gap: 0.95rem !important;
-		padding-block: 0.35rem 0.95rem !important;
-		margin-inline: -1rem;
-		padding-inline: 1rem;
-		scrollbar-width: none;
-	}
-
-	.card-scroll-mobile::-webkit-scrollbar {
-		display: none;
-	}
-
-	.card-scroll-mobile > * {
-		flex: 0 0 min(285px, 80vw) !important;
-		max-width: min(285px, 80vw);
-		scroll-snap-align: start;
-		margin: 0;
 	}
 
 	.article-layout-container {
