@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560" width="560" height="560">
+  <defs>
+    <!-- 典雅蝴蝶结 (Refined Ribbon Bow) -->
+    <g id="ribbon-bow">
+      <!-- 左翼弧形 -->
+      <path d="M 0,-1 C -4.5,-8.5 -16,-7.5 -16,-1 C -16,5 -6,5.5 0,0.5 Z" />
+      <!-- 右翼弧形 -->
+      <path d="M 0,-1 C 4.5,-8.5 16,-7.5 16,-1 C 16,5 6,5.5 0,0.5 Z" />
+      <!-- 中心结 -->
+      <ellipse cx="0" cy="-0.2" rx="2.4" ry="2.2" />
+      <!-- 飘带 -->
+      <path d="M -1.8,2 C -4.5,7 -8.5,11.5 -12.5,14.5 M 1.8,2 C 4.5,7 8.5,11.5 12.5,14.5" />
+    </g>
+
+    <!-- 工业级标准 4 点星芒 (Precision Sparkle) -->
+    <path id="sparkle-lg" d="M 0,-16 Q 0,-1.2 15,0 Q 0,1.2 0,16 Q 0,1.2 -15,0 Q 0,-1.2 0,-16 Z" />
+    <path id="sparkle-sm" d="M 0,-8.5 Q 0,-0.8 8,0 Q 0,0.8 0,8.5 Q 0,0.8 -8,0 Q 0,-0.8 0,-8.5 Z" />
+
+    <!-- 标准治愈系心形 (Cardioid Heart) -->
+    <path id="heart-cute" d="M 0,3.5 C -3,-2.5 -11.5,-2.5 -11.5,4 C -11.5,9.5 -4,14 0,18 C 4,14 11.5,9.5 11.5,4 C 11.5,-2.5 3,-2.5 0,3.5 Z" />
+
+    <!-- 标准猫爪印 (Precision Paw Print) -->
+    <g id="paw-print">
+      <!-- 掌心肉垫 -->
+      <path d="M -7,3 C -7.5,-0.5 -4.5,-3 0,-3 C 4.5,-3 7.5,-0.5 7,3 C 6.5,6.5 3.5,8.5 0,8.5 C -3.5,8.5 -6.5,6.5 -7,3 Z" />
+      <!-- 4 指节 -->
+      <ellipse cx="-7.5" cy="-6.5" rx="2.2" ry="3.2" transform="rotate(-20 -7.5 -6.5)" />
+      <!-- 中左趾 -->
+      <ellipse cx="-2.6" cy="-9.5" rx="2.3" ry="3.5" transform="rotate(-6 -2.6 -9.5)" />
+      <!-- 中右趾 -->
+      <ellipse cx="2.6" cy="-9.5" rx="2.3" ry="3.5" transform="rotate(6 2.6 -9.5)" />
+      <!-- 外右趾 -->
+      <ellipse cx="7.5" cy="-6.5" rx="2.2" ry="3.2" transform="rotate(20 7.5 -6.5)" />
+    </g>
+
+    <!-- 典雅落樱瓣 (Sakura Petal) -->
+    <path id="sakura-petal" d="M 0,-12 C 6,-8 9,-1.5 7.5,5.5 C 6,11.5 1.5,13.5 0,13 C -1.5,13.5 -6,11.5 -7.5,5.5 C -9,-1.5 -6,-8 0,-12 Z" />
+
+    <!-- 雅致微弯月 (Crescent Moon) -->
+    <path id="crescent-moon" d="M 3,-8.5 A 9 9 0 1 0 3,8.5 A 7 7 0 1 1 3,-8.5 Z" />
+
+    <!-- 微十字微光 (Twinkle Cross) -->
+    <path id="twinkle-cross" d="M -4.5,0 L 4.5,0 M 0,-4.5 L 0,4.5" />
+  </defs>
+
+  <!-- 柔粉调矢量图层 (Soft Rose / Mauve Pink) -->
+  <g fill="none" stroke="#e25c7a" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round" opacity="0.32">
+    <!-- 蝴蝶结 1 -->
+    <g transform="translate(90, 80) rotate(-10)">
+      <use href="#ribbon-bow" fill="#e25c7a" fill-opacity="0.09" />
+    </g>
+    <!-- 蝴蝶结 2 -->
+    <g transform="translate(370, 360) rotate(14)">
+      <use href="#ribbon-bow" fill="#e25c7a" fill-opacity="0.09" />
+    </g>
+
+    <!-- 猫爪印 1 -->
+    <g transform="translate(290, 110) rotate(15)">
+      <use href="#paw-print" fill="#e25c7a" fill-opacity="0.10" />
+    </g>
+    <!-- 猫爪印 2 -->
+    <g transform="translate(110, 430) rotate(-18)">
+      <use href="#paw-print" fill="#e25c7a" fill-opacity="0.10" />
+    </g>
+
+    <!-- 爱心 -->
+    <g transform="translate(470, 130) rotate(-12)">
+      <use href="#heart-cute" fill="#e25c7a" fill-opacity="0.10" />
+    </g>
+    <g transform="translate(230, 480) rotate(8)">
+      <use href="#heart-cute" fill="#e25c7a" fill-opacity="0.10" />
+    </g>
+
+    <!-- 星芒大 -->
+    <use href="#sparkle-lg" x="180" y="240" fill="#e25c7a" fill-opacity="0.07" />
+    <use href="#sparkle-lg" x="490" y="440" fill="#e25c7a" fill-opacity="0.07" />
+
+    <!-- 樱花瓣 -->
+    <g transform="translate(390, 230) rotate(35)">
+      <use href="#sakura-petal" fill="#e25c7a" fill-opacity="0.08" />
+    </g>
+    <g transform="translate(50, 270) rotate(-25)">
+      <use href="#sakura-petal" fill="#e25c7a" fill-opacity="0.08" />
+    </g>
+
+    <!-- 弯月 -->
+    <g transform="translate(430, 40) rotate(-20)">
+      <use href="#crescent-moon" fill="#e25c7a" fill-opacity="0.10" />
+    </g>
+  </g>
+
+  <!-- 柔蓝浅紫互补光尘图层 (Soft Periwinkle Blue Accents) -->
+  <g fill="none" stroke="#6b7ecb" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.28">
+    <!-- 星芒小 -->
+    <use href="#sparkle-sm" x="110" y="180" fill="#6b7ecb" fill-opacity="0.08" />
+    <use href="#sparkle-sm" x="320" y="440" fill="#6b7ecb" fill-opacity="0.08" />
+    <use href="#sparkle-sm" x="250" y="30" fill="#6b7ecb" fill-opacity="0.08" />
+    <use href="#sparkle-sm" x="480" y="290" fill="#6b7ecb" fill-opacity="0.08" />
+
+    <!-- 极微十字闪光 -->
+    <use href="#twinkle-cross" x="200" y="110" />
+    <use href="#twinkle-cross" x="420" y="170" />
+    <use href="#twinkle-cross" x="280" y="320" />
+    <use href="#twinkle-cross" x="70" y="360" />
+    <use href="#twinkle-cross" x="510" y="80" />
+    <use href="#twinkle-cross" x="160" y="520" />
+
+    <!-- 灵动微小点 -->
+    <circle cx="150" cy="50" r="1.4" fill="#6b7ecb" fill-opacity="0.45" stroke="none" />
+    <circle cx="340" cy="190" r="1.4" fill="#6b7ecb" fill-opacity="0.45" stroke="none" />
+    <circle cx="430" cy="490" r="1.4" fill="#6b7ecb" fill-opacity="0.45" stroke="none" />
+    <circle cx="40" cy="480" r="1.4" fill="#6b7ecb" fill-opacity="0.45" stroke="none" />
+    <circle cx="210" cy="380" r="1.4" fill="#6b7ecb" fill-opacity="0.45" stroke="none" />
+  </g>
+</svg>

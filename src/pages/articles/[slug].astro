@@ -2,6 +2,8 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
+import TableOfContents from '../../components/TableOfContents.astro';
+import ArticleSidebarNav from '../../components/ArticleSidebarNav.astro';
 import { formatDate, site } from '../../lib/site';
 
 export async function getStaticPaths() {
@@ -12,6 +14,7 @@ export async function getStaticPaths() {
 		params: { slug: post.id },
 		props: {
 			post,
+			allPosts: posts,
 			prevPost: index < posts.length - 1 ? posts[index + 1] : null,
 			nextPost: index > 0 ? posts[index - 1] : null,
 		},
@@ -20,46 +23,92 @@ export async function getStaticPaths() {
 
 interface Props {
 	post: CollectionEntry<'articles'>;
+	allPosts: CollectionEntry<'articles'>[];
 	prevPost?: CollectionEntry<'articles'> | null;
 	nextPost?: CollectionEntry<'articles'> | null;
 }
 
-const { post, prevPost, nextPost } = Astro.props;
-const { Content } = await render(post);
+const { post, allPosts, prevPost, nextPost } = Astro.props;
+const { Content, headings } = await render(post);
+const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
 <BaseLayout title={`${post.data.title} · ${site.name}`} description={post.data.description}>
-	<article class="article-page wrap-narrow">
-		<a class="back-link" href="/#articles"><Icon name="arrow" /> 返回首页</a>
-		<p class="meta">
-			<span class="badge">{post.data.category}</span>
-			{formatDate(post.data.date)}
-		</p>
-		<h1>{post.data.title}</h1>
-		<div class="prose">
-			<Content />
-		</div>
-		<nav class="article-nav" aria-label="文章上下篇导航">
-			{
-				prevPost ? (
-					<a class="article-nav-card prev" href={`/articles/${prevPost.id}/`}>
-						<span class="nav-direction">← 上一篇</span>
-						<span class="nav-title">{prevPost.data.title}</span>
-					</a>
-				) : (
-					<div />
-				)
-			}
-			{
-				nextPost ? (
-					<a class="article-nav-card next" href={`/articles/${nextPost.id}/`}>
-						<span class="nav-direction">下一篇 →</span>
-						<span class="nav-title">{nextPost.data.title}</span>
-					</a>
-				) : (
-					<div />
-				)
-			}
-		</nav>
-	</article>
+	<div class="article-layout-container wrap-wide" data-article-layout>
+		<!-- 左侧：文章快速切换侧栏 (桌面宽屏) -->
+		<ArticleSidebarNav currentSlug={post.id} posts={allPosts} class="desktop-sidebar" />
+
+		<!-- 侧栏收起时在最左侧浮现的展开胶囊按钮 -->
+		<button
+			class="sidebar-float-expand-btn desktop-sidebar"
+			type="button"
+			data-sidebar-expand
+			aria-label="展开文章侧栏"
+			title="展开文章列表侧栏"
+		>
+			<Icon name="chevron-right" />
+			<span>文章列表</span>
+		</button>
+
+		<!-- 中间：文章主体内容 -->
+		<main class="article-main-column">
+			<article class="article-page">
+				<a class="back-link" href="/#articles"><Icon name="arrow" /> 返回首页</a>
+				<p class="meta">
+					<span class="badge">{post.data.category}</span>
+					{formatDate(post.data.date)}
+				</p>
+				<h1>{post.data.title}</h1>
+
+				<!-- 移动端 / 中屏折叠目录 -->
+				{
+					filteredHeadings.length > 0 && (
+						<details class="mobile-toc-details">
+							<summary class="mobile-toc-summary">
+								<span class="mobile-toc-summary-left">
+									<Icon name="list" />
+									<span>本文目录导航 (点击展开)</span>
+								</span>
+								<Icon name="chevron-down" class="mobile-toc-chevron" />
+							</summary>
+							<TableOfContents headings={headings} class="mobile-toc-inner" />
+						</details>
+					)
+				}
+
+				<div class="prose">
+					<Content />
+				</div>
+
+				<nav class="article-nav" aria-label="文章上下篇导航">
+					{
+						prevPost ? (
+							<a class="article-nav-card prev" href={`/articles/${prevPost.id}/`}>
+								<span class="nav-direction">← 上一篇</span>
+								<span class="nav-title">{prevPost.data.title}</span>
+							</a>
+						) : (
+							<div />
+						)
+					}
+					{
+						nextPost ? (
+							<a class="article-nav-card next" href={`/articles/${nextPost.id}/`}>
+								<span class="nav-direction">下一篇 →</span>
+								<span class="nav-title">{nextPost.data.title}</span>
+							</a>
+						) : (
+							<div />
+						)
+					}
+				</nav>
+			</article>
+		</main>
+
+		<!-- 右侧：目录大纲树 (桌面宽屏) -->
+		<aside class="article-toc-column desktop-toc" aria-label="文章目录侧栏">
+			<TableOfContents headings={headings} />
+		</aside>
+	</div>
 </BaseLayout>
+

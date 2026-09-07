@@ -132,6 +132,100 @@ function initScrollSpy(signal: AbortSignal) {
 	window.addEventListener('resize', onScroll, { passive: true, signal });
 }
 
+function initTableOfContents(signal: AbortSignal) {
+	const tocContainers = $all('[data-toc]');
+	if (!tocContainers.length) return;
+
+	const links = $all<HTMLAnchorElement>('[data-toc-link]');
+	if (!links.length) return;
+
+	const headingItems = links
+		.map((link) => {
+			const slug = link.getAttribute('data-toc-link');
+			const el = slug ? document.getElementById(slug) : null;
+			return el ? { slug, el, link } : null;
+		})
+		.filter((item): item is { slug: string; el: HTMLElement; link: HTMLAnchorElement } => Boolean(item));
+
+	if (!headingItems.length) return;
+
+	const setActive = (slug: string) => {
+		headingItems.forEach((item) => {
+			const isActive = item.slug === slug;
+			item.link.classList.toggle('is-active', isActive);
+			if (isActive) {
+				item.link.setAttribute('aria-current', 'location');
+			} else {
+				item.link.removeAttribute('aria-current');
+			}
+		});
+	};
+
+	let lockUntil = 0;
+
+	// Click feedback on TOC items: smooth scroll and immediate active
+	links.forEach((link) => {
+		link.addEventListener(
+			'click',
+			(e) => {
+				const slug = link.getAttribute('data-toc-link');
+				if (slug) {
+					setActive(slug);
+					lockUntil = Date.now() + 850;
+					const targetEl = document.getElementById(slug);
+					if (targetEl) {
+						e.preventDefault();
+						targetEl.scrollIntoView({ behavior: 'smooth' });
+						history.replaceState(null, '', `#${slug}`);
+					}
+				}
+			},
+			{ signal },
+		);
+	});
+
+	let ticking = false;
+	const onScroll = () => {
+		if (ticking) return;
+		ticking = true;
+		requestAnimationFrame(() => {
+			ticking = false;
+			if (Date.now() < lockUntil) return;
+
+			const scrollY = window.scrollY;
+			const docHeight = document.documentElement.scrollHeight;
+			const winHeight = window.innerHeight;
+
+			// Reached bottom of page: highlight last heading
+			if (winHeight + scrollY >= docHeight - 60) {
+				setActive(headingItems[headingItems.length - 1].slug);
+				return;
+			}
+
+			// Reading line offset accounting for header + comfortable reading margin
+			const readingLine = 150;
+			let activeSlug = '';
+
+			for (const item of headingItems) {
+				const rect = item.el.getBoundingClientRect();
+				if (rect.top <= readingLine) {
+					activeSlug = item.slug;
+				}
+			}
+
+			if (activeSlug) {
+				setActive(activeSlug);
+			} else if (scrollY < 200) {
+				setActive(headingItems[0].slug);
+			}
+		});
+	};
+
+	onScroll();
+	window.addEventListener('scroll', onScroll, { passive: true, signal });
+	window.addEventListener('resize', onScroll, { passive: true, signal });
+}
+
 function initReveal(signal: AbortSignal) {
 	const els = $all('.reveal');
 	if (!els.length) return;
@@ -209,6 +303,86 @@ function initArticleFilter(signal: AbortSignal) {
 			{ signal },
 		);
 	});
+}
+
+function initHomepageArticleExpand(signal: AbortSignal) {
+	const toggleBtns = $all<HTMLButtonElement>('[data-articles-toggle]');
+	if (!toggleBtns.length) return;
+
+	toggleBtns.forEach((btn) => {
+		const root = btn.closest('section') ?? btn.parentElement;
+		if (!root) return;
+		const grid = root.querySelector('[data-article-list]') as HTMLElement | null;
+		if (!grid) return;
+
+		const remaining = btn.getAttribute('data-remaining') ?? '';
+		const textSpan = btn.querySelector('.expand-btn-text') as HTMLElement | null;
+
+		btn.addEventListener(
+			'click',
+			() => {
+				const isExpanded = grid.classList.toggle('is-expanded');
+				btn.setAttribute('aria-expanded', String(isExpanded));
+				btn.classList.toggle('is-active', isExpanded);
+				if (textSpan) {
+					textSpan.textContent = isExpanded
+						? '收起文章 ↑'
+						: `展开更多文章${remaining ? ` (还有 ${remaining} 篇)` : ''} ↓`;
+				}
+			},
+			{ signal },
+		);
+	});
+}
+
+function initSidebarNavFilterAndCollapse(signal: AbortSignal) {
+	const layout = $('[data-article-layout]') as HTMLElement | null;
+	const collapseBtn = $('[data-sidebar-collapse]') as HTMLButtonElement | null;
+	const expandBtn = $('[data-sidebar-expand]') as HTMLButtonElement | null;
+	const select = $('[data-sidebar-category-filter]') as HTMLSelectElement | null;
+	const items = $all<HTMLElement>('[data-sidebar-item]');
+	const emptyHint = $('[data-sidebar-empty]') as HTMLElement | null;
+
+	// 1. 下拉分类筛选
+	if (select && items.length) {
+		select.addEventListener(
+			'change',
+			() => {
+				const selectedCat = select.value;
+				let visible = 0;
+				items.forEach((item) => {
+					const match = selectedCat === 'all' || item.getAttribute('data-sidebar-category') === selectedCat;
+					item.hidden = !match;
+					item.style.display = match ? '' : 'none';
+					if (match) visible++;
+				});
+				if (emptyHint) {
+					emptyHint.hidden = visible > 0;
+					emptyHint.style.display = visible > 0 ? 'none' : 'block';
+				}
+			},
+			{ signal },
+		);
+	}
+
+	// 2. 侧栏展开与收起联动
+	if (layout && (collapseBtn || expandBtn)) {
+		const setCollapsed = (collapsed: boolean) => {
+			layout.classList.toggle('is-sidebar-collapsed', collapsed);
+			try {
+				localStorage.setItem('article_sidebar_collapsed', collapsed ? '1' : '0');
+			} catch {}
+		};
+
+		try {
+			if (window.innerWidth > 1180 && localStorage.getItem('article_sidebar_collapsed') === '1') {
+				layout.classList.add('is-sidebar-collapsed');
+			}
+		} catch {}
+
+		collapseBtn?.addEventListener('click', () => setCollapsed(true), { signal });
+		expandBtn?.addEventListener('click', () => setCollapsed(false), { signal });
+	}
 }
 
 function initBackToTop(signal: AbortSignal) {
@@ -369,8 +543,11 @@ function initPage() {
 	const { signal } = pageAbort;
 	initHeader(signal);
 	initScrollSpy(signal);
+	initTableOfContents(signal);
 	initReveal(signal);
 	initArticleFilter(signal);
+	initHomepageArticleExpand(signal);
+	initSidebarNavFilterAndCollapse(signal);
 	initDetailsAnimation(signal);
 	initBackToTop(signal);
 	scrollToHash();

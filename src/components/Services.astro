@@ -18,10 +18,10 @@ const rendered = await Promise.all(
 	<div class="section-head">
 		<div>
 			<p class="kicker">04</p>
-			<h2>服务</h2>
+			<h2>服务 / Service</h2>
 		</div>
 	</div>
-	<div class="card-grid services-grid">
+	<div class="card-grid services-grid card-scroll-mobile">
 		{
 			rendered.map(({ service, Content }) => (
 				<article class="card service-card">

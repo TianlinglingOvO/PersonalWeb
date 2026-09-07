@@ -1,0 +1,75 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Icon from './Icon.astro';
+import { formatDate } from '../lib/site';
+
+interface Props {
+	currentSlug: string;
+	posts: CollectionEntry<'articles'>[];
+	class?: string;
+}
+
+const { currentSlug, posts, class: className = '' } = Astro.props;
+const categories = Array.from(new Set(posts.map((p) => p.data.category).filter(Boolean)));
+---
+
+<aside class:list={['article-sidebar-widget', className]} aria-label="文章快速切换导航" data-article-sidebar>
+	<div class="sidebar-nav-top">
+		<a href="/#articles" class="sidebar-nav-back">
+			<Icon name="arrow" />
+			<span>返回首页</span>
+		</a>
+		<a href="/articles/" class="sidebar-nav-all">
+			全部 ({posts.length})
+		</a>
+	</div>
+
+	<div class="sidebar-heading-row">
+		<div class="sidebar-nav-heading">
+			<Icon name="book" class="sidebar-heading-icon" />
+			<span>切换文章</span>
+		</div>
+		<div class="sidebar-heading-actions">
+			<div class="sidebar-select-wrapper">
+				<select class="sidebar-category-select" data-sidebar-category-filter aria-label="按分类筛选文章">
+					<option value="all">全部分类</option>
+					{categories.map((cat) => <option value={cat}>{cat}</option>)}
+				</select>
+			</div>
+			<button
+				class="sidebar-collapse-btn"
+				type="button"
+				data-sidebar-collapse
+				aria-label="收起文章侧栏"
+				title="收起文章列表侧栏"
+			>
+				<Icon name="chevron-left" />
+			</button>
+		</div>
+	</div>
+
+	<ul class="sidebar-articles-list" data-article-nav-list>
+		{
+			posts.map((post) => {
+				const isCurrent = post.id === currentSlug;
+				return (
+					<li class="sidebar-article-wrapper" data-sidebar-item data-sidebar-category={post.data.category}>
+						<a
+							href={`/articles/${post.id}/`}
+							class:list={['sidebar-article-link', { 'is-current': isCurrent }]}
+							aria-current={isCurrent ? 'page' : undefined}
+						>
+							<div class="sidebar-article-meta">
+								<span class="badge badge-sm">{post.data.category}</span>
+								<time class="sidebar-article-time">{formatDate(post.data.date)}</time>
+							</div>
+							<span class="sidebar-article-title">{post.data.title}</span>
+						</a>
+					</li>
+				);
+			})
+		}
+	</ul>
+	<p class="sidebar-empty-hint" data-sidebar-empty hidden>该分类下暂无文章</p>
+</aside>
+
