@@ -44,7 +44,7 @@ function hint(item: SocialItem) {
 											<Icon name={item.id} />
 											<span class="contact-id">{item.label}</span>
 										</span>
-										<span class="contact-value">{item.value}</span>
+										<span class="contact-value"><!--email_off-->{item.value}<!--/email_off--></span>
 										<span class="contact-action">{hint(item)}</span>
 									</a>
 								) : (
@@ -58,7 +58,7 @@ function hint(item: SocialItem) {
 											<Icon name={item.id} />
 											<span class="contact-id">{item.label}</span>
 										</span>
-										<span class="contact-value">{item.value}</span>
+										<span class="contact-value"><!--email_off-->{item.value}<!--/email_off--></span>
 										<span class="contact-action">{hint(item)}</span>
 									</button>
 								),

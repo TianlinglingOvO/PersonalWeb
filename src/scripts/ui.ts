@@ -829,6 +829,16 @@ function initPageProgressBar() {
 	});
 }
 
+function initEmailFix() {
+	$all<HTMLElement>('.contact-copy[data-copy]').forEach((btn) => {
+		const text = btn.getAttribute('data-copy');
+		const valueEl = btn.querySelector('.contact-value');
+		if (text && valueEl && (valueEl.textContent?.includes('[email') || valueEl.querySelector('.__cf_email__'))) {
+			valueEl.textContent = text;
+		}
+	});
+}
+
 function initPage() {
 	pageAbort?.abort();
 	pageAbort = new AbortController();
@@ -842,6 +852,7 @@ function initPage() {
 	initDetailsAnimation(signal);
 	initBackToTop(signal);
 	initLazyImages();
+	initEmailFix();
 	scrollToHash();
 }
 
