@@ -801,6 +801,29 @@ function initDetailsAnimation(signal: AbortSignal) {
 	});
 }
 
+function initLazyImages() {
+	$all<HTMLImageElement>('.prose img').forEach((img) => {
+		if (!img.getAttribute('loading')) img.setAttribute('loading', 'lazy');
+		if (!img.getAttribute('decoding')) img.setAttribute('decoding', 'async');
+	});
+}
+
+function initPageProgressBar() {
+	const bar = document.getElementById('page-progress');
+	if (!bar) return;
+
+	document.addEventListener('astro:before-preparation', () => {
+		bar.className = 'page-progress is-loading';
+	});
+
+	document.addEventListener('astro:after-preparation', () => {
+		bar.className = 'page-progress is-loaded';
+		window.setTimeout(() => {
+			bar.className = 'page-progress';
+		}, 360);
+	});
+}
+
 function initPage() {
 	pageAbort?.abort();
 	pageAbort = new AbortController();
@@ -813,9 +836,11 @@ function initPage() {
 	initSidebarNavFilterAndCollapse(signal);
 	initDetailsAnimation(signal);
 	initBackToTop(signal);
+	initLazyImages();
 	scrollToHash();
 }
 
+initPageProgressBar();
 document.addEventListener('click', onClick);
 document.addEventListener('keydown', onKeydown);
 document.addEventListener('astro:page-load', initPage);

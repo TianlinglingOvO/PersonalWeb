@@ -15,7 +15,9 @@
 	--radius: 20px;
 	--radius-sm: 12px;
 	--header-h: 68px;
-	--font: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+	--font:
+		-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+		"Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", "WenQuanYi Micro Hei",
 		system-ui, sans-serif;
 	--space: 1.15rem;
 	--max: 1080px;
@@ -954,6 +956,33 @@ a:hover {
 
 .footer-inner span {
 	min-width: 0;
+}
+
+.page-progress {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 3px;
+	width: 0%;
+	background: linear-gradient(90deg, var(--accent), #ff8fa3, var(--accent-deep));
+	z-index: 99999;
+	pointer-events: none;
+	opacity: 0;
+	border-radius: 0 999px 999px 0;
+	box-shadow: 0 1px 8px rgba(226, 92, 122, 0.6);
+	transition: width 0.25s ease, opacity 0.2s ease;
+}
+
+.page-progress.is-loading {
+	opacity: 1;
+	width: 78%;
+	transition: width 0.38s cubic-bezier(0.1, 0.6, 0.2, 1), opacity 0.15s ease;
+}
+
+.page-progress.is-loaded {
+	width: 100%;
+	opacity: 0;
+	transition: width 0.15s ease, opacity 0.25s ease 0.12s;
 }
 
 .toast-host {
