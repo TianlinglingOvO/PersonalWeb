@@ -26,6 +26,29 @@
 *::before,
 *::after {
 	box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+.filter-chip,
+.card-link,
+.nav-toggle,
+.sidebar-dropdown-trigger,
+.badge {
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.filter-chip:active,
+.btn:active,
+.btn-expand-articles:active,
+.nav-toggle:active,
+.sidebar-dropdown-trigger:active,
+.btn-close-menu:active {
+	transform: scale(0.95);
+	transition: transform 0.08s ease;
 }
 
 [hidden] {
@@ -67,8 +90,11 @@ body {
 	background-size: auto, auto, auto, auto, 240px 240px;
 }
 
+html.nav-open,
 body.nav-open {
-	overflow: hidden;
+	overflow: hidden !important;
+	touch-action: none;
+	overscroll-behavior: contain;
 }
 
 img {
@@ -1801,19 +1827,35 @@ html.js .reveal.is-visible {
 		height: 72px;
 	}
 
+	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 100;
+	}
+
+	.site-header.is-scrolled,
+	body.nav-open .site-header {
+		background: #fbf7f2;
+		border-bottom-color: var(--line);
+		box-shadow: 0 8px 24px rgba(90, 50, 70, 0.06);
+	}
+
 	.nav-toggle {
 		display: inline-flex;
+		z-index: 101;
 	}
 
 	.nav-backdrop {
 		display: block;
 		position: fixed;
 		inset: 0;
-		z-index: 35;
-		background: rgba(42, 38, 44, 0.28);
+		z-index: 90;
+		background: rgba(42, 38, 44, 0.38);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
 		opacity: 0;
 		pointer-events: none;
-		transition: opacity 0.2s ease;
+		transition: opacity 0.22s ease;
 	}
 
 	.nav-backdrop.is-open {
@@ -1826,22 +1868,23 @@ html.js .reveal.is-visible {
 		top: var(--header-h);
 		right: 0;
 		left: 0;
-		z-index: 36;
+		z-index: 95;
 		background: #fbf7f2;
 		border-bottom: 1px solid var(--line);
+		border-radius: 0 0 20px 20px;
+		box-shadow: 0 16px 36px rgba(90, 50, 70, 0.16);
 		flex-direction: column;
-		padding: 0.6rem 1rem 1rem;
-		max-height: calc(100dvh - var(--header-h));
-		overflow: auto;
+		padding: 0.6rem 1rem 1.2rem;
+		max-height: calc(100dvh - var(--header-h) - 1rem);
+		overflow-y: auto;
 		transform: translateY(-12px);
 		opacity: 0;
 		visibility: hidden;
 		pointer-events: none;
 		transition:
-			transform 0.2s ease,
-			opacity 0.2s ease,
-			visibility 0.2s ease;
-		box-shadow: var(--shadow);
+			transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+			opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+			visibility 0.22s ease;
 	}
 
 	.nav.is-open {
@@ -1854,6 +1897,42 @@ html.js .reveal.is-visible {
 	.nav a {
 		padding: 0.85rem 0.9rem;
 		font-size: 1.05rem;
+	}
+
+	.nav-mobile-bottom {
+		display: flex;
+		justify-content: center;
+		margin-top: 0.8rem;
+		padding-top: 0.8rem;
+		border-top: 1px dashed var(--line);
+	}
+
+	.btn-close-menu {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		padding: 0.5rem 1.3rem;
+		border-radius: 999px;
+		background: var(--surface);
+		border: 1px solid var(--line);
+		color: var(--muted);
+		font-size: 0.88rem;
+		font-weight: 600;
+		cursor: pointer;
+		box-shadow: 0 2px 8px rgba(90, 50, 70, 0.06);
+		transition: all 0.18s ease;
+	}
+
+	.btn-close-menu .icon {
+		width: 14px;
+		height: 14px;
+	}
+
+	.btn-close-menu:hover,
+	.btn-close-menu:active {
+		background: var(--accent-soft);
+		border-color: var(--accent);
+		color: var(--accent-deep);
 	}
 
 	.hero-art,

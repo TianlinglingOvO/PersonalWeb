@@ -41,11 +41,16 @@ function setNavOpen(open: boolean) {
 	toggle.setAttribute('aria-expanded', String(open));
 	panel.classList.toggle('is-open', open);
 	backdrop?.classList.toggle('is-open', open);
+	document.documentElement.classList.toggle('nav-open', open);
 	document.body.classList.toggle('nav-open', open);
 }
 
 function initHeader(signal: AbortSignal) {
 	const header = $('.site-header') as HTMLElement | null;
+	const backdrop = $('[data-nav-backdrop]');
+	if (backdrop) {
+		backdrop.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false, signal });
+	}
 	if (!header) return;
 	const onScroll = () => {
 		header.classList.toggle('is-scrolled', window.scrollY > 10);
@@ -269,6 +274,7 @@ function initArticleController(signal: AbortSignal) {
 
 	controllers.forEach((ctrl) => {
 		const limit = parseInt(ctrl.getAttribute('data-limit') || '0', 10);
+		const grid = $('[data-article-list]', ctrl) as HTMLElement | null;
 		const cards = $all<HTMLElement>('[data-article-list] [data-category]', ctrl);
 		const empty = $('[data-article-empty]', ctrl) as HTMLElement | null;
 		const chips = $all<HTMLButtonElement>('[data-filter]', ctrl);
@@ -278,16 +284,32 @@ function initArticleController(signal: AbortSignal) {
 
 		let currentFilter = 'all';
 		let isExpanded = false;
+		let currentAnimation: Animation | null = null;
+		let isAnimating = false;
 
-		const render = () => {
-			const matchedCards = cards.filter((card) => {
+		const getMatchedCards = () =>
+			cards.filter((card) => {
 				const cat = card.getAttribute('data-category');
 				return currentFilter === 'all' || cat === currentFilter;
 			});
 
+		const render = () => {
+			if (currentAnimation) {
+				currentAnimation.cancel();
+				currentAnimation = null;
+			}
+			isAnimating = false;
+			if (grid) {
+				grid.style.height = '';
+				grid.style.overflow = '';
+			}
+
+			const matchedCards = getMatchedCards();
+
 			cards.forEach((c) => {
 				c.hidden = true;
 				c.style.display = 'none';
+				c.style.opacity = '';
 				c.classList.remove('article-card-overflow');
 			});
 
@@ -336,6 +358,150 @@ function initArticleController(signal: AbortSignal) {
 			}
 		};
 
+		const toggleExpandWithAnimation = () => {
+			if (!grid || isAnimating) return;
+
+			if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				isExpanded = !isExpanded;
+				render();
+				return;
+			}
+
+			const matchedCards = getMatchedCards();
+			const total = matchedCards.length;
+			if (total <= limit) return;
+
+			const overflowCards = matchedCards.slice(limit);
+
+			if (!isExpanded) {
+				// 展开动画 (丝滑高度延展 + 卡片轻柔滑入淡出)
+				const startHeight = grid.offsetHeight;
+				isExpanded = true;
+
+				overflowCards.forEach((card) => {
+					card.hidden = false;
+					card.style.display = '';
+					card.style.opacity = '0';
+					card.classList.remove('article-card-overflow');
+				});
+
+				const targetHeight = grid.offsetHeight;
+
+				if (toggleBtn) {
+					toggleBtn.setAttribute('aria-expanded', 'true');
+					toggleBtn.classList.add('is-active');
+				}
+				if (textSpan) {
+					textSpan.textContent = '收起文章 ↑';
+				}
+
+				grid.style.overflow = 'hidden';
+				isAnimating = true;
+
+				currentAnimation = grid.animate(
+					[
+						{ height: `${startHeight}px` },
+						{ height: `${targetHeight}px` },
+					],
+					{
+						duration: 320,
+						easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+					},
+				);
+
+				overflowCards.forEach((card, idx) => {
+					card.animate(
+						[
+							{ opacity: 0, transform: 'translateY(-10px)' },
+							{ opacity: 1, transform: 'translateY(0)' },
+						],
+						{
+							duration: 300,
+							delay: Math.min(idx * 35, 120),
+							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+							fill: 'forwards',
+						},
+					);
+				});
+
+				currentAnimation.onfinish = () => {
+					grid.style.height = '';
+					grid.style.overflow = '';
+					overflowCards.forEach((c) => {
+						c.style.opacity = '';
+					});
+					isAnimating = false;
+					currentAnimation = null;
+				};
+			} else {
+				// 收起动画 (卡片平缓淡出 + 容器高度丝滑回弹)
+				const startHeight = grid.offsetHeight;
+				const firstCard = matchedCards[0];
+				const lastInitialCard = matchedCards[limit - 1];
+				const targetHeight =
+					firstCard && lastInitialCard
+						? lastInitialCard.offsetTop + lastInitialCard.offsetHeight - firstCard.offsetTop
+						: startHeight;
+
+				isExpanded = false;
+
+				if (toggleBtn) {
+					toggleBtn.setAttribute('aria-expanded', 'false');
+					toggleBtn.classList.remove('is-active');
+				}
+				if (textSpan) {
+					const remaining = total - limit;
+					textSpan.textContent = `展开更多文章 (还有 ${remaining} 篇) ↓`;
+				}
+
+				grid.style.overflow = 'hidden';
+				isAnimating = true;
+
+				overflowCards.forEach((card) => {
+					card.animate(
+						[
+							{ opacity: 1, transform: 'translateY(0)' },
+							{ opacity: 0, transform: 'translateY(-8px)' },
+						],
+						{
+							duration: 220,
+							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+						},
+					);
+				});
+
+				currentAnimation = grid.animate(
+					[
+						{ height: `${startHeight}px` },
+						{ height: `${targetHeight}px` },
+					],
+					{
+						duration: 280,
+						easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+					},
+				);
+
+				currentAnimation.onfinish = () => {
+					overflowCards.forEach((c) => {
+						c.hidden = true;
+						c.style.display = 'none';
+						c.style.opacity = '';
+						c.classList.add('article-card-overflow');
+					});
+					grid.style.height = '';
+					grid.style.overflow = '';
+					isAnimating = false;
+					currentAnimation = null;
+
+					const section = ctrl.closest('section') ?? ctrl;
+					const rect = section.getBoundingClientRect();
+					if (rect.top < 60) {
+						section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					}
+				};
+			}
+		};
+
 		chips.forEach((chip) => {
 			chip.addEventListener(
 				'click',
@@ -353,14 +519,7 @@ function initArticleController(signal: AbortSignal) {
 			);
 		});
 
-		toggleBtn?.addEventListener(
-			'click',
-			() => {
-				isExpanded = !isExpanded;
-				render();
-			},
-			{ signal },
-		);
+		toggleBtn?.addEventListener('click', toggleExpandWithAnimation, { signal });
 
 		render();
 	});
@@ -503,8 +662,13 @@ function onClick(event: Event) {
 		return;
 	}
 
-	if (target.closest('[data-nav-backdrop]') || target.closest('[data-nav-link]')) {
+	if (
+		target.closest('[data-nav-backdrop]') ||
+		target.closest('[data-nav-link]') ||
+		target.closest('[data-nav-close]')
+	) {
 		setNavOpen(false);
+		if (target.closest('[data-nav-close]')) return;
 	}
 
 	const copyBtn = target.closest('[data-copy]');
