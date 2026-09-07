@@ -33,6 +33,14 @@ async function copyText(text: string) {
 	}
 }
 
+function onNavTouchMove(e: TouchEvent) {
+	const panel = $('[data-nav-panel]');
+	if (panel && panel.contains(e.target as Node)) {
+		return;
+	}
+	e.preventDefault();
+}
+
 function setNavOpen(open: boolean) {
 	const toggle = $('[data-nav-toggle]') as HTMLButtonElement | null;
 	const panel = $('[data-nav-panel]');
@@ -43,6 +51,12 @@ function setNavOpen(open: boolean) {
 	backdrop?.classList.toggle('is-open', open);
 	document.documentElement.classList.toggle('nav-open', open);
 	document.body.classList.toggle('nav-open', open);
+
+	if (open) {
+		document.addEventListener('touchmove', onNavTouchMove, { passive: false });
+	} else {
+		document.removeEventListener('touchmove', onNavTouchMove);
+	}
 }
 
 function initHeader(signal: AbortSignal) {
@@ -662,13 +676,8 @@ function onClick(event: Event) {
 		return;
 	}
 
-	if (
-		target.closest('[data-nav-backdrop]') ||
-		target.closest('[data-nav-link]') ||
-		target.closest('[data-nav-close]')
-	) {
+	if (target.closest('[data-nav-backdrop]') || target.closest('[data-nav-link]')) {
 		setNavOpen(false);
-		if (target.closest('[data-nav-close]')) return;
 	}
 
 	const copyBtn = target.closest('[data-copy]');
