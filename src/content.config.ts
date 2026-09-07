@@ -9,16 +9,6 @@ const about = defineCollection({
 	}),
 });
 
-const projects = defineCollection({
-	loader: glob({ pattern: '*.md', base: './content/projects' }),
-	schema: z.object({
-		title: z.string(),
-		summary: z.string(),
-		tags: z.array(z.string()).default([]),
-		url: z.string().optional(),
-		order: z.number().default(0),
-	}),
-});
 
 const articles = defineCollection({
 	loader: glob({ pattern: '*.md', base: './content/articles' }),
@@ -63,4 +53,4 @@ const timeline = defineCollection({
 	}),
 });
 
-export const collections = { about, projects, articles, services, timeline };
+export const collections = { about, articles, services, timeline };

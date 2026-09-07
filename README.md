@@ -12,6 +12,7 @@
 
 - 🌸 **温润马卡龙设计系统**：采用粉白与柔和深洋红配色，搭配手绘插画与浮动二次元矢量背景，视觉清新治愈；
 - ⚡ **零前端运行时负担**：全静态生成（SSG），采用原生 TypeScript 驱动交互逻辑与平滑滚动，极速轻量秒开；
+- ⏳ **丝滑个人历程时间线**：支持滚轮阻尼横向滑动、卡片靠近视口时的动态呼吸缩放与最新节点脉冲光环；
 - 📱 **移动端深度适配**：移动端顶栏绝对锁定（`position: fixed`）吸附，下拉菜单与顶栏 100% 融合成一张无缝纯白大圆角卡片，手势防穿透体验极佳；
 - 📖 **优雅的文章阅读体系**：
   - 桌面端支持文章切换侧栏、自定义马卡龙圆角分类下拉选择器、右侧大纲目录树（TOC）；
@@ -25,7 +26,7 @@
 
 | 文档 | 适用对象 | 内容说明 |
 | :--- | :--- | :--- |
-| [📘 MAINTENANCE.md](./MAINTENANCE.md) | **站长自用** | 日常发文 SOP、文章插图防 404 规范、服务/活动卡片维护、发布前安全检查清单与 Git 一键部署 |
+| [📘 MAINTENANCE.md](./MAINTENANCE.md) | **站长自用** | 日常发文 SOP、文章插图防 404 规范、时间线/服务卡片维护、发布前安全检查清单与 Git 一键部署 |
 | [🤖 AGENTS.md](./AGENTS.md) | **AI 助手** | 后续任何 AI（Cursor/Claude/Antigravity/Grok 等）辅助开发时的架构底线、移动端排版红线与 Token 约束 |
 | [📂 updata_plan/](./updata_plan/) | **版本历史** | 站点历经 13 个版本的迭代需求、规划与补丁实现文档（支持 `update_plan` 软链接快捷访问） |
 
@@ -69,8 +70,8 @@ npm run preview
 | **站点昵称 / 标语 / 简介** | `content/site.json` | 修改网站标题、个人签名等全局信息 |
 | **关于我正文** | `content/about.md` | 支持富文本 Markdown 讲述个人故事 |
 | **撰写 / 发布新文章** | `content/articles/*.md` | 必填 `title, date, description, category` |
-| **服务项目卡片** | `content/services/*.md` | 标题、简介与展开后的详细服务说明 |
-| **活动 / 经历卡片** | `content/projects/*.md` | 支持设置标签 `tags` 与项目链接 `url` |
+| **个人历程时间线** | `content/timeline/*.md` | 节点标题、时间标签、图标与跳转链接 |
+| **服务与协助卡片** | `content/services/*.md` | 标题、简介与展开后的详细服务说明 |
 | **社交账号与联系方式** | `content/social.json` | 支持跳转链接（`link`）或一键复制（`copy`） |
 | **头像 / 插画 / 背景素材** | `public/images/` | 静态图片存放目录，在 Markdown 中用 `/images/...` 引用 |
 
