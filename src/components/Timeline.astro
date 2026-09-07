@@ -1,0 +1,104 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+
+interface Props {
+	timeline: CollectionEntry<'timeline'>[];
+}
+
+const { timeline } = Astro.props;
+
+const renderedItems = await Promise.all(
+	timeline.map(async (item) => {
+		const { Content } = await render(item);
+		return { item, Content };
+	}),
+);
+---
+
+<section id="timeline" class="section wrap reveal">
+	<div class="section-head">
+		<div>
+			<p class="kicker">02</p>
+			<h2>历程 / 成长足迹 / Timeline</h2>
+		</div>
+		<div class="timeline-toolbar">
+			<div class="timeline-nav-arrows" aria-label="左右翻动控制">
+				<button
+					type="button"
+					class="timeline-arrow-btn"
+					data-timeline-arrow="prev"
+					title="向左翻动"
+					aria-label="向左翻动"
+				>
+					‹
+				</button>
+				<button
+					type="button"
+					class="timeline-arrow-btn"
+					data-timeline-arrow="next"
+					title="向右翻动"
+					aria-label="向右翻动"
+				>
+					›
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 横向画卷长轨 -->
+	<div class="timeline-rail-wrap">
+		<div class="timeline-horizontal-stem" aria-hidden="true"></div>
+		<div class="timeline-rail" data-timeline-track tabindex="0" role="region" aria-label="成长历程画卷">
+			{
+				renderedItems.map(({ item, Content }, index) => (
+					<div
+						class:list={[
+							'timeline-rail-item',
+							'timeline-item-pop',
+							{
+								'is-highlight': item.data.isHighlight,
+								'is-future': item.data.isFuture,
+							},
+						]}
+						data-timeline-item
+						data-timeline-index={index}
+					>
+						<div class="timeline-node-wrap">
+							<div class="timeline-node" aria-hidden="true">
+								{item.data.isFuture ? (
+									<span class="timeline-node-star">★</span>
+								) : (
+									<span class="timeline-node-dot" />
+								)}
+							</div>
+						</div>
+						<article class="timeline-micro-card card">
+							<div class="timeline-card-header">
+								<span class="timeline-date-badge">{item.data.date}</span>
+								<span class="timeline-tag-badge">{item.data.tag}</span>
+							</div>
+							<h3 class="timeline-card-title">{item.data.title}</h3>
+							<div class="timeline-card-desc">
+								<Content />
+							</div>
+							{item.data.links && item.data.links.length > 0 && (
+								<div class="timeline-card-links">
+									{item.data.links.map((link) => (
+										<a
+											href={link.href}
+											class="timeline-link-btn"
+											target={link.isExternal ? '_blank' : undefined}
+											rel={link.isExternal ? 'noopener noreferrer' : undefined}
+										>
+											{link.label}
+										</a>
+									))}
+								</div>
+							)}
+						</article>
+					</div>
+				))
+			}
+		</div>
+	</div>
+</section>

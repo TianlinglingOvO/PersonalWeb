@@ -41,4 +41,26 @@ const services = defineCollection({
 	}),
 });
 
-export const collections = { about, projects, articles, services };
+const timeline = defineCollection({
+	loader: glob({ pattern: '*.md', base: './content/timeline' }),
+	schema: z.object({
+		date: z.coerce.string(),
+		title: z.string(),
+		tag: z.string().default('历程'),
+		icon: z.string().default('spark'),
+		isHighlight: z.boolean().default(false),
+		isFuture: z.boolean().default(false),
+		links: z
+			.array(
+				z.object({
+					label: z.string(),
+					href: z.string(),
+					isExternal: z.boolean().default(false),
+				}),
+			)
+			.default([]),
+		order: z.number().default(0),
+	}),
+});
+
+export const collections = { about, projects, articles, services, timeline };

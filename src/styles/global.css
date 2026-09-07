@@ -685,6 +685,352 @@ a:hover {
 	padding: 0.15rem 0.55rem;
 }
 
+/* ==========================================================================
+   Timeline / 历程成长画卷轨道 (Timeline V3)
+   ========================================================================== */
+
+.timeline-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.timeline-nav-arrows {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.timeline-arrow-btn {
+	width: 34px;
+	height: 34px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	color: var(--ink);
+	font-size: 1.25rem;
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: 0 2px 6px rgba(90, 50, 70, 0.06);
+	transition:
+		border-color 0.18s ease,
+		color 0.18s ease,
+		transform 0.18s ease,
+		box-shadow 0.18s ease;
+}
+
+.timeline-arrow-btn:hover:not(:disabled) {
+	border-color: var(--accent);
+	color: var(--accent-deep);
+	transform: scale(1.08);
+	box-shadow: 0 4px 12px rgba(226, 92, 122, 0.15);
+}
+
+.timeline-arrow-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+
+/* --- 横向画卷长轨 --- */
+.timeline-rail-wrap {
+	position: relative;
+	margin: 0 -0.5rem;
+	padding: 1.2rem 0.5rem 0.5rem;
+}
+
+.timeline-horizontal-stem {
+	position: absolute;
+	top: calc(1.6rem + 18.5px);
+	left: 1.5rem;
+	right: 1.5rem;
+	height: 3px;
+	background: linear-gradient(
+		to right,
+		var(--accent) 0%,
+		var(--accent-soft) 45%,
+		var(--line) 85%,
+		transparent 100%
+	);
+	border-radius: 3px;
+	z-index: 1;
+}
+
+.timeline-rail {
+	display: flex;
+	gap: 1.25rem;
+	overflow-x: auto;
+	padding: 0.4rem 0.5rem 1.2rem;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+	scrollbar-color: var(--accent-soft) transparent;
+	position: relative;
+	z-index: 2;
+}
+
+.timeline-rail::-webkit-scrollbar {
+	height: 6px;
+}
+
+.timeline-rail::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.timeline-rail::-webkit-scrollbar-thumb {
+	background: var(--accent-soft);
+	border-radius: 999px;
+}
+
+.timeline-rail-item {
+	flex: 0 0 275px;
+	scroll-snap-align: start;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: left;
+	position: relative;
+}
+
+/* 逐个弹跳冒出动画 (Pop-in Bounce) */
+.timeline-item-pop {
+	opacity: 0;
+	transform: scale(0.85) translateY(20px);
+	transition:
+		opacity 0.36s ease,
+		transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+	will-change: transform, opacity;
+}
+
+.timeline-item-pop.is-popped {
+	opacity: 1;
+	transform: scale(1) translateY(0);
+}
+
+html:not(.js) .timeline-item-pop {
+	opacity: 1;
+	transform: none;
+}
+
+.timeline-node-wrap {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	padding-left: 0;
+	margin-bottom: 0.75rem;
+	position: relative;
+	z-index: 3;
+}
+
+/* 时间节点图标 / 圆点 */
+.timeline-node {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--surface);
+	border: 2px solid var(--accent);
+	box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition:
+		transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+		box-shadow 0.24s ease;
+}
+
+.timeline-node-dot {
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: var(--accent);
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+/* 高亮脉冲动效（最新节点） */
+.timeline-rail-item.is-highlight .timeline-node {
+	border-color: var(--accent-deep);
+	animation: pulseNode 2.6s infinite;
+}
+
+.timeline-rail-item.is-highlight .timeline-node-dot {
+	background: var(--accent-deep);
+}
+
+@keyframes pulseNode {
+	0%, 100% {
+		box-shadow: 0 0 0 3px var(--accent-soft), 0 4px 14px rgba(226, 92, 122, 0.25);
+	}
+	50% {
+		box-shadow: 0 0 0 7px rgba(248, 213, 221, 0.55), 0 6px 18px rgba(226, 92, 122, 0.4);
+	}
+}
+
+/* 未来探索节点 */
+.timeline-rail-item.is-future .timeline-node {
+	border-color: var(--accent-2);
+	box-shadow: 0 0 0 3px var(--accent-2-soft), var(--shadow);
+	background: linear-gradient(135deg, #ffffff, var(--accent-2-soft));
+}
+
+.timeline-node-star {
+	color: var(--accent-2);
+	font-size: 1.1rem;
+	font-weight: 700;
+	line-height: 1;
+	transform: translateY(-1px);
+	display: inline-block;
+	animation: spinStar 10s linear infinite;
+}
+
+@keyframes spinStar {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+/* 轻量微卡片主体 */
+.timeline-micro-card {
+	width: 100%;
+	min-height: 162px;
+	padding: 1.15rem 1.25rem;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	transition:
+		transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+		box-shadow 0.22s ease,
+		border-color 0.22s ease;
+}
+
+.timeline-micro-card:hover {
+	transform: translateY(-3px);
+	border-color: var(--accent);
+	box-shadow: var(--shadow-hover);
+}
+
+.timeline-card-header {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.45rem;
+	flex-wrap: wrap;
+}
+
+.timeline-date-badge {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--accent-deep);
+	background: var(--accent-soft);
+	padding: 0.2rem 0.55rem;
+	border-radius: 999px;
+}
+
+.timeline-rail-item.is-future .timeline-date-badge {
+	color: var(--accent-2);
+	background: var(--accent-2-soft);
+}
+
+.timeline-tag-badge {
+	font-size: 0.74rem;
+	font-weight: 600;
+	color: var(--muted);
+	background: rgba(42, 38, 44, 0.05);
+	padding: 0.18rem 0.5rem;
+	border-radius: 999px;
+	border: 1px solid var(--line);
+}
+
+.timeline-card-title {
+	margin: 0 0 0.4rem;
+	font-size: 1.02rem;
+	font-weight: 700;
+	color: var(--ink);
+	line-height: 1.35;
+}
+
+.timeline-card-desc {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.88rem;
+	line-height: 1.55;
+	flex-grow: 1;
+}
+
+.timeline-card-desc p {
+	margin: 0;
+}
+
+.timeline-card-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.75rem;
+	padding-top: 0.65rem;
+	border-top: 1px dashed var(--line);
+}
+
+.timeline-link-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.32rem 0.75rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--accent-deep);
+	background: var(--bg);
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	text-decoration: none;
+	transition:
+		background-color 0.18s ease,
+		border-color 0.18s ease,
+		transform 0.15s ease,
+		box-shadow 0.18s ease;
+}
+
+.timeline-link-btn:hover {
+	background: var(--accent-soft);
+	border-color: var(--accent);
+	transform: translateY(-1.5px);
+	box-shadow: 0 4px 12px rgba(226, 92, 122, 0.15);
+	color: var(--accent-deep);
+}
+
+/* 移动端时间轴响应式微调 */
+@media (max-width: 640px) {
+	.timeline-toolbar {
+		margin-top: 0.4rem;
+	}
+
+	.timeline-nav-arrows {
+		display: none;
+	}
+
+	.timeline-rail {
+		scroll-snap-type: x mandatory;
+	}
+
+	.timeline-rail-item {
+		flex: 0 0 82vw;
+		max-width: 290px;
+	}
+
+	.timeline-micro-card {
+		padding: 1.1rem 1.15rem;
+	}
+}
+
 .meta {
 	color: var(--muted);
 	font-size: 0.86rem;

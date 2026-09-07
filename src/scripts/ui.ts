@@ -839,6 +839,123 @@ function initEmailFix() {
 	});
 }
 
+function initTimelineRail(signal: AbortSignal) {
+	const timelineSection = document.getElementById('timeline');
+	if (!timelineSection) return;
+
+	const track = timelineSection.querySelector<HTMLElement>('[data-timeline-track]');
+	const items = $all<HTMLElement>('[data-timeline-item]', timelineSection);
+	const prevBtn = timelineSection.querySelector<HTMLButtonElement>('[data-timeline-arrow="prev"]');
+	const nextBtn = timelineSection.querySelector<HTMLButtonElement>('[data-timeline-arrow="next"]');
+	const railWrap = timelineSection.querySelector<HTMLElement>('.timeline-rail-wrap') ?? track;
+
+	if (!track || !items.length) return;
+
+	// 1. Pop-in Bounce Animation (Supports recurring triggers)
+	const popItem = (item: HTMLElement) => {
+		item.classList.add('is-popped');
+	};
+
+	const unpopItem = (item: HTMLElement) => {
+		item.classList.remove('is-popped');
+	};
+
+	let isSectionVisible = false;
+
+	const checkVisibleItems = () => {
+		if (!isSectionVisible) return;
+		const trackRect = track.getBoundingClientRect();
+		items.forEach((item) => {
+			const rect = item.getBoundingClientRect();
+			if (rect.left < trackRect.right - 20 && rect.right > trackRect.left + 20) {
+				popItem(item);
+			} else {
+				unpopItem(item);
+			}
+		});
+	};
+
+	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		items.forEach(popItem);
+	} else {
+		// When Section 02 enters/leaves viewport vertically:
+		const sectionObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						isSectionVisible = true;
+						const trackRect = track.getBoundingClientRect();
+						let visibleCount = 0;
+						items.forEach((item) => {
+							const itemRect = item.getBoundingClientRect();
+							if (itemRect.left < trackRect.right - 20 && itemRect.right > trackRect.left + 20) {
+								const delay = visibleCount * 80;
+								visibleCount++;
+								window.setTimeout(() => popItem(item), delay);
+							}
+						});
+					} else {
+						isSectionVisible = false;
+						items.forEach(unpopItem);
+					}
+				});
+			},
+			{ threshold: 0.12 },
+		);
+		sectionObserver.observe(timelineSection);
+		signal.addEventListener('abort', () => sectionObserver.disconnect());
+	}
+
+	// 2. Arrow navigation & scroll updates
+	const updateArrowState = () => {
+		if (!prevBtn || !nextBtn) return;
+		const maxScroll = track.scrollWidth - track.clientWidth;
+		prevBtn.disabled = track.scrollLeft <= 5;
+		nextBtn.disabled = track.scrollLeft >= maxScroll - 5;
+	};
+
+	const onTrackScroll = () => {
+		updateArrowState();
+		checkVisibleItems();
+	};
+
+	if (prevBtn && nextBtn) {
+		prevBtn.addEventListener(
+			'click',
+			() => {
+				const cardWidth = items[0]?.offsetWidth ?? 275;
+				track.scrollBy({ left: -(cardWidth + 20), behavior: 'smooth' });
+			},
+			{ signal },
+		);
+
+		nextBtn.addEventListener(
+			'click',
+			() => {
+				const cardWidth = items[0]?.offsetWidth ?? 275;
+				track.scrollBy({ left: cardWidth + 20, behavior: 'smooth' });
+			},
+			{ signal },
+		);
+
+		track.addEventListener('scroll', onTrackScroll, { passive: true, signal });
+		window.setTimeout(updateArrowState, 100);
+	}
+
+	// 3. Mouse Wheel Horizontal Scroll: Timeline area solely controls horizontal scroll
+	railWrap.addEventListener(
+		'wheel',
+		(e: WheelEvent) => {
+			// Unconditionally prevent default page vertical scrolling inside the timeline area
+			e.preventDefault();
+			const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+			track.scrollLeft += delta;
+			onTrackScroll();
+		},
+		{ passive: false, signal },
+	);
+}
+
 function initPage() {
 	pageAbort?.abort();
 	pageAbort = new AbortController();
@@ -847,6 +964,7 @@ function initPage() {
 	initScrollSpy(signal);
 	initTableOfContents(signal);
 	initReveal(signal);
+	initTimelineRail(signal);
 	initArticleController(signal);
 	initSidebarNavFilterAndCollapse(signal);
 	initDetailsAnimation(signal);
