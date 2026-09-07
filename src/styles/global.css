@@ -1827,10 +1827,20 @@ html.js .reveal.is-visible {
 		height: 72px;
 	}
 
+	/* 移动端页面顶部留出固定顶栏高度，防止正文被顶栏覆盖 */
+	body {
+		padding-top: var(--header-h);
+	}
+
+	/* 移动端顶栏彻底改为 fixed 绝对锁定，解决滚动后 sticky 坍缩导致的脱节与镂空 */
 	.site-header {
-		position: sticky;
-		top: 0;
-		z-index: 100;
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		width: 100% !important;
+		z-index: 100 !important;
+		height: var(--header-h);
 	}
 
 	.site-header.is-scrolled {
@@ -1839,9 +1849,10 @@ html.js .reveal.is-visible {
 		box-shadow: 0 8px 24px rgba(90, 50, 70, 0.06);
 	}
 
+	/* 菜单打开时：顶栏与菜单融合成一张无缝纯白卡片，消除底边线 */
 	body.nav-open .site-header {
 		background: var(--surface) !important;
-		border-bottom-color: transparent !important;
+		border-bottom: none !important;
 		box-shadow: none !important;
 	}
 
@@ -1868,19 +1879,20 @@ html.js .reveal.is-visible {
 		pointer-events: auto;
 	}
 
+	/* 下拉抽屉：直接自 68px 处紧贴纯白顶栏，下底带有 24px 圆角与柔和微光 */
 	.nav {
-		position: fixed;
-		top: var(--header-h);
-		right: 0;
-		left: 0;
-		z-index: 95;
-		background: var(--surface);
-		border-top: none;
+		position: fixed !important;
+		top: var(--header-h) !important;
+		right: 0 !important;
+		left: 0 !important;
+		z-index: 95 !important;
+		background: var(--surface) !important;
+		border-top: none !important;
 		border-bottom: 1px solid var(--line);
 		border-radius: 0 0 24px 24px;
-		box-shadow: 0 20px 48px rgba(90, 50, 70, 0.18);
+		box-shadow: 0 24px 50px rgba(90, 50, 70, 0.2);
 		flex-direction: column;
-		padding: 0.3rem 1rem 1.4rem;
+		padding: 0.2rem 1.2rem 1.4rem;
 		max-height: calc(100dvh - var(--header-h) - 1.5rem);
 		overflow-y: auto;
 		transform: translateY(-8px);
