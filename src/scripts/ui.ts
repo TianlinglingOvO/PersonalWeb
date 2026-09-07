@@ -944,15 +944,6 @@ function initTimelineRail(signal: AbortSignal) {
 	// 3. Smooth Lerp Momentum Wheel Scrolling (丝滑滚轮平滑阻尼滚动)
 	let targetScroll = track.scrollLeft;
 	let animFrameId: number | null = null;
-	let scrollTimeout: number | null = null;
-
-	const markScrolling = () => {
-		track.classList.add('is-scrolling');
-		if (scrollTimeout) clearTimeout(scrollTimeout);
-		scrollTimeout = window.setTimeout(() => {
-			track.classList.remove('is-scrolling');
-		}, 160);
-	};
 
 	const renderSmoothScroll = () => {
 		const maxScroll = track.scrollWidth - track.clientWidth;
@@ -963,7 +954,6 @@ function initTimelineRail(signal: AbortSignal) {
 		if (Math.abs(diff) < 0.6) {
 			track.scrollLeft = targetScroll;
 			animFrameId = null;
-			track.classList.remove('is-scrolling');
 			onTrackScroll();
 			return;
 		}
@@ -977,7 +967,6 @@ function initTimelineRail(signal: AbortSignal) {
 	track.addEventListener(
 		'scroll',
 		() => {
-			markScrolling();
 			if (!animFrameId) {
 				targetScroll = track.scrollLeft;
 			}
@@ -995,7 +984,6 @@ function initTimelineRail(signal: AbortSignal) {
 
 			targetScroll = Math.max(0, Math.min(targetScroll + delta * 1.15, maxScroll));
 
-			track.classList.add('is-scrolling');
 			if (!animFrameId) {
 				animFrameId = requestAnimationFrame(renderSmoothScroll);
 			}
@@ -1005,7 +993,6 @@ function initTimelineRail(signal: AbortSignal) {
 
 	signal.addEventListener('abort', () => {
 		if (animFrameId) cancelAnimationFrame(animFrameId);
-		if (scrollTimeout) clearTimeout(scrollTimeout);
 	});
 
 	// Initial render
