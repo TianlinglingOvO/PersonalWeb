@@ -851,60 +851,69 @@ function initTimelineRail(signal: AbortSignal) {
 
 	if (!track || !items.length) return;
 
-	// 1. Pop-in Bounce Animation (Supports recurring triggers)
-	const popItem = (item: HTMLElement) => {
-		item.classList.add('is-popped');
-	};
-
-	const unpopItem = (item: HTMLElement) => {
-		item.classList.remove('is-popped');
-	};
-
 	let isSectionVisible = false;
+	const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-	const checkVisibleItems = () => {
-		if (!isSectionVisible) return;
+	// 1. Dynamic Card Proximity Scale & Fade (进入逐渐放大，消失逐渐缩小)
+	const updateProximity = () => {
+		if (isReducedMotion) {
+			items.forEach((item) => {
+				item.style.setProperty('--item-scale', '1');
+				item.style.setProperty('--item-opacity', '1');
+				item.style.setProperty('--item-y', '0px');
+			});
+			return;
+		}
+
+		if (!isSectionVisible) {
+			items.forEach((item) => {
+				item.style.setProperty('--item-scale', '0.82');
+				item.style.setProperty('--item-opacity', '0');
+				item.style.setProperty('--item-y', '14px');
+			});
+			return;
+		}
+
 		const trackRect = track.getBoundingClientRect();
+		const trackLeft = trackRect.left;
+		const trackRight = trackRect.right;
+		// Transition zone width at track edges
+		const fadeZone = Math.min(180, trackRect.width * 0.4);
+
 		items.forEach((item) => {
 			const rect = item.getBoundingClientRect();
-			if (rect.left < trackRect.right - 20 && rect.right > trackRect.left + 20) {
-				popItem(item);
-			} else {
-				unpopItem(item);
-			}
+
+			// Distance penetrated through the left and right boundary
+			const distLeft = rect.right - trackLeft;
+			const distRight = trackRight - rect.left;
+
+			const ratioLeft = Math.min(Math.max(distLeft / fadeZone, 0), 1);
+			const ratioRight = Math.min(Math.max(distRight / fadeZone, 0), 1);
+			const visibility = Math.min(ratioLeft, ratioRight);
+
+			// Scale: 0.82 -> 1.0; Opacity: 0.0 -> 1.0; Y: 14px -> 0px
+			const scale = 0.82 + 0.18 * visibility;
+			const opacity = Math.max(0, Math.min(1, visibility * 1.15));
+			const translateY = (1 - visibility) * 14;
+
+			item.style.setProperty('--item-scale', scale.toFixed(3));
+			item.style.setProperty('--item-opacity', opacity.toFixed(3));
+			item.style.setProperty('--item-y', `${translateY.toFixed(1)}px`);
 		});
 	};
 
-	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-		items.forEach(popItem);
-	} else {
-		// When Section 02 enters/leaves viewport vertically:
-		const sectionObserver = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						isSectionVisible = true;
-						const trackRect = track.getBoundingClientRect();
-						let visibleCount = 0;
-						items.forEach((item) => {
-							const itemRect = item.getBoundingClientRect();
-							if (itemRect.left < trackRect.right - 20 && itemRect.right > trackRect.left + 20) {
-								const delay = visibleCount * 80;
-								visibleCount++;
-								window.setTimeout(() => popItem(item), delay);
-							}
-						});
-					} else {
-						isSectionVisible = false;
-						items.forEach(unpopItem);
-					}
-				});
-			},
-			{ threshold: 0.12 },
-		);
-		sectionObserver.observe(timelineSection);
-		signal.addEventListener('abort', () => sectionObserver.disconnect());
-	}
+	// When Section 02 enters/leaves viewport vertically
+	const sectionObserver = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				isSectionVisible = entry.isIntersecting;
+				updateProximity();
+			});
+		},
+		{ threshold: 0.1 },
+	);
+	sectionObserver.observe(timelineSection);
+	signal.addEventListener('abort', () => sectionObserver.disconnect());
 
 	// 2. Arrow navigation & scroll updates
 	const updateArrowState = () => {
@@ -916,7 +925,7 @@ function initTimelineRail(signal: AbortSignal) {
 
 	const onTrackScroll = () => {
 		updateArrowState();
-		checkVisibleItems();
+		updateProximity();
 	};
 
 	if (prevBtn && nextBtn) {
@@ -937,23 +946,67 @@ function initTimelineRail(signal: AbortSignal) {
 			},
 			{ signal },
 		);
-
-		track.addEventListener('scroll', onTrackScroll, { passive: true, signal });
-		window.setTimeout(updateArrowState, 100);
 	}
 
-	// 3. Mouse Wheel Horizontal Scroll: Timeline area solely controls horizontal scroll
+	// 3. Smooth Lerp Momentum Wheel Scrolling (丝滑滚轮平滑阻尼滚动)
+	let targetScroll = track.scrollLeft;
+	let animFrameId: number | null = null;
+
+	const renderSmoothScroll = () => {
+		const maxScroll = track.scrollWidth - track.clientWidth;
+		targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+		const current = track.scrollLeft;
+		const diff = targetScroll - current;
+
+		if (Math.abs(diff) < 0.6) {
+			track.scrollLeft = targetScroll;
+			animFrameId = null;
+			onTrackScroll();
+			return;
+		}
+
+		// Lerp easing factor 0.16 gives a gentle, tactile momentum glide
+		track.scrollLeft += diff * 0.16;
+		onTrackScroll();
+		animFrameId = requestAnimationFrame(renderSmoothScroll);
+	};
+
+	track.addEventListener(
+		'scroll',
+		() => {
+			if (!animFrameId) {
+				targetScroll = track.scrollLeft;
+			}
+			onTrackScroll();
+		},
+		{ passive: true, signal },
+	);
+
 	railWrap.addEventListener(
 		'wheel',
 		(e: WheelEvent) => {
-			// Unconditionally prevent default page vertical scrolling inside the timeline area
 			e.preventDefault();
 			const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-			track.scrollLeft += delta;
-			onTrackScroll();
+			const maxScroll = track.scrollWidth - track.clientWidth;
+
+			targetScroll = Math.max(0, Math.min(targetScroll + delta * 1.15, maxScroll));
+
+			if (!animFrameId) {
+				animFrameId = requestAnimationFrame(renderSmoothScroll);
+			}
 		},
 		{ passive: false, signal },
 	);
+
+	signal.addEventListener('abort', () => {
+		if (animFrameId) cancelAnimationFrame(animFrameId);
+	});
+
+	// Initial render
+	window.setTimeout(() => {
+		updateArrowState();
+		updateProximity();
+	}, 60);
 }
 
 function initPage() {
