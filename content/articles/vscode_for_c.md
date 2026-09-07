@@ -5,7 +5,7 @@ description: VSCode C语言环境简单配置
 category: 教程
 ---
 
-![VSCode](/images/vscode_for_c/VsCode.png)
+![VSCode](/images/vscode_for_c/VSCode.png)
 
 ## 提醒
 
@@ -13,6 +13,6 @@ category: 教程
 >
 > 还请原谅
 
-如果有兴趣，还请移步原帖`小黑盒`[VSCode配置C语言环境](https://www.xiaoheihe.cn/app/bbs/link/167240839)
+如果有兴趣，还请移步小黑盒原帖：[VSCode配置C语言环境](https://www.xiaoheihe.cn/app/bbs/link/167240839)
 
 ![HeiBox](/images/vscode_for_c/xiaoheihe.png)
