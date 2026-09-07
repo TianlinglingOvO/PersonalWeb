@@ -4,7 +4,7 @@ import { site } from '../lib/site';
 
 <section id="top" class="hero wrap">
 	<div class="hero-copy">
-		<img class="avatar" src={site.avatar} alt={`${site.name} 的头像占位`} width="88" height="88" />
+		<img class="avatar" src={site.avatar} alt={`${site.name} 的头像占位`} width="88" height="88" fetchpriority="high" decoding="async" />
 		<p class="eyebrow">{site.eyebrow}</p>
 		<h1>{site.name}</h1>
 		<p class="tagline">{site.tagline}</p>
@@ -15,6 +15,6 @@ import { site } from '../lib/site';
 		</div>
 	</div>
 	<div class="hero-art">
-		<img src={site.heroImage} alt={site.heroImageAlt} width="990" height="1400" />
+		<img src={site.heroImage} alt={site.heroImageAlt} width="990" height="1400" fetchpriority="high" decoding="async" />
 	</div>
 </section>

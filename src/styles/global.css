@@ -608,7 +608,12 @@ a:hover {
 	font-weight: 600;
 	box-shadow: var(--shadow);
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease,
+		color 0.2s ease,
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
 }
 
 .btn-expand-articles:hover {
@@ -794,7 +799,9 @@ a:hover {
 	transform-origin: center 35%;
 	transform: scale(var(--item-scale, 1)) translateY(var(--item-y, 0px));
 	opacity: var(--item-opacity, 1);
-	transition: transform 0.16s ease-out, opacity 0.16s ease-out;
+}
+
+.timeline-rail.is-scrolling .timeline-rail-item {
 	will-change: transform, opacity;
 }
 
@@ -1630,7 +1637,10 @@ dialog::backdrop {
 	font-weight: 600;
 	color: var(--ink);
 	cursor: pointer;
-	transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+	transition:
+		background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+		border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+		color 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 	user-select: none;
 }
 
@@ -1700,7 +1710,10 @@ dialog::backdrop {
 	color: var(--ink);
 	cursor: pointer;
 	text-align: left;
-	transition: all 0.15s ease;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		transform 0.15s ease;
 }
 
 .sidebar-dropdown-option:hover {
@@ -1740,7 +1753,10 @@ dialog::backdrop {
 	border: 1px solid transparent;
 	color: var(--muted);
 	cursor: pointer;
-	transition: all 0.15s ease;
+	transition:
+		background-color 0.15s ease,
+		border-color 0.15s ease,
+		color 0.15s ease;
 	padding: 0;
 	flex: none;
 }
@@ -2022,7 +2038,12 @@ dialog::backdrop {
 	font-size: 0.82rem;
 	font-weight: 600;
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease,
+		color 0.2s ease,
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
 	white-space: nowrap;
 }
 
@@ -2144,6 +2165,7 @@ html.js .reveal.is-visible {
 @media (max-width: 860px) {
 	.page-bg {
 		background-size: auto, auto, auto, auto, 180px 180px;
+		background-attachment: scroll !important;
 	}
 
 	.hero,

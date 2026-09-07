@@ -1,5 +1,24 @@
 let pageAbort: AbortController | null = null;
 
+let scrollTicking = false;
+const scrollSubscribers = new Set<(scrollY: number) => void>();
+
+function onGlobalScroll() {
+	if (scrollTicking) return;
+	scrollTicking = true;
+	requestAnimationFrame(() => {
+		scrollTicking = false;
+		const sy = window.scrollY;
+		scrollSubscribers.forEach((cb) => cb(sy));
+	});
+}
+
+function subscribeScroll(cb: (scrollY: number) => void, signal: AbortSignal) {
+	scrollSubscribers.add(cb);
+	cb(window.scrollY);
+	signal.addEventListener('abort', () => scrollSubscribers.delete(cb));
+}
+
 function $(selector: string, root: ParentNode = document) {
 	return root.querySelector(selector);
 }
@@ -66,11 +85,9 @@ function initHeader(signal: AbortSignal) {
 		backdrop.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false, signal });
 	}
 	if (!header) return;
-	const onScroll = () => {
-		header.classList.toggle('is-scrolled', window.scrollY > 10);
-	};
-	onScroll();
-	window.addEventListener('scroll', onScroll, { passive: true, signal });
+	subscribeScroll((sy) => {
+		header.classList.toggle('is-scrolled', sy > 10);
+	}, signal);
 }
 
 function initScrollSpy(signal: AbortSignal) {
@@ -109,46 +126,35 @@ function initScrollSpy(signal: AbortSignal) {
 		);
 	});
 
-	let ticking = false;
-	const onScroll = () => {
-		if (ticking) return;
-		ticking = true;
-		requestAnimationFrame(() => {
-			ticking = false;
-			if (Date.now() < lockUntil) return;
+	subscribeScroll((scrollY) => {
+		if (Date.now() < lockUntil) return;
 
-			const scrollY = window.scrollY;
-			const docHeight = document.documentElement.scrollHeight;
-			const winHeight = window.innerHeight;
+		const docHeight = document.documentElement.scrollHeight;
+		const winHeight = window.innerHeight;
 
-			// Reached bottom of page: highlight last section (Connect)
-			if (winHeight + scrollY >= docHeight - 40) {
-				setActive(sectionItems[sectionItems.length - 1].id);
-				return;
+		// Reached bottom of page: highlight last section (Connect)
+		if (winHeight + scrollY >= docHeight - 40) {
+			setActive(sectionItems[sectionItems.length - 1].id);
+			return;
+		}
+
+		// Reading line offset accounting for sticky header
+		const readingLine = 120;
+		let activeId = '';
+
+		for (const item of sectionItems) {
+			const rect = item.el.getBoundingClientRect();
+			if (rect.top <= readingLine) {
+				activeId = item.id;
 			}
+		}
 
-			// Reading line offset accounting for sticky header
-			const readingLine = 120;
-			let activeId = '';
-
-			for (const item of sectionItems) {
-				const rect = item.el.getBoundingClientRect();
-				if (rect.top <= readingLine) {
-					activeId = item.id;
-				}
-			}
-
-			if (activeId) {
-				setActive(activeId);
-			} else if (scrollY < 100) {
-				setActive('');
-			}
-		});
-	};
-
-	onScroll();
-	window.addEventListener('scroll', onScroll, { passive: true, signal });
-	window.addEventListener('resize', onScroll, { passive: true, signal });
+		if (activeId) {
+			setActive(activeId);
+		} else if (scrollY < 100) {
+			setActive('');
+		}
+	}, signal);
 }
 
 function initTableOfContents(signal: AbortSignal) {
@@ -203,46 +209,35 @@ function initTableOfContents(signal: AbortSignal) {
 		);
 	});
 
-	let ticking = false;
-	const onScroll = () => {
-		if (ticking) return;
-		ticking = true;
-		requestAnimationFrame(() => {
-			ticking = false;
-			if (Date.now() < lockUntil) return;
+	subscribeScroll((scrollY) => {
+		if (Date.now() < lockUntil) return;
 
-			const scrollY = window.scrollY;
-			const docHeight = document.documentElement.scrollHeight;
-			const winHeight = window.innerHeight;
+		const docHeight = document.documentElement.scrollHeight;
+		const winHeight = window.innerHeight;
 
-			// Reached bottom of page: highlight last heading
-			if (winHeight + scrollY >= docHeight - 60) {
-				setActive(headingItems[headingItems.length - 1].slug);
-				return;
+		// Reached bottom of page: highlight last heading
+		if (winHeight + scrollY >= docHeight - 60) {
+			setActive(headingItems[headingItems.length - 1].slug);
+			return;
+		}
+
+		// Reading line offset accounting for header + comfortable reading margin
+		const readingLine = 150;
+		let activeSlug = '';
+
+		for (const item of headingItems) {
+			const rect = item.el.getBoundingClientRect();
+			if (rect.top <= readingLine) {
+				activeSlug = item.slug;
 			}
+		}
 
-			// Reading line offset accounting for header + comfortable reading margin
-			const readingLine = 150;
-			let activeSlug = '';
-
-			for (const item of headingItems) {
-				const rect = item.el.getBoundingClientRect();
-				if (rect.top <= readingLine) {
-					activeSlug = item.slug;
-				}
-			}
-
-			if (activeSlug) {
-				setActive(activeSlug);
-			} else if (scrollY < 200) {
-				setActive(headingItems[0].slug);
-			}
-		});
-	};
-
-	onScroll();
-	window.addEventListener('scroll', onScroll, { passive: true, signal });
-	window.addEventListener('resize', onScroll, { passive: true, signal });
+		if (activeSlug) {
+			setActive(activeSlug);
+		} else if (scrollY < 200) {
+			setActive(headingItems[0].slug);
+		}
+	}, signal);
 }
 
 function initReveal(signal: AbortSignal) {
@@ -652,11 +647,9 @@ function initSidebarNavFilterAndCollapse(signal: AbortSignal) {
 function initBackToTop(signal: AbortSignal) {
 	const btn = $('[data-back-to-top]') as HTMLButtonElement | null;
 	if (!btn) return;
-	const onScroll = () => {
-		btn.classList.toggle('is-visible', window.scrollY > 640);
-	};
-	onScroll();
-	window.addEventListener('scroll', onScroll, { passive: true, signal });
+	subscribeScroll((sy) => {
+		btn.classList.toggle('is-visible', sy > 640);
+	}, signal);
 }
 
 function scrollToHash() {
@@ -951,6 +944,15 @@ function initTimelineRail(signal: AbortSignal) {
 	// 3. Smooth Lerp Momentum Wheel Scrolling (丝滑滚轮平滑阻尼滚动)
 	let targetScroll = track.scrollLeft;
 	let animFrameId: number | null = null;
+	let scrollTimeout: number | null = null;
+
+	const markScrolling = () => {
+		track.classList.add('is-scrolling');
+		if (scrollTimeout) clearTimeout(scrollTimeout);
+		scrollTimeout = window.setTimeout(() => {
+			track.classList.remove('is-scrolling');
+		}, 160);
+	};
 
 	const renderSmoothScroll = () => {
 		const maxScroll = track.scrollWidth - track.clientWidth;
@@ -961,6 +963,7 @@ function initTimelineRail(signal: AbortSignal) {
 		if (Math.abs(diff) < 0.6) {
 			track.scrollLeft = targetScroll;
 			animFrameId = null;
+			track.classList.remove('is-scrolling');
 			onTrackScroll();
 			return;
 		}
@@ -974,6 +977,7 @@ function initTimelineRail(signal: AbortSignal) {
 	track.addEventListener(
 		'scroll',
 		() => {
+			markScrolling();
 			if (!animFrameId) {
 				targetScroll = track.scrollLeft;
 			}
@@ -991,6 +995,7 @@ function initTimelineRail(signal: AbortSignal) {
 
 			targetScroll = Math.max(0, Math.min(targetScroll + delta * 1.15, maxScroll));
 
+			track.classList.add('is-scrolling');
 			if (!animFrameId) {
 				animFrameId = requestAnimationFrame(renderSmoothScroll);
 			}
@@ -1000,6 +1005,7 @@ function initTimelineRail(signal: AbortSignal) {
 
 	signal.addEventListener('abort', () => {
 		if (animFrameId) cancelAnimationFrame(animFrameId);
+		if (scrollTimeout) clearTimeout(scrollTimeout);
 	});
 
 	// Initial render
@@ -1030,5 +1036,6 @@ function initPage() {
 initPageProgressBar();
 document.addEventListener('click', onClick);
 document.addEventListener('keydown', onKeydown);
+window.addEventListener('scroll', onGlobalScroll, { passive: true });
+window.addEventListener('resize', onGlobalScroll, { passive: true });
 document.addEventListener('astro:page-load', initPage);
-initPage();
