@@ -4,5 +4,8 @@ import { defineConfig } from 'astro/config';
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://sutady.top',
-	prefetch: true,
+	prefetch: {
+		prefetchAll: true,
+		defaultStrategy: 'viewport',
+	},
 });

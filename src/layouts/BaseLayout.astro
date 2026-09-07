@@ -36,7 +36,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 		</script>
 	</head>
 	<body class="page-bg">
-		<div id="page-progress" class="page-progress" aria-hidden="true"></div>
+		<div id="page-progress" class="page-progress" transition:persist aria-hidden="true"></div>
 		<a class="skip-link" href="#main">跳到正文</a>
 		<Header />
 		<main id="main">

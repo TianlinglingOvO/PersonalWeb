@@ -809,18 +809,23 @@ function initLazyImages() {
 }
 
 function initPageProgressBar() {
-	const bar = document.getElementById('page-progress');
-	if (!bar) return;
-
 	document.addEventListener('astro:before-preparation', () => {
-		bar.className = 'page-progress is-loading';
+		const bar = document.getElementById('page-progress');
+		if (bar) {
+			bar.classList.remove('is-loaded');
+			bar.classList.add('is-loading');
+		}
 	});
 
 	document.addEventListener('astro:after-preparation', () => {
-		bar.className = 'page-progress is-loaded';
-		window.setTimeout(() => {
-			bar.className = 'page-progress';
-		}, 360);
+		const bar = document.getElementById('page-progress');
+		if (bar) {
+			bar.classList.remove('is-loading');
+			bar.classList.add('is-loaded');
+			window.setTimeout(() => {
+				bar.classList.remove('is-loaded');
+			}, 360);
+		}
 	});
 }
 
