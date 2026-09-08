@@ -37,7 +37,6 @@ const timeline = defineCollection({
 		date: z.coerce.string(),
 		title: z.string(),
 		tag: z.string().default('历程'),
-		icon: z.string().default('spark'),
 		isHighlight: z.boolean().default(false),
 		isFuture: z.boolean().default(false),
 		links: z

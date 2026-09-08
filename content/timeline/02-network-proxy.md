@@ -2,7 +2,6 @@
 date: "2026.08"
 title: 首发计算机网络底层科普
 tag: 科普分享
-icon: network
 links:
   - label: VPN科普 ➔
     href: /articles/how_vpn_work/

@@ -2,7 +2,6 @@
 date: "2026.09"
 title: 个人空间上线 & 开源
 tag: 独立开发
-icon: rocket
 isHighlight: true
 links:
   - label: 访问 GitHub ↗

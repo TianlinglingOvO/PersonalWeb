@@ -2,7 +2,6 @@
 date: "2026.05"
 title: VPN 代理原理初探
 tag: 科普分享
-icon: network
 links:
   - label: 阅读科普 ➔
     href: /articles/how_vpn_work/

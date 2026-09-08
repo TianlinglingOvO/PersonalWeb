@@ -2,7 +2,6 @@
 date: "Future"
 title: 探索更广阔的技术宇宙
 tag: 持续进阶
-icon: star
 isFuture: true
 order: 0
 ---
