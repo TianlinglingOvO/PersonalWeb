@@ -65,7 +65,13 @@ const renderedItems = await Promise.all(
 						<div class="timeline-node-wrap">
 							<div class="timeline-node" aria-hidden="true">
 								{item.data.isFuture ? (
-									<span class="timeline-node-star">★</span>
+									<svg
+										class="timeline-node-star"
+										viewBox="0 0 24 24"
+										aria-hidden="true"
+									>
+										<polygon points="12.0,2.8 14.47,8.6 20.75,9.16 15.99,13.3 17.41,19.44 12.0,16.2 6.59,19.44 8.01,13.3 3.25,9.16 9.53,8.6" />
+									</svg>
 								) : (
 									<span class="timeline-node-dot" />
 								)}

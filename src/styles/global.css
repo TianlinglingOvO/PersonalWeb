@@ -829,6 +829,8 @@ html:not(.js) .timeline-rail-item {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	position: relative;
+	animation: pulseCirclePink 2.8s ease-in-out infinite;
 	transition:
 		transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
 		box-shadow 0.24s ease;
@@ -842,39 +844,56 @@ html:not(.js) .timeline-rail-item {
 	transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-/* 高亮脉冲动效（最新节点） */
+@keyframes pulseCirclePink {
+	0%, 100% {
+		box-shadow: 0 0 0 3px var(--accent-soft), 0 2px 8px rgba(226, 92, 122, 0.15);
+	}
+	50% {
+		box-shadow: 0 0 0 7px rgba(248, 213, 221, 0.6), 0 4px 16px rgba(226, 92, 122, 0.35);
+	}
+}
+
+/* 高亮最新里程碑节点 */
 .timeline-rail-item.is-highlight .timeline-node {
 	border-color: var(--accent-deep);
-	animation: pulseNode 2.6s infinite;
+	animation: pulseCirclePinkHighlight 2.8s ease-in-out infinite;
 }
 
 .timeline-rail-item.is-highlight .timeline-node-dot {
 	background: var(--accent-deep);
 }
 
-@keyframes pulseNode {
+@keyframes pulseCirclePinkHighlight {
 	0%, 100% {
-		box-shadow: 0 0 0 3px var(--accent-soft), 0 4px 14px rgba(226, 92, 122, 0.25);
+		box-shadow: 0 0 0 3px var(--accent-soft), 0 2px 8px rgba(184, 67, 95, 0.2);
 	}
 	50% {
-		box-shadow: 0 0 0 7px rgba(248, 213, 221, 0.55), 0 6px 18px rgba(226, 92, 122, 0.4);
+		box-shadow: 0 0 0 7px rgba(248, 213, 221, 0.65), 0 4px 18px rgba(184, 67, 95, 0.4);
 	}
 }
 
 /* 未来探索节点 */
 .timeline-rail-item.is-future .timeline-node {
 	border-color: var(--accent-2);
-	box-shadow: 0 0 0 3px var(--accent-2-soft), var(--shadow);
 	background: linear-gradient(135deg, #ffffff, var(--accent-2-soft));
+	animation: pulseCircleBlue 2.8s ease-in-out infinite;
+}
+
+@keyframes pulseCircleBlue {
+	0%, 100% {
+		box-shadow: 0 0 0 3px var(--accent-2-soft), 0 2px 8px rgba(90, 165, 199, 0.15);
+	}
+	50% {
+		box-shadow: 0 0 0 7px rgba(200, 230, 245, 0.65), 0 4px 16px rgba(90, 165, 199, 0.35);
+	}
 }
 
 .timeline-node-star {
-	color: var(--accent-2);
-	font-size: 1.1rem;
-	font-weight: 700;
-	line-height: 1;
-	transform: translateY(-1px);
-	display: inline-block;
+	width: 18px;
+	height: 18px;
+	fill: var(--accent-2);
+	display: block;
+	transform-origin: center;
 	animation: spinStar 10s linear infinite;
 }
 
@@ -909,6 +928,49 @@ html:not(.js) .timeline-rail-item {
 	transform: translateY(-3px);
 	border-color: var(--accent);
 	box-shadow: var(--shadow-hover);
+}
+
+/* 未来探索卡片 */
+.timeline-rail-item.is-future .timeline-micro-card {
+	border-style: dashed;
+	border-color: rgba(90, 165, 199, 0.45);
+	background: linear-gradient(180deg, rgba(229, 243, 249, 0.45) 0%, #ffffff 70px);
+}
+
+/* 重要里程碑卡片高亮体系 (Highlight Milestone Cards) */
+.timeline-rail-item.is-highlight .timeline-micro-card {
+	border: 1.5px solid var(--accent);
+	background: linear-gradient(180deg, #fff5f7 0%, #ffffff 65px);
+	box-shadow: 0 6px 22px rgba(242, 139, 159, 0.18), var(--shadow);
+}
+
+.timeline-rail-item.is-highlight .timeline-micro-card:hover {
+	transform: translateY(-3px);
+	border-color: var(--accent-deep);
+	box-shadow: 0 10px 28px rgba(184, 67, 95, 0.22);
+}
+
+.timeline-rail-item.is-highlight .timeline-date-badge {
+	background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+	color: #ffffff;
+	box-shadow: 0 2px 6px rgba(184, 67, 95, 0.25);
+}
+
+.timeline-rail-item.is-highlight .timeline-tag-badge {
+	color: var(--accent-deep);
+	background: var(--accent-soft);
+	border-color: rgba(242, 139, 159, 0.35);
+}
+
+.timeline-rail-item.is-highlight .timeline-link-btn {
+	background: var(--accent-soft);
+	border-color: var(--accent);
+}
+
+.timeline-rail-item.is-highlight .timeline-link-btn:hover {
+	background: var(--accent);
+	color: #ffffff;
+	border-color: var(--accent-deep);
 }
 
 .timeline-card-header {

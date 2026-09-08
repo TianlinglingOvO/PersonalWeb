@@ -704,6 +704,19 @@ function onClick(event: Event) {
 		return;
 	}
 
+	const timelineArrow = target.closest<HTMLButtonElement>('[data-timeline-arrow]');
+	if (timelineArrow && !timelineArrow.disabled) {
+		const dir = timelineArrow.getAttribute('data-timeline-arrow');
+		const track = document.querySelector<HTMLElement>('[data-timeline-track]');
+		if (track) {
+			const items = track.querySelectorAll<HTMLElement>('[data-timeline-item]');
+			const cardWidth = items[0]?.offsetWidth ?? 275;
+			const delta = dir === 'prev' ? -(cardWidth + 20) : (cardWidth + 20);
+			track.scrollBy({ left: delta, behavior: 'smooth' });
+		}
+		return;
+	}
+
 	const anchor = target.closest('a');
 	if (anchor && anchor.origin && anchor.origin !== window.location.origin) {
 		anchor.target = '_blank';
@@ -921,27 +934,7 @@ function initTimelineRail(signal: AbortSignal) {
 		updateProximity();
 	};
 
-	if (prevBtn && nextBtn) {
-		prevBtn.addEventListener(
-			'click',
-			() => {
-				const cardWidth = items[0]?.offsetWidth ?? 275;
-				track.scrollBy({ left: -(cardWidth + 20), behavior: 'smooth' });
-			},
-			{ signal },
-		);
-
-		nextBtn.addEventListener(
-			'click',
-			() => {
-				const cardWidth = items[0]?.offsetWidth ?? 275;
-				track.scrollBy({ left: cardWidth + 20, behavior: 'smooth' });
-			},
-			{ signal },
-		);
-	}
-
-	// 3. Smooth Lerp Momentum Wheel Scrolling (丝滑滚轮平滑阻尼滚动)
+	// 3. Smooth Lerp Momentum Wheel & Arrow Navigation Scrolling (丝滑阻尼滑行管线)
 	let targetScroll = track.scrollLeft;
 	let animFrameId: number | null = null;
 
@@ -964,6 +957,41 @@ function initTimelineRail(signal: AbortSignal) {
 		animFrameId = requestAnimationFrame(renderSmoothScroll);
 	};
 
+	const scrollTimelineBy = (delta: number) => {
+		const maxScroll = track.scrollWidth - track.clientWidth;
+		if (!animFrameId) {
+			targetScroll = track.scrollLeft;
+		}
+		targetScroll = Math.max(0, Math.min(targetScroll + delta, maxScroll));
+		if (!animFrameId) {
+			animFrameId = requestAnimationFrame(renderSmoothScroll);
+		}
+	};
+
+	if (prevBtn && nextBtn) {
+		prevBtn.addEventListener(
+			'click',
+			(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				const cardWidth = items[0]?.offsetWidth ?? 275;
+				scrollTimelineBy(-(cardWidth + 20));
+			},
+			{ signal },
+		);
+
+		nextBtn.addEventListener(
+			'click',
+			(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				const cardWidth = items[0]?.offsetWidth ?? 275;
+				scrollTimelineBy(cardWidth + 20);
+			},
+			{ signal },
+		);
+	}
+
 	track.addEventListener(
 		'scroll',
 		() => {
@@ -982,6 +1010,9 @@ function initTimelineRail(signal: AbortSignal) {
 			const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
 			const maxScroll = track.scrollWidth - track.clientWidth;
 
+			if (!animFrameId) {
+				targetScroll = track.scrollLeft;
+			}
 			targetScroll = Math.max(0, Math.min(targetScroll + delta * 1.15, maxScroll));
 
 			if (!animFrameId) {
@@ -1026,3 +1057,6 @@ document.addEventListener('keydown', onKeydown);
 window.addEventListener('scroll', onGlobalScroll, { passive: true });
 window.addEventListener('resize', onGlobalScroll, { passive: true });
 document.addEventListener('astro:page-load', initPage);
+if (document.readyState !== 'loading') {
+	initPage();
+}
