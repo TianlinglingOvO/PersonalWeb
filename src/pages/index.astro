@@ -11,7 +11,14 @@ import Connect from '../components/Connect.astro';
 const aboutEntry = (await getCollection('about'))[0];
 if (!aboutEntry) throw new Error('缺少 content/about.md');
 
-const timeline = (await getCollection('timeline')).sort((a, b) => a.data.order - b.data.order);
+const timeline = (await getCollection('timeline')).sort((a, b) => {
+	if (a.data.isFuture && !b.data.isFuture) return -1;
+	if (!a.data.isFuture && b.data.isFuture) return 1;
+	if (b.data.order !== a.data.order) {
+		return b.data.order - a.data.order;
+	}
+	return b.data.date.localeCompare(a.data.date);
+});
 const articles = (await getCollection('articles')).sort(
 	(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );

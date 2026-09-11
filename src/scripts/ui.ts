@@ -704,19 +704,6 @@ function onClick(event: Event) {
 		return;
 	}
 
-	const timelineArrow = target.closest<HTMLButtonElement>('[data-timeline-arrow]');
-	if (timelineArrow && !timelineArrow.disabled) {
-		const dir = timelineArrow.getAttribute('data-timeline-arrow');
-		const track = document.querySelector<HTMLElement>('[data-timeline-track]');
-		if (track) {
-			const items = track.querySelectorAll<HTMLElement>('[data-timeline-item]');
-			const cardWidth = items[0]?.offsetWidth ?? 275;
-			const delta = dir === 'prev' ? -(cardWidth + 20) : (cardWidth + 20);
-			track.scrollBy({ left: delta, behavior: 'smooth' });
-		}
-		return;
-	}
-
 	const anchor = target.closest('a');
 	if (anchor && anchor.origin && anchor.origin !== window.location.origin) {
 		anchor.target = '_blank';
@@ -908,12 +895,22 @@ function initTimelineRail(signal: AbortSignal) {
 		});
 	};
 
+	// Proximity updates throttled by requestAnimationFrame to prevent layout thrashing on 23 items
+	let proximityRaf: number | null = null;
+	const scheduleProximityUpdate = () => {
+		if (proximityRaf) return;
+		proximityRaf = requestAnimationFrame(() => {
+			proximityRaf = null;
+			updateProximity();
+		});
+	};
+
 	// When Section 02 enters/leaves viewport vertically
 	const sectionObserver = new IntersectionObserver(
 		(entries) => {
 			entries.forEach((entry) => {
 				isSectionVisible = entry.isIntersecting;
-				updateProximity();
+				scheduleProximityUpdate();
 			});
 		},
 		{ threshold: 0.1 },
@@ -931,12 +928,21 @@ function initTimelineRail(signal: AbortSignal) {
 
 	const onTrackScroll = () => {
 		updateArrowState();
-		updateProximity();
+		scheduleProximityUpdate();
 	};
 
 	// 3. Smooth Lerp Momentum Wheel & Arrow Navigation Scrolling (丝滑阻尼滑行管线)
 	let targetScroll = track.scrollLeft;
 	let animFrameId: number | null = null;
+	let isProgrammaticScroll = false;
+
+	const stopAnimation = () => {
+		if (animFrameId) {
+			cancelAnimationFrame(animFrameId);
+			animFrameId = null;
+		}
+		targetScroll = track.scrollLeft;
+	};
 
 	const renderSmoothScroll = () => {
 		const maxScroll = track.scrollWidth - track.clientWidth;
@@ -945,14 +951,30 @@ function initTimelineRail(signal: AbortSignal) {
 		const diff = targetScroll - current;
 
 		if (Math.abs(diff) < 0.6) {
+			isProgrammaticScroll = true;
 			track.scrollLeft = targetScroll;
+			isProgrammaticScroll = false;
 			animFrameId = null;
 			onTrackScroll();
 			return;
 		}
 
-		// Lerp easing factor 0.16 gives a gentle, tactile momentum glide
-		track.scrollLeft += diff * 0.16;
+		// Responsive Lerp factor 0.22 with a guaranteed minimum step speed (>= 3.5px/frame)
+		let step = diff * 0.22;
+		if (Math.abs(step) < 3.5 && Math.abs(diff) >= 0.6) {
+			step = Math.sign(diff) * Math.min(Math.abs(diff), 3.5);
+		}
+
+		// Edge Snap: when within 80px of boundary and moving towards it, snap directly in 1 frame
+		if (targetScroll <= 0 && current <= 80) {
+			step = -current;
+		} else if (targetScroll >= maxScroll && current >= maxScroll - 80) {
+			step = maxScroll - current;
+		}
+
+		isProgrammaticScroll = true;
+		track.scrollLeft += step;
+		isProgrammaticScroll = false;
 		onTrackScroll();
 		animFrameId = requestAnimationFrame(renderSmoothScroll);
 	};
@@ -992,10 +1014,24 @@ function initTimelineRail(signal: AbortSignal) {
 		);
 	}
 
+	// Immediate stop on pointerdown to yield 100% control to user interaction (scrollbar drag, click, etc.)
+	track.addEventListener(
+		'pointerdown',
+		() => {
+			stopAnimation();
+		},
+		{ passive: true, signal },
+	);
+
 	track.addEventListener(
 		'scroll',
 		() => {
-			if (!animFrameId) {
+			if (!isProgrammaticScroll) {
+				// Native user scroll (scrollbar dragging, touch gesture, keyboard arrow keys)
+				if (animFrameId) {
+					cancelAnimationFrame(animFrameId);
+					animFrameId = null;
+				}
 				targetScroll = track.scrollLeft;
 			}
 			onTrackScroll();
@@ -1003,17 +1039,60 @@ function initTimelineRail(signal: AbortSignal) {
 		{ passive: true, signal },
 	);
 
+	// 动态滚轮加速度感应 (慢滚细腻，快滚极速加速)
+	let lastWheelTime = 0;
+	let wheelVelocity = 1.0;
+
 	railWrap.addEventListener(
 		'wheel',
 		(e: WheelEvent) => {
+			if (e.ctrlKey) return;
+			const rawDelta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+			if (Math.abs(rawDelta) < 0.5) return;
 			e.preventDefault();
-			const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+
 			const maxScroll = track.scrollWidth - track.clientWidth;
+
+			// Quick edge pass-through: if already within 80px of edge and rolling further into it, land immediately!
+			if (rawDelta < 0 && track.scrollLeft <= 80) {
+				stopAnimation();
+				isProgrammaticScroll = true;
+				track.scrollLeft = 0;
+				isProgrammaticScroll = false;
+				targetScroll = 0;
+				onTrackScroll();
+				return;
+			}
+			if (rawDelta > 0 && track.scrollLeft >= maxScroll - 80) {
+				stopAnimation();
+				isProgrammaticScroll = true;
+				track.scrollLeft = maxScroll;
+				isProgrammaticScroll = false;
+				targetScroll = maxScroll;
+				onTrackScroll();
+				return;
+			}
+
+			const now = performance.now();
+			const dt = now - lastWheelTime;
+			lastWheelTime = now;
+
+			// 快速连续滚动时阶梯累加加速度，停顿后平缓回落
+			if (dt < 130) {
+				wheelVelocity = Math.min(wheelVelocity + 0.35, 3.8);
+			} else if (dt > 280) {
+				wheelVelocity = 1.0;
+			} else {
+				wheelVelocity = Math.max(1.0, wheelVelocity - 0.15);
+			}
+
+			const dynamicMultiplier = 1.6 * wheelVelocity;
+			const delta = rawDelta * dynamicMultiplier;
 
 			if (!animFrameId) {
 				targetScroll = track.scrollLeft;
 			}
-			targetScroll = Math.max(0, Math.min(targetScroll + delta * 1.15, maxScroll));
+			targetScroll = Math.max(0, Math.min(targetScroll + delta, maxScroll));
 
 			if (!animFrameId) {
 				animFrameId = requestAnimationFrame(renderSmoothScroll);
@@ -1024,12 +1103,13 @@ function initTimelineRail(signal: AbortSignal) {
 
 	signal.addEventListener('abort', () => {
 		if (animFrameId) cancelAnimationFrame(animFrameId);
+		if (proximityRaf) cancelAnimationFrame(proximityRaf);
 	});
 
 	// Initial render
 	window.setTimeout(() => {
 		updateArrowState();
-		updateProximity();
+		scheduleProximityUpdate();
 	}, 60);
 }
 

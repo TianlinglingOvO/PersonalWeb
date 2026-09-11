@@ -767,17 +767,20 @@ a:hover {
 .timeline-rail {
 	display: flex;
 	gap: 1.25rem;
+	align-items: flex-start;
 	overflow-x: auto;
+	overflow-anchor: none;
+	overscroll-behavior-x: contain;
 	padding: 0.4rem 0.5rem 1.2rem;
 	-webkit-overflow-scrolling: touch;
 	scrollbar-width: thin;
-	scrollbar-color: var(--accent-soft) transparent;
+	scrollbar-color: var(--accent) transparent;
 	position: relative;
 	z-index: 2;
 }
 
 .timeline-rail::-webkit-scrollbar {
-	height: 6px;
+	height: 8px;
 }
 
 .timeline-rail::-webkit-scrollbar-track {
@@ -785,8 +788,14 @@ a:hover {
 }
 
 .timeline-rail::-webkit-scrollbar-thumb {
-	background: var(--accent-soft);
+	background: var(--accent);
 	border-radius: 999px;
+	transition: background-color 0.18s ease;
+}
+
+.timeline-rail::-webkit-scrollbar-thumb:hover,
+.timeline-rail::-webkit-scrollbar-thumb:active {
+	background: var(--accent-deep);
 }
 
 .timeline-rail-item {
@@ -906,18 +915,19 @@ html:not(.js) .timeline-rail-item {
 	}
 }
 
-/* 轻量微卡片主体 */
+/* 轻量微卡片主体：自适应内容高度，告别无意义留白 */
 .timeline-micro-card {
 	width: 100%;
-	min-height: 162px;
-	padding: 1.15rem 1.25rem;
+	min-height: auto;
+	padding: 0.95rem 1.15rem;
 	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: var(--radius);
 	box-shadow: var(--shadow);
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
+	justify-content: flex-start;
+	gap: 0.45rem;
 	transition:
 		transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
 		box-shadow 0.22s ease,
@@ -977,7 +987,7 @@ html:not(.js) .timeline-rail-item {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
-	margin-bottom: 0.45rem;
+	margin-bottom: 0;
 	flex-wrap: wrap;
 }
 
@@ -1008,7 +1018,7 @@ html:not(.js) .timeline-rail-item {
 }
 
 .timeline-card-title {
-	margin: 0 0 0.4rem;
+	margin: 0;
 	font-size: 1.02rem;
 	font-weight: 700;
 	color: var(--ink);
@@ -1020,19 +1030,27 @@ html:not(.js) .timeline-rail-item {
 	color: var(--muted);
 	font-size: 0.88rem;
 	line-height: 1.55;
-	flex-grow: 1;
+	flex-grow: 0;
+}
+
+.timeline-card-desc:empty {
+	display: none;
 }
 
 .timeline-card-desc p {
-	margin: 0;
+	margin: 0 0 0.35rem;
+}
+
+.timeline-card-desc p:last-child {
+	margin-bottom: 0;
 }
 
 .timeline-card-links {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	margin-top: 0.75rem;
-	padding-top: 0.65rem;
+	margin-top: 0.25rem;
+	padding-top: 0.55rem;
 	border-top: 1px dashed var(--line);
 }
 
