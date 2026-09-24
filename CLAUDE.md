@@ -20,7 +20,7 @@ npm run check     # astro check：对 .astro / .ts 做 TypeScript 类型检查
 ```
 
 - 项目没有测试和 lint。`astro build` 不做类型检查，所以改完代码先跑 `npm run check`（需 0 errors），再按 AGENTS.md 的要求跑 `npm run build`，输出 `Complete!`、0 错误、0 警告后才能声明完成。
-- Node 版本以 `package.json` 的 `engines` 为准（`>=22.12.0`，`.nvmrc` 写的是 22）。README 里写的 “Node 20+” 已经过时。
+- Node 版本以 `package.json` 的 `engines` 为准（`>=22.12.0`，`.nvmrc` 写的是 22）。
 
 ## 架构要点
 
@@ -33,12 +33,12 @@ npm run check     # astro check：对 .astro / .ts 做 TypeScript 类型检查
 - 首页 `src/pages/index.astro` 是单页，由 Hero、About、Timeline、Articles、Services、Connect 几个 section 拼成。各集合的**排序逻辑都写在这个页面里**，不在组件中。
 - 所有页面都套用 `src/layouts/BaseLayout.astro`，其中启用了 `<ClientRouter />`（View Transitions），并在 body 底部加载唯一的客户端脚本 `src/scripts/ui.ts`。
 
-**客户端脚本 `src/scripts/ui.ts`（约 1100 行，所有交互都在这里）**
+**客户端脚本 `src/scripts/ui.ts`（约 1000 行，所有交互都在这里）**
 - 由于启用了 ClientRouter，页面切换时不会重新加载脚本。`initPage()` 挂在 `astro:page-load` 上，每次导航都会 `abort` 上一个 `AbortController`，再依次调用各个 `initXxx(signal)`。**新加的监听器、Observer、rAF 都必须挂到这个 `signal` 上**（`{ signal }` 或 `signal.addEventListener('abort', …)`），否则页面来回切换后会重复绑定。
 - 滚动事件统一走一条 rAF 节流的总线：用 `subscribeScroll(cb, signal)` 订阅，不要自己再加 `window` 的 scroll 监听。
 - 点击和键盘事件在文档级别用事件委托处理（`onClick` / `onKeydown`），只绑定一次，靠 `data-*` 属性分发。组件和脚本之间通过 `data-*` 钩子（如 `data-timeline-track`、`data-article-controller`）对接，改 DOM 结构时要同步检查 `ui.ts`。
 
-**样式 `src/styles/global.css`（约 2900 行，单文件）**
+**样式 `src/styles/global.css`（约 2800 行，单文件）**
 - 只写原生 CSS 和 CSS 变量，按 section 分块。设计 token、圆角层级、动效曲线都以 AGENTS.md 第 3 节为准，禁止硬编码颜色。
 
 **时间线（Section 02）**

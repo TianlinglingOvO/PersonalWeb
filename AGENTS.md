@@ -88,9 +88,10 @@
 
 ## 5. 变更与提交强制校验 (Pre-commit Verification)
 
-任何 AI 助手在完成代码或内容修改后，**必须在终端执行静态构建测试**：
+任何 AI 助手在完成代码或内容修改后，**必须在终端依次执行类型检查与静态构建测试**：
 
 ```bash
+npm run check   # astro check，必须 0 errors（astro build 本身不做类型检查）
 npm run build
 ```
 
