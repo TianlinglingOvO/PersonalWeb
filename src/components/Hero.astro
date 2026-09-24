@@ -1,5 +1,12 @@
 ---
+import type { CollectionEntry } from 'astro:content';
 import { site } from '../lib/site';
+
+interface Props {
+	latest?: CollectionEntry<'articles'>;
+}
+
+const { latest } = Astro.props;
 ---
 
 <section id="top" class="hero wrap">
@@ -13,6 +20,15 @@ import { site } from '../lib/site';
 			<a class="btn btn-ghost" href="/#timeline">看历程</a>
 			<a class="btn btn-ghost" href="/#connect">联系我</a>
 		</div>
+		{
+			latest && (
+				<a class="hero-latest" href={`/articles/${latest.id}/`}>
+					<span class="hero-latest-label"><span class="hero-latest-dot" aria-hidden="true"></span>最近更新</span>
+					<span class="hero-latest-title">{latest.data.title}</span>
+					<span class="hero-latest-arrow" aria-hidden="true">→</span>
+				</a>
+			)
+		}
 	</div>
 	<div class="hero-art">
 		<img src={site.heroImage} alt={site.heroImageAlt} width="990" height="1400" fetchpriority="high" decoding="async" />

@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import Icon from './Icon.astro';
-import { articleCategories, formatDate } from '../lib/site';
+import { articleCategories, formatDate, readingMinutes } from '../lib/site';
 
 interface Props {
 	articles: CollectionEntry<'articles'>[];
@@ -33,7 +33,7 @@ const hasOverflow = Boolean(showExpand && limit > 0 && articles.length > limit);
 		}
 	</div>
 
-	<div class="card-grid" data-article-list>
+	<div class="card-grid" data-article-list data-stagger>
 		{
 			articles.map((article, index) => {
 				const isInitialOverflow = hasOverflow && index >= limit;
@@ -47,7 +47,7 @@ const hasOverflow = Boolean(showExpand && limit > 0 && articles.length > limit);
 					>
 						<p class="meta">
 							<span class="badge">{article.data.category}</span>
-							{formatDate(article.data.date)}
+							{formatDate(article.data.date)} · 约 {readingMinutes(article.body)} 分钟
 						</p>
 						<h3>{article.data.title}</h3>
 						<p>{article.data.description}</p>

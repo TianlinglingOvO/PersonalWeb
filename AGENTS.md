@@ -47,16 +47,21 @@
 
 ```css
 :root {
-  --bg: #fdfbf7;          /* 全局米白微温底色 */
-  --surface: #ffffff;     /* 卡片、面板、纯净白表面 */
-  --ink: #2a262c;         /* 正文字体深灰黑 */
-  --muted: #6b6370;       /* 次要文案柔和灰 */
-  --line: #f1dfd6;        /* 极细微粉边界线 */
-  --accent: #f28b9f;      /* 主题马卡龙粉红 */
-  --accent-soft: #fde8ee; /* 极淡粉红高亮背景底色 */
-  --accent-deep: #b8435f; /* 交互强调深洋红 */
+  --bg: #fbf7f2;            /* 全局米白微温底色 */
+  --bg-soft: #f3ebe4;       /* 次级米色底（图片占位、标签底） */
+  --surface: #ffffff;       /* 卡片、面板、纯净白表面 */
+  --ink: #2a262c;           /* 正文字体深灰黑 */
+  --muted: #6d6570;         /* 次要文案柔和灰 */
+  --line: #e8dfd8;          /* 极细微暖色边界线 */
+  --accent: #e25c7a;        /* 主题马卡龙粉红 */
+  --accent-soft: #f8d5dd;   /* 极淡粉红高亮背景底色 */
+  --accent-deep: #c44763;   /* 交互强调深洋红 */
+  --accent-2: #5c6bc0;      /* 辅助靛蓝（次要链接、时间线“未来”节点） */
+  --accent-2-soft: #dde1f5; /* 淡靛蓝底 */
 }
 ```
+
+* 以上数值以 `src/styles/global.css` 的 `:root` 为准；需要半透明色时用 `color-mix(in srgb, var(--accent) 30%, transparent)`，不要写死 rgba。
 
 * **圆角层级规范**：
   * 胶囊标签 / 交互按钮：`border-radius: 999px;`

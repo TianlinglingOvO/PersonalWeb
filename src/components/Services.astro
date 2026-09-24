@@ -21,19 +21,19 @@ const rendered = await Promise.all(
 			<h2>服务 / Services</h2>
 		</div>
 	</div>
-	<div class="card-grid services-grid">
+	<div class="card-grid services-grid" data-stagger>
 		{
 			rendered.map(({ service, Content }) => (
 				<article class="card service-card">
 					<h3>{service.data.title}</h3>
 					<p>{service.data.summary}</p>
-					<a class="btn btn-primary btn-tiny" href={service.data.ctaHref}>
-						{service.data.ctaLabel}
-					</a>
 					<details>
 						<summary>展开说明</summary>
 						<div class="prose">
 							<Content />
+							<a class="service-cta" href={service.data.ctaHref}>
+								{service.data.ctaLabel} <span aria-hidden="true">→</span>
+							</a>
 						</div>
 					</details>
 				</article>

@@ -4,7 +4,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import ArticleSidebarNav from '../../components/ArticleSidebarNav.astro';
-import { formatDate, site } from '../../lib/site';
+import { formatDate, readingMinutes, site } from '../../lib/site';
 
 export async function getStaticPaths() {
 	const posts = (await getCollection('articles')).sort(
@@ -34,6 +34,7 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
 <BaseLayout title={`${post.data.title} · ${site.name}`} description={post.data.description}>
+	<div class="reading-progress" data-reading-progress aria-hidden="true"><span></span></div>
 	<div class="article-layout-container wrap-wide" data-article-layout>
 		<!-- 左侧：文章快速切换侧栏 (桌面宽屏) -->
 		<ArticleSidebarNav currentSlug={post.id} posts={allPosts} class="desktop-sidebar" />
@@ -56,7 +57,7 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 				<a class="back-link" href="/#articles"><Icon name="arrow" /> 返回首页</a>
 				<p class="meta">
 					<span class="badge">{post.data.category}</span>
-					{formatDate(post.data.date)}
+					{formatDate(post.data.date)} · 约 {readingMinutes(post.body)} 分钟
 				</p>
 				<h1>{post.data.title}</h1>
 

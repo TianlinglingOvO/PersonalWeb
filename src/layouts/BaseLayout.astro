@@ -44,7 +44,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 		</main>
 		<Footer />
 		<div id="toast-host" class="toast-host" aria-live="polite"></div>
-		<button class="back-to-top" type="button" data-back-to-top aria-label="回到顶部">
+		<button class="back-to-top" type="button" data-back-to-top aria-label="回到顶部" transition:name="back-to-top">
 			<Icon name="top" />
 		</button>
 		<script src="../scripts/ui.ts"></script>
