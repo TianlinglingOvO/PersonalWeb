@@ -1,8 +1,11 @@
 ---
 import { nav, site } from '../lib/site';
+
+// 文章页没有首页的区块锚点，滚动高亮不会接管，这里直接在 SSR 时点亮“文章”
+const isArticlePage = Astro.url.pathname.startsWith('/articles');
 ---
 
-<header class="site-header">
+<header class="site-header" transition:name="site-header">
 	<div class="header-inner">
 		<a class="brand" href="/#top" data-nav-link>
 			<img class="brand-avatar" src="/images/brand-avatar.jpg?v=8" alt={site.name} width="32" height="32" decoding="async" fetchpriority="high" />
@@ -22,7 +25,12 @@ import { nav, site } from '../lib/site';
 		<nav id="site-nav" class="nav" data-nav-panel aria-label="页面区块">
 			{
 				nav.map((item) => (
-					<a href={item.href} data-nav-link data-section={item.section}>
+					<a
+						href={item.href}
+						class:list={{ 'is-active': isArticlePage && item.section === 'articles' }}
+						data-nav-link
+						data-section={item.section}
+					>
 						{item.label}
 					</a>
 				))

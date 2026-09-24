@@ -240,9 +240,29 @@ function initTableOfContents(signal: AbortSignal) {
 	}, signal);
 }
 
+// 文章阅读进度：正文顶部到达顶栏下沿时为 0，正文底部进入视口底部时为 1
+function initReadingProgress(signal: AbortSignal) {
+	const bar = $('[data-reading-progress] > span') as HTMLElement | null;
+	const body = $('.article-page .prose') as HTMLElement | null;
+	if (!bar || !body) return;
+	subscribeScroll(() => {
+		const headerH = ($('.site-header') as HTMLElement | null)?.offsetHeight ?? 0;
+		const rect = body.getBoundingClientRect();
+		const range = rect.height - (window.innerHeight - headerH);
+		const p = range > 0 ? (headerH - rect.top) / range : 1;
+		bar.style.transform = `scaleX(${Math.min(Math.max(p, 0), 1).toFixed(4)})`;
+	}, signal);
+}
+
 function initReveal(signal: AbortSignal) {
 	const els = $all('.reveal');
 	if (!els.length) return;
+	// 区块内的卡片按顺序错落出场，延迟上限 8 个卡位
+	$all<HTMLElement>('[data-stagger]').forEach((group) => {
+		[...group.children].forEach((child, i) => {
+			(child as HTMLElement).style.setProperty('--stagger-i', String(Math.min(i, 8)));
+		});
+	});
 	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 		els.forEach((el) => el.classList.add('is-visible'));
 		return;
@@ -822,6 +842,32 @@ function initPageProgressBar() {
 	});
 }
 
+// 从文章卡片进入文章页时，让卡片和文章主体共用一个 view-transition-name，形成“卡片展开”过场。
+// 名字只在这条路径上临时添加、过场结束即移除，文章之间切换仍保留原来的翻页效果。
+function initArticleMorph() {
+	const MORPH = 'article-morph';
+	let card: HTMLElement | null = null;
+
+	document.addEventListener('astro:before-preparation', (e) => {
+		card?.style.removeProperty('view-transition-name');
+		const source = (e as Event & { sourceElement?: Element }).sourceElement;
+		card = source?.closest<HTMLElement>('a.card-link[href^="/articles/"]') ?? null;
+		card?.style.setProperty('view-transition-name', MORPH);
+	});
+
+	document.addEventListener('astro:before-swap', (e) => {
+		if (!card) return;
+		card = null;
+		const { newDocument, viewTransition } = e as Event & { newDocument: Document; viewTransition?: ViewTransition };
+		const page = newDocument.querySelector<HTMLElement>('.article-page');
+		if (!page) return;
+		page.style.setProperty('view-transition-name', MORPH);
+		const cleanup = () => page.style.removeProperty('view-transition-name');
+		if (viewTransition) viewTransition.finished.finally(cleanup);
+		else cleanup();
+	});
+}
+
 function initEmailFix() {
 	$all<HTMLElement>('.contact-copy[data-copy]').forEach((btn) => {
 		const text = btn.getAttribute('data-copy');
@@ -832,285 +878,26 @@ function initEmailFix() {
 	});
 }
 
-function initTimelineRail(signal: AbortSignal) {
-	const timelineSection = document.getElementById('timeline');
-	if (!timelineSection) return;
+// 历程时间线：桌面端蛇形布局是纯 CSS；手机端（≤860px）点年份标题展开 / 收起该年的节点
+function initTimeline(signal: AbortSignal) {
+	const section = document.querySelector<HTMLElement>('[data-timeline]');
+	if (!section) return;
+	const mobileQuery = window.matchMedia('(max-width: 860px)');
 
-	const track = timelineSection.querySelector<HTMLElement>('[data-timeline-track]');
-	const items = $all<HTMLElement>('[data-timeline-item]', timelineSection);
-	const prevBtn = timelineSection.querySelector<HTMLButtonElement>('[data-timeline-arrow="prev"]');
-	const nextBtn = timelineSection.querySelector<HTMLButtonElement>('[data-timeline-arrow="next"]');
-	const railWrap = timelineSection.querySelector<HTMLElement>('.timeline-rail-wrap') ?? track;
-
-	if (!track || !items.length) return;
-
-	let isSectionVisible = false;
-	const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-	// 1. Dynamic Card Proximity Scale & Fade (进入逐渐放大，消失逐渐缩小)
-	const updateProximity = () => {
-		if (isReducedMotion) {
-			items.forEach((item) => {
-				item.style.setProperty('--item-scale', '1');
-				item.style.setProperty('--item-opacity', '1');
-				item.style.setProperty('--item-y', '0px');
-			});
-			return;
-		}
-
-		if (!isSectionVisible) {
-			items.forEach((item) => {
-				item.style.setProperty('--item-scale', '0.82');
-				item.style.setProperty('--item-opacity', '0');
-				item.style.setProperty('--item-y', '14px');
-			});
-			return;
-		}
-
-		const trackRect = track.getBoundingClientRect();
-		const trackLeft = trackRect.left;
-		const trackRight = trackRect.right;
-		// Transition zone width at track edges
-		const fadeZone = Math.min(180, trackRect.width * 0.4);
-
-		items.forEach((item) => {
-			const rect = item.getBoundingClientRect();
-
-			// Distance penetrated through the left and right boundary
-			const distLeft = rect.right - trackLeft;
-			const distRight = trackRight - rect.left;
-
-			const ratioLeft = Math.min(Math.max(distLeft / fadeZone, 0), 1);
-			const ratioRight = Math.min(Math.max(distRight / fadeZone, 0), 1);
-			const visibility = Math.min(ratioLeft, ratioRight);
-
-			// Scale: 0.82 -> 1.0; Opacity: 0.0 -> 1.0; Y: 14px -> 0px
-			const scale = 0.82 + 0.18 * visibility;
-			const opacity = Math.max(0, Math.min(1, visibility * 1.15));
-			const translateY = (1 - visibility) * 14;
-
-			item.style.setProperty('--item-scale', scale.toFixed(3));
-			item.style.setProperty('--item-opacity', opacity.toFixed(3));
-			item.style.setProperty('--item-y', `${translateY.toFixed(1)}px`);
-		});
-	};
-
-	// Proximity updates throttled by requestAnimationFrame to prevent layout thrashing on 23 items
-	let proximityRaf: number | null = null;
-	const scheduleProximityUpdate = () => {
-		if (proximityRaf) return;
-		proximityRaf = requestAnimationFrame(() => {
-			proximityRaf = null;
-			updateProximity();
-		});
-	};
-
-	// When Section 02 enters/leaves viewport vertically
-	const sectionObserver = new IntersectionObserver(
-		(entries) => {
-			entries.forEach((entry) => {
-				isSectionVisible = entry.isIntersecting;
-				scheduleProximityUpdate();
-			});
-		},
-		{ threshold: 0.1 },
-	);
-	sectionObserver.observe(timelineSection);
-	signal.addEventListener('abort', () => sectionObserver.disconnect());
-
-	// 2. Arrow navigation & scroll updates
-	const updateArrowState = () => {
-		if (!prevBtn || !nextBtn) return;
-		const maxScroll = track.scrollWidth - track.clientWidth;
-		prevBtn.disabled = track.scrollLeft <= 5;
-		nextBtn.disabled = track.scrollLeft >= maxScroll - 5;
-	};
-
-	const onTrackScroll = () => {
-		updateArrowState();
-		scheduleProximityUpdate();
-	};
-
-	// 3. Smooth Lerp Momentum Wheel & Arrow Navigation Scrolling (丝滑阻尼滑行管线)
-	let targetScroll = track.scrollLeft;
-	let animFrameId: number | null = null;
-	let isProgrammaticScroll = false;
-
-	const stopAnimation = () => {
-		if (animFrameId) {
-			cancelAnimationFrame(animFrameId);
-			animFrameId = null;
-		}
-		targetScroll = track.scrollLeft;
-	};
-
-	const renderSmoothScroll = () => {
-		const maxScroll = track.scrollWidth - track.clientWidth;
-		targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
-		const current = track.scrollLeft;
-		const diff = targetScroll - current;
-
-		if (Math.abs(diff) < 0.6) {
-			isProgrammaticScroll = true;
-			track.scrollLeft = targetScroll;
-			isProgrammaticScroll = false;
-			animFrameId = null;
-			onTrackScroll();
-			return;
-		}
-
-		// Responsive Lerp factor 0.22 with a guaranteed minimum step speed (>= 3.5px/frame)
-		let step = diff * 0.22;
-		if (Math.abs(step) < 3.5 && Math.abs(diff) >= 0.6) {
-			step = Math.sign(diff) * Math.min(Math.abs(diff), 3.5);
-		}
-
-		// Edge Snap: when within 80px of boundary and moving towards it, snap directly in 1 frame
-		if (targetScroll <= 0 && current <= 80) {
-			step = -current;
-		} else if (targetScroll >= maxScroll && current >= maxScroll - 80) {
-			step = maxScroll - current;
-		}
-
-		isProgrammaticScroll = true;
-		track.scrollLeft += step;
-		isProgrammaticScroll = false;
-		onTrackScroll();
-		animFrameId = requestAnimationFrame(renderSmoothScroll);
-	};
-
-	const scrollTimelineBy = (delta: number) => {
-		const maxScroll = track.scrollWidth - track.clientWidth;
-		if (!animFrameId) {
-			targetScroll = track.scrollLeft;
-		}
-		targetScroll = Math.max(0, Math.min(targetScroll + delta, maxScroll));
-		if (!animFrameId) {
-			animFrameId = requestAnimationFrame(renderSmoothScroll);
-		}
-	};
-
-	if (prevBtn && nextBtn) {
-		prevBtn.addEventListener(
+	$all<HTMLButtonElement>('[data-timeline-year-toggle]', section).forEach((toggle) => {
+		toggle.addEventListener(
 			'click',
-			(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				const cardWidth = items[0]?.offsetWidth ?? 275;
-				scrollTimelineBy(-(cardWidth + 20));
+			() => {
+				if (!mobileQuery.matches) return;
+				const expand = toggle.getAttribute('aria-expanded') !== 'true';
+				toggle.setAttribute('aria-expanded', String(expand));
+				$all<HTMLElement>(`[data-timeline-item][data-year="${toggle.dataset.timelineYearToggle}"]`, section).forEach(
+					(item) => item.classList.toggle('is-folded', !expand),
+				);
 			},
 			{ signal },
 		);
-
-		nextBtn.addEventListener(
-			'click',
-			(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				const cardWidth = items[0]?.offsetWidth ?? 275;
-				scrollTimelineBy(cardWidth + 20);
-			},
-			{ signal },
-		);
-	}
-
-	// Immediate stop on pointerdown to yield 100% control to user interaction (scrollbar drag, click, etc.)
-	track.addEventListener(
-		'pointerdown',
-		() => {
-			stopAnimation();
-		},
-		{ passive: true, signal },
-	);
-
-	track.addEventListener(
-		'scroll',
-		() => {
-			if (!isProgrammaticScroll) {
-				// Native user scroll (scrollbar dragging, touch gesture, keyboard arrow keys)
-				if (animFrameId) {
-					cancelAnimationFrame(animFrameId);
-					animFrameId = null;
-				}
-				targetScroll = track.scrollLeft;
-			}
-			onTrackScroll();
-		},
-		{ passive: true, signal },
-	);
-
-	// 动态滚轮加速度感应 (慢滚细腻，快滚极速加速)
-	let lastWheelTime = 0;
-	let wheelVelocity = 1.0;
-
-	railWrap.addEventListener(
-		'wheel',
-		(e: WheelEvent) => {
-			if (e.ctrlKey) return;
-			const rawDelta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-			if (Math.abs(rawDelta) < 0.5) return;
-			e.preventDefault();
-
-			const maxScroll = track.scrollWidth - track.clientWidth;
-
-			// Quick edge pass-through: if already within 80px of edge and rolling further into it, land immediately!
-			if (rawDelta < 0 && track.scrollLeft <= 80) {
-				stopAnimation();
-				isProgrammaticScroll = true;
-				track.scrollLeft = 0;
-				isProgrammaticScroll = false;
-				targetScroll = 0;
-				onTrackScroll();
-				return;
-			}
-			if (rawDelta > 0 && track.scrollLeft >= maxScroll - 80) {
-				stopAnimation();
-				isProgrammaticScroll = true;
-				track.scrollLeft = maxScroll;
-				isProgrammaticScroll = false;
-				targetScroll = maxScroll;
-				onTrackScroll();
-				return;
-			}
-
-			const now = performance.now();
-			const dt = now - lastWheelTime;
-			lastWheelTime = now;
-
-			// 快速连续滚动时阶梯累加加速度，停顿后平缓回落
-			if (dt < 130) {
-				wheelVelocity = Math.min(wheelVelocity + 0.35, 3.8);
-			} else if (dt > 280) {
-				wheelVelocity = 1.0;
-			} else {
-				wheelVelocity = Math.max(1.0, wheelVelocity - 0.15);
-			}
-
-			const dynamicMultiplier = 1.6 * wheelVelocity;
-			const delta = rawDelta * dynamicMultiplier;
-
-			if (!animFrameId) {
-				targetScroll = track.scrollLeft;
-			}
-			targetScroll = Math.max(0, Math.min(targetScroll + delta, maxScroll));
-
-			if (!animFrameId) {
-				animFrameId = requestAnimationFrame(renderSmoothScroll);
-			}
-		},
-		{ passive: false, signal },
-	);
-
-	signal.addEventListener('abort', () => {
-		if (animFrameId) cancelAnimationFrame(animFrameId);
-		if (proximityRaf) cancelAnimationFrame(proximityRaf);
 	});
-
-	// Initial render
-	window.setTimeout(() => {
-		updateArrowState();
-		scheduleProximityUpdate();
-	}, 60);
 }
 
 function initPage() {
@@ -1120,8 +907,9 @@ function initPage() {
 	initHeader(signal);
 	initScrollSpy(signal);
 	initTableOfContents(signal);
+	initReadingProgress(signal);
 	initReveal(signal);
-	initTimelineRail(signal);
+	initTimeline(signal);
 	initArticleController(signal);
 	initSidebarNavFilterAndCollapse(signal);
 	initDetailsAnimation(signal);
@@ -1132,6 +920,10 @@ function initPage() {
 }
 
 initPageProgressBar();
+initArticleMorph();
+// ClientRouter 换页会用新文档的 <html> 属性覆盖当前属性，而 head 里的内联脚本不会重跑，
+// 所以要在 swap 后补回 js 标记，否则 html.js 相关样式（入场动画、时间线吸顶）全部失效
+document.addEventListener('astro:after-swap', () => document.documentElement.classList.add('js'));
 document.addEventListener('click', onClick);
 document.addEventListener('keydown', onKeydown);
 window.addEventListener('scroll', onGlobalScroll, { passive: true });
