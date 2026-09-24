@@ -878,22 +878,108 @@ function initEmailFix() {
 	});
 }
 
-// 历程时间线：桌面端蛇形布局是纯 CSS；手机端（≤860px）点年份标题展开 / 收起该年的节点
+// 历程年历：电脑端用年份标签切换年份、点月份格查看当月经历；手机端（≤860px）点年份标题折叠 / 展开
 function initTimeline(signal: AbortSignal) {
 	const section = document.querySelector<HTMLElement>('[data-timeline]');
 	if (!section) return;
-	const mobileQuery = window.matchMedia('(max-width: 860px)');
 
-	$all<HTMLButtonElement>('[data-timeline-year-toggle]', section).forEach((toggle) => {
-		toggle.addEventListener(
+	const tabs = $all<HTMLButtonElement>('[data-timeline-tab]', section);
+	const panels = $all<HTMLElement>('[data-timeline-panel]', section);
+	const mobileQuery = window.matchMedia('(max-width: 860px)');
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const ease = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+	// 切换年份：往后的年份从右侧翻入，往前的年份从左侧翻入
+	const showYear = (index: number, focus = false) => {
+		const current = tabs.findIndex((tab) => tab.getAttribute('aria-selected') === 'true');
+		if (index < 0 || index >= tabs.length) return;
+		tabs.forEach((tab, i) => {
+			tab.setAttribute('aria-selected', String(i === index));
+			tab.tabIndex = i === index ? 0 : -1;
+		});
+		const year = tabs[index].dataset.timelineTab;
+		panels.forEach((panel) => panel.classList.toggle('is-active', panel.dataset.timelinePanel === year));
+		if (focus) tabs[index].focus();
+		const panel = panels.find((p) => p.dataset.timelinePanel === year);
+		if (panel && index !== current && !reducedMotion) {
+			const dx = index > current ? 28 : -28;
+			panel.animate(
+				[
+					{ opacity: 0, transform: `translateX(${dx}px)` },
+					{ opacity: 1, transform: 'none' },
+				],
+				{ duration: 380, easing: ease },
+			);
+		}
+	};
+
+	tabs.forEach((tab, i) => {
+		tab.addEventListener('click', () => showYear(i), { signal });
+		tab.addEventListener(
+			'keydown',
+			(e) => {
+				const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+				if (next === undefined) return;
+				e.preventDefault();
+				showYear(Math.min(Math.max(next, 0), tabs.length - 1), true);
+			},
+			{ signal },
+		);
+	});
+
+	panels.forEach((panel) => {
+		const cells = $all<HTMLButtonElement>('[data-timeline-month]', panel);
+		const details = $all<HTMLElement>('[data-timeline-month-detail]', panel);
+
+		// 选中月份：右侧（窄屏在下方）换成当月的全部经历；点的是某条小标签时，闪一下对应卡片
+		cells.forEach((cell) => {
+			cell.addEventListener(
+				'click',
+				(e) => {
+					const month = cell.dataset.timelineMonth;
+					cells.forEach((c) => {
+						c.classList.toggle('is-selected', c === cell);
+						c.setAttribute('aria-pressed', String(c === cell));
+					});
+					details.forEach((d) => d.classList.toggle('is-active', d.dataset.timelineMonthDetail === month));
+					const detail = details.find((d) => d.dataset.timelineMonthDetail === month);
+					if (!detail) return;
+					if (!reducedMotion) {
+						[...detail.children].forEach((child, i) =>
+							(child as HTMLElement).animate(
+								[
+									{ opacity: 0, transform: 'translateY(10px)' },
+									{ opacity: 1, transform: 'none' },
+								],
+								{ duration: 320, delay: i * 60, easing: ease, fill: 'backwards' },
+							),
+						);
+					}
+					const ref = (e.target as HTMLElement).closest<HTMLElement>('[data-entry-ref]')?.dataset.entryRef;
+					const entry = ref ? detail.querySelector<HTMLElement>(`[data-entry="${CSS.escape(ref)}"]`) : null;
+					if (entry) {
+						entry.classList.remove('is-flash');
+						void entry.offsetWidth;
+						entry.classList.add('is-flash');
+						// 窄屏时详情在年历下方，滚过去让用户看到
+						if (entry.getBoundingClientRect().top > window.innerHeight) {
+							entry.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+						}
+					}
+				},
+				{ signal },
+			);
+		});
+
+		// 手机端：年份标题折叠 / 展开
+		const toggle = panel.querySelector<HTMLButtonElement>('[data-timeline-year-toggle]');
+		toggle?.addEventListener(
 			'click',
 			() => {
 				if (!mobileQuery.matches) return;
 				const expand = toggle.getAttribute('aria-expanded') !== 'true';
 				toggle.setAttribute('aria-expanded', String(expand));
-				$all<HTMLElement>(`[data-timeline-item][data-year="${toggle.dataset.timelineYearToggle}"]`, section).forEach(
-					(item) => item.classList.toggle('is-folded', !expand),
-				);
+				panel.classList.toggle('is-folded', !expand);
 			},
 			{ signal },
 		);

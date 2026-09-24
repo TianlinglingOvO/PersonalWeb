@@ -1,118 +1,181 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
+import TimelineEntry from './TimelineEntry.astro';
 
 interface Props {
+	/** 已按时间正序排好（index.astro），Future 在最后 */
 	timeline: CollectionEntry<'timeline'>[];
 }
 
 const { timeline } = Astro.props;
 
-const MOBILE_OPEN_YEARS = 2; // 手机端默认展开的年份组数（Future + 最新一年），其余折叠
+const MAX_CHIPS = 3; // 日历格里最多直接列出的经历条数，超出显示“+N”
+const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-const items = await Promise.all(
+const entries = await Promise.all(
 	timeline.map(async (item) => {
 		const { Content } = await render(item);
-		const year = item.data.isFuture ? 'Future' : item.data.date.slice(0, 4);
-		return { item, Content, year };
+		const month = Number(item.data.date.split('.')[1]);
+		return {
+			item,
+			Content,
+			year: item.data.isFuture ? 'Future' : item.data.date.slice(0, 4),
+			// 0 表示没写月份（如 "2025"），归入“全年”
+			month: month >= 1 && month <= 12 ? month : 0,
+		};
 	}),
 );
+type Entry = (typeof entries)[number];
 
-const years = [...new Set(items.map(({ year }) => year))];
-const yearCount = (year: string) => items.filter((i) => i.year === year).length;
+// 按年份分组（保持正序），每组再按月份分组
+const groups = [...new Set(entries.map((e) => e.year))].map((year) => {
+	const list = entries.filter((e) => e.year === year);
+	const byMonth = new Map<number, Entry[]>();
+	list.forEach((e) => byMonth.set(e.month, [...(byMonth.get(e.month) ?? []), e]));
+	const months = [...byMonth.keys()].sort((a, b) => a - b);
+	const count = (m: number) => byMonth.get(m)?.length ?? 0;
+	const busiest = months.reduce((best, m) => (count(m) > count(best) ? m : best), months[0]);
+	const highlights = list.filter((e) => e.item.data.isHighlight).length;
+	const summary = [
+		`${list.length} 段经历`,
+		busiest && count(busiest) > 1 ? `最忙的是 ${busiest} 月` : '',
+		highlights ? `${highlights} 个里程碑` : '',
+	]
+		.filter(Boolean)
+		.join(' · ');
+	return { year, isFuture: year === 'Future', list, byMonth, months, summary };
+});
 
-// 桌面端蛇形排布：偶数行从左往右、奇数行从右往左，行尾向下拐弯接到下一行。
-// 同时算出 4 列（宽屏）与 3 列（窄桌面）两套位置，由 CSS 媒体查询选用。
-const snake = (i: number, cols: number) => {
-	const row = Math.floor(i / cols);
-	const pos = i % cols;
-	const rtl = row % 2 === 1;
-	const isLast = i === items.length - 1;
-	const flags = [rtl && 'rtl', !isLast && pos === cols - 1 && 'turn', isLast && 'last'].filter(Boolean).join(' ');
-	return { row: row + 1, col: rtl ? cols - pos : pos + 1, pos, flags };
-};
+// 电脑端默认打开最近的一个真实年份，并选中这一年最后一个有经历的月份
+const defaultYear = groups.filter((g) => !g.isFuture).at(-1)?.year ?? groups[0]?.year;
+// 手机端默认展开最近一年和 Future，其余年份折叠
+const mobileOpen = new Set([defaultYear, 'Future']);
+const monthLabel = (m: number) => (m === 0 ? '全年' : `${m} 月`);
 ---
 
 <section id="timeline" class="section wrap timeline-section" data-timeline>
-	<div class="section-head reveal">
+	<div class="section-head timeline-head reveal">
 		<div>
 			<p class="kicker">02</p>
 			<h2>历程 / 成长足迹 / Timeline</h2>
 		</div>
+		<div class="timeline-tabs" role="tablist" aria-label="按年份查看">
+			{
+				groups.map((g) => (
+					<button
+						type="button"
+						role="tab"
+						id={`tl-tab-${g.year}`}
+						class:list={['timeline-tab', { 'is-future': g.isFuture }]}
+						aria-controls={`tl-panel-${g.year}`}
+						aria-selected={g.year === defaultYear ? 'true' : 'false'}
+						tabindex={g.year === defaultYear ? 0 : -1}
+						data-timeline-tab={g.year}
+					>
+						{g.year}
+						<span class="timeline-tab-count">{g.list.length}</span>
+					</button>
+				))
+			}
+		</div>
 	</div>
 
-	<div class="timeline-items">
+	<div class="timeline-panels reveal">
 		{
-			items.map(({ item, Content, year }, index) => {
-				const s4 = snake(index, 4);
-				const s3 = snake(index, 3);
-				const isYearStart = index === 0 || items[index - 1].year !== year;
-				const open = years.indexOf(year) < MOBILE_OPEN_YEARS;
+			groups.map((g) => {
+				const lastMonth = g.months.at(-1);
+				const open = mobileOpen.has(g.year);
 				return (
 					<div
 						class:list={[
-							'timeline-rail-item reveal',
-							{
-								'is-highlight': item.data.isHighlight,
-								'is-future': item.data.isFuture,
-								'is-folded': !open,
-							},
+							'timeline-year-panel',
+							{ 'is-active': g.year === defaultYear, 'is-folded': !open, 'is-future': g.isFuture },
 						]}
-						style={`--r4:${s4.row};--c4:${s4.col};--p4:${s4.pos};--r3:${s3.row};--c3:${s3.col};--p3:${s3.pos}`}
-						data-s4={s4.flags || undefined}
-						data-s3={s3.flags || undefined}
-						data-timeline-item
-						data-year={year}
-						data-year-start={isYearStart ? '' : undefined}
+						id={`tl-panel-${g.year}`}
+						role="tabpanel"
+						aria-labelledby={`tl-tab-${g.year}`}
+						data-timeline-panel={g.year}
 					>
-						{isYearStart && (
-							<button
-								type="button"
-								class="timeline-year-label"
-								data-timeline-year-toggle={year}
-								aria-expanded={String(open)}
-							>
-								<span>{year}</span>
-								<span class="timeline-year-count">{yearCount(year)} 条</span>
-							</button>
-						)}
-						<div class="timeline-band" aria-hidden="true">
-							<span class="timeline-node">
-								{item.data.isFuture ? (
-									<svg class="timeline-node-star" viewBox="0 0 24 24">
-										<polygon points="12.0,2.8 14.47,8.6 20.75,9.16 15.99,13.3 17.41,19.44 12.0,16.2 6.59,19.44 8.01,13.3 3.25,9.16 9.53,8.6" />
-									</svg>
-								) : (
-									<span class="timeline-node-dot" />
-								)}
-							</span>
-							<span class="timeline-stem" />
-						</div>
-						<div class="timeline-card-slot">
-							<article class="timeline-micro-card card">
-								<div class="timeline-card-header">
-									<span class="timeline-date-badge">{item.data.date}</span>
-									<span class="timeline-tag-badge">{item.data.tag}</span>
+						<button
+							type="button"
+							class="timeline-year-head"
+							data-timeline-year-toggle
+							aria-expanded={open ? 'true' : 'false'}
+						>
+							<span class="timeline-year-num">{g.year}</span>
+							<span class="timeline-year-summary">{g.isFuture ? '还没发生的故事' : g.summary}</span>
+							<span class="timeline-year-count">{g.list.length} 条</span>
+						</button>
+
+						{g.isFuture ? (
+							<div class="timeline-year-body timeline-future">
+								<div class="timeline-detail">
+									{g.list.map(({ item, Content }) => (
+										<TimelineEntry item={item} Content={Content} />
+									))}
 								</div>
-								<h3 class="timeline-card-title">{item.data.title}</h3>
-								<div class="timeline-card-desc">
-									<Content />
-								</div>
-								{item.data.links.length > 0 && (
-									<div class="timeline-card-links">
-										{item.data.links.map((link) => (
-											<a
-												href={link.href}
-												class="timeline-link-btn"
-												target={link.isExternal ? '_blank' : undefined}
-												rel={link.isExternal ? 'noopener noreferrer' : undefined}
+								<p class="timeline-future-note">未完待续……</p>
+							</div>
+						) : (
+							<div class="timeline-year-body">
+								<div class="timeline-calendar">
+									{[...(g.byMonth.has(0) ? [0] : []), ...MONTHS].map((m) => {
+										const list = g.byMonth.get(m) ?? [];
+										if (!list.length) {
+											return (
+												<div class="timeline-month is-empty" aria-hidden="true">
+													<span class="timeline-month-label">{monthLabel(m)}</span>
+												</div>
+											);
+										}
+										const shown = list.length > MAX_CHIPS ? list.slice(0, MAX_CHIPS - 1) : list;
+										return (
+											<button
+												type="button"
+												class:list={['timeline-month has-events', { 'is-all-year': m === 0, 'is-selected': m === lastMonth }]}
+												aria-pressed={m === lastMonth ? 'true' : 'false'}
+												aria-label={`${g.year} 年 ${monthLabel(m)}，${list.length} 段经历`}
+												data-timeline-month={m}
 											>
-												{link.label}
-											</a>
-										))}
-									</div>
-								)}
-							</article>
-						</div>
+												<span class="timeline-month-label">
+													{monthLabel(m)}
+													{list.length > 1 && <span class="timeline-month-count">{list.length}</span>}
+												</span>
+												{shown.map((e) => (
+													<span
+														class:list={['timeline-chip', { 'is-highlight': e.item.data.isHighlight }]}
+														data-entry-ref={e.item.id}
+													>
+														{e.item.data.title}
+													</span>
+												))}
+												{list.length > shown.length && (
+													<span class="timeline-chip-more">+{list.length - shown.length} 条</span>
+												)}
+											</button>
+										);
+									})}
+								</div>
+
+								<div class="timeline-detail">
+									{g.months.map((m) => (
+										<div
+											class:list={['timeline-month-detail', { 'is-active': m === lastMonth }]}
+											data-timeline-month-detail={m}
+										>
+											<p class="timeline-detail-title">
+												<span class="timeline-detail-year">{g.year} 年 </span>
+												{monthLabel(m)}
+												<span class="timeline-detail-count"> · {g.byMonth.get(m)?.length} 段经历</span>
+											</p>
+											{g.byMonth.get(m)?.map(({ item, Content }) => (
+												<TimelineEntry item={item} Content={Content} />
+											))}
+										</div>
+									))}
+								</div>
+							</div>
+						)}
 					</div>
 				);
 			})

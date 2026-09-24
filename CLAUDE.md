@@ -16,9 +16,10 @@ Sutady 的个人网站与技术博客，线上地址 https://sutady.top 。Astro
 npm run dev       # 本地开发服务器，默认 http://localhost:4321
 npm run build     # 静态构建到 dist/，这是唯一的验收手段
 npm run preview   # 预览 dist/ 构建产物
+npm run check     # astro check：对 .astro / .ts 做 TypeScript 类型检查
 ```
 
-- 项目没有测试和 lint，`npx astro check` 也没有配置。按 AGENTS.md 的要求，任何改动都必须通过 `npm run build`，并满足输出 `Complete!`、0 错误、0 警告，之后才能声明完成。
+- 项目没有测试和 lint。`astro build` 不做类型检查，所以改完代码先跑 `npm run check`（需 0 errors），再按 AGENTS.md 的要求跑 `npm run build`，输出 `Complete!`、0 错误、0 警告后才能声明完成。
 - Node 版本以 `package.json` 的 `engines` 为准（`>=22.12.0`，`.nvmrc` 写的是 22）。README 里写的 “Node 20+” 已经过时。
 
 ## 架构要点
@@ -41,10 +42,12 @@ npm run preview   # 预览 dist/ 构建产物
 - 只写原生 CSS 和 CSS 变量，按 section 分块。设计 token、圆角层级、动效曲线都以 AGENTS.md 第 3 节为准，禁止硬编码颜色。
 
 **时间线（Section 02）**
-- 排序在 `index.astro` 里完成：`isFuture` 永远排在最前，其余按 `order` **降序**排列（order 越大越新、越靠前），order 相同时再比较 `date` 字符串。
-- 桌面端（>860px）是**蛇形折行**：偶数行从左往右、奇数行从右往左，行尾用半圆弧拐到下一行；≥1100px 每行 4 列，861–1099px 每行 3 列。`Timeline.astro` 的 `snake()` 在 SSR 时为每个节点同时算好两套位置（`--r4/--c4/--p4`、`--r3/--c3/--p3`）和连线类型（`data-s4` / `data-s3` 里的 `rtl`、`turn`、`last`），CSS 按媒体查询选用。连线、拐弯和方向箭头都是节点的 `::before` / `::after`，没有 JS。
-- 手机端（≤860px）是竖向时间线，按年份折叠：每年第一个节点里的 `.timeline-year-label` 是折叠按钮（桌面端显示为节点上方的年份小胶囊）；默认展开前 `MOBILE_OPEN_YEARS` 组。`ui.ts` 的 `initTimeline` 只负责切换 `.is-folded`。
-- 历史教训：横向滚动画卷（滚轮劫持、吸顶驱动）都被站长否决过，原因是会卡住页面滚动、手机上要一直横着滑。**不要再引入横向滚动或拦截滚轮**。
+- 排序在 `index.astro` 里完成，**时间正序**：order 越小越早（2006 出生在最前），`isFuture` 永远排在最后。
+- 电脑端（>860px）是**年历**：顶部年份标签（`role="tablist"`）切换年份，每年一张 12 个月的格子；同月多条经历在格子里显示为标题小胶囊（最多 `MAX_CHIPS` 条，超出显示“+N”），点月份后在右侧（<1100px 时在下方）显示当月全部完整卡片。高度只取决于经历最多的那个月，不会随条目总数变长。`Future` 是单独一页，没有月份格。
+- 手机端（≤860px）是按年份折叠的竖向时间线，同一套 DOM：隐藏年历，所有月份详情依次铺开；默认只展开最近一年和 Future。
+- 月份取自 `date` 的 `年.月`；没写月份的归入“全年”（月份 0，年历顶部通栏一格）。单张卡片是 `TimelineEntry.astro`，每条经历只渲染一次（在月份详情里），年历格里的小胶囊只是标题。
+- 交互全部在 `ui.ts` 的 `initTimeline`：切年份（带左右翻入动画、←/→ 键）、选月份、点小胶囊时闪烁对应卡片、手机端折叠。
+- 历史教训：横向滚动画卷（滚轮劫持、吸顶驱动）和会无限变长的蛇形排布都被站长否决过。**不要再引入横向滚动或拦截滚轮**。
 - 新增或修改节点的 frontmatter 字段见 MAINTENANCE.md 第 1.4 节。`Timeline事件簿.md` 是站长按年月记录的原始备忘，`content/timeline/*.md` 就是根据它整理出来的（该文件已被 gitignore）。
 
 **页面过场**
