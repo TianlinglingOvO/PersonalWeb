@@ -21,7 +21,6 @@
 		system-ui, sans-serif;
 	--space: 1.15rem;
 	--max: 1080px;
-	--narrow: 720px;
 }
 
 *,
@@ -47,8 +46,7 @@ a,
 .btn:active,
 .btn-expand-articles:active,
 .nav-toggle:active,
-.sidebar-dropdown-trigger:active,
-.btn-close-menu:active {
+.sidebar-dropdown-trigger:active {
 	transform: scale(0.95);
 	transition: transform 0.08s ease;
 }
@@ -140,11 +138,6 @@ a:hover {
 	margin-inline: auto;
 }
 
-.wrap-narrow {
-	width: min(var(--narrow), calc(100% - 2rem));
-	margin-inline: auto;
-}
-
 .wrap-wide {
 	width: min(1360px, calc(100% - 2rem));
 	margin-inline: auto;
@@ -194,7 +187,6 @@ a:hover {
 	color: var(--accent-deep);
 }
 
-.brand-mark,
 .brand-avatar {
 	width: 32px;
 	height: 32px;
@@ -563,12 +555,6 @@ a:hover {
 	background: #fff;
 }
 
-.btn-tiny {
-	min-height: 36px;
-	padding: 0.3rem 0.8rem;
-	font-size: 0.88rem;
-}
-
 .section,
 #top {
 	scroll-margin-top: calc(var(--header-h) + 20px);
@@ -801,21 +787,6 @@ a:hover {
 
 .card-link:hover {
 	color: inherit;
-}
-
-.tags {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.4rem;
-	margin-top: 0.95rem;
-}
-
-.tag {
-	font-size: 0.78rem;
-	background: var(--bg-soft);
-	color: var(--muted);
-	border-radius: 999px;
-	padding: 0.15rem 0.55rem;
 }
 
 /* ==========================================================================
@@ -1500,13 +1471,22 @@ a:hover {
 	display: block;
 }
 
-/* 如果在图片紧接着下一行写 *图说明*，自动识别为居中小字注释 */
+/* 图片下方写 *图说明*，自动显示为居中小字注释。两种写法都支持：
+   空一行再写（说明自成一段），或紧接着下一行写（说明和图片在同一段） */
 .prose p:has(> img) + p:has(> em:only-child) {
 	text-align: center;
 	font-size: 0.86rem;
 	color: var(--muted);
 	margin-top: -0.6rem;
 	margin-bottom: 1.4rem;
+}
+
+.prose p:has(> img) > img + em:last-child {
+	display: block;
+	margin-top: 0.5rem;
+	text-align: center;
+	font-size: 0.86rem;
+	color: var(--muted);
 }
 
 .prose code {
@@ -1844,52 +1824,6 @@ a:hover {
 
 .toast-host:not(:empty) + .back-to-top {
 	bottom: 72px;
-}
-
-dialog {
-	border: none;
-	border-radius: var(--radius);
-	padding: 1.3rem;
-	width: min(360px, calc(100% - 2rem));
-	box-shadow: var(--shadow-hover);
-}
-
-dialog::backdrop {
-	background: rgba(42, 38, 44, 0.42);
-	backdrop-filter: blur(6px);
-}
-
-.dialog-title {
-	margin: 0 0 0.4rem;
-	font-size: 1.15rem;
-}
-
-.dialog-note {
-	margin: 0 0 0.9rem;
-	color: var(--muted);
-	font-size: 0.92rem;
-}
-
-.qr {
-	width: 220px;
-	height: 220px;
-	margin: 0 auto 1rem;
-	padding: 10px;
-	background: #fff;
-	border: 1px solid var(--line);
-	border-radius: 12px;
-}
-
-.qr img,
-.qr svg {
-	width: 100%;
-	height: 100%;
-}
-
-.dialog-actions {
-	display: flex;
-	gap: 0.6rem;
-	justify-content: flex-end;
 }
 
 .article-page {

@@ -700,24 +700,6 @@ function onClick(event: Event) {
 		return;
 	}
 
-	const openBtn = target.closest('[data-dialog-open]');
-	if (openBtn) {
-		const id = openBtn.getAttribute('data-dialog-open');
-		const dialog = id ? (document.getElementById(id) as HTMLDialogElement | null) : null;
-		dialog?.showModal();
-		return;
-	}
-
-	const closeBtn = target.closest('[data-dialog-close]');
-	if (closeBtn) {
-		closeBtn.closest('dialog')?.close();
-		return;
-	}
-
-	if (target.tagName === 'DIALOG') {
-		(target as HTMLDialogElement).close();
-		return;
-	}
 
 	if (target.closest('[data-back-to-top]')) {
 		window.scrollTo({ top: 0, behavior: 'smooth' });
