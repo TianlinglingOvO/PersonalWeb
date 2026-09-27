@@ -28,7 +28,7 @@ category: 科普
 
 平时我们浏览`国内网站`的流量路径是：
 
-![国内浏览网站](/images/How_VPN_Work/1.png)
+![国内浏览网站](/images/how_vpn_work/1.png)
 
 *浏览国内网站*
 
@@ -36,7 +36,7 @@ category: 科普
 
 使用`代理`时，我们的电脑(手机)请求`不会直接访问`目标网站，而是先发送到`代理节点`，再由`代理节点`代替用户访问目标网站(以`美国`代理为例):
 
-![使用代理浏览网站](/images/How_VPN_Work/2.png)
+![使用代理浏览网站](/images/how_vpn_work/2.png)
 
 *浏览海外网站(数据传输延迟230ms)*
 
@@ -58,7 +58,7 @@ category: 科普
 
 `代理`就是通过`VPS`去帮助我们访问其他网站。
 
-![VPS_INFO](/images/How_VPN_Work/3.png)
+![VPS_INFO](/images/how_vpn_work/3.png)
 
 *这是一台位于美国的VPS*
 
@@ -77,7 +77,7 @@ category: 科普
 `协议`规定了`客户端`与`服务器`之间如何`建立连接`和`传输数据`，部分方案还会加入`加密`、`认证`等机制。
 
 例如本文使用的节点采用了 `VLESS + TCP + REALITY` 这一组合，当然还有其他的组合。
-![Protocol](/images/How_VPN_Work/4.png)
+![Protocol](/images/how_vpn_work/4.png)
 
 *传输协议*
 
@@ -87,7 +87,7 @@ category: 科普
 
 以下是`完整`的过程(以美国VPS为例)：
 
-![VPS_Work](/images/How_VPN_Work/5.png)
+![VPS_Work](/images/how_vpn_work/5.png)
 
 *机场的完整工作链路*
 

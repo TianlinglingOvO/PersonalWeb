@@ -23,7 +23,7 @@ category: 科普
 
 > `机房IP`广义上指的就是`数据中心`上的`服务器`等
 
-![GOOD_VPS_IP_INFO](/images/What_Is_IP/1.png)
+![GOOD_VPS_IP_INFO](/images/what_is_ip/1.png)
 
 *这是一个相对干净的原生机房IP*
 

@@ -5,7 +5,7 @@ description: VSCode C语言环境简单配置
 category: 教程
 ---
 
-![VSCode](/images/vscode_for_c/VSCode.png)
+![VSCode](/images/vscode_for_c/vscode.png)
 
 ## 提醒
 
