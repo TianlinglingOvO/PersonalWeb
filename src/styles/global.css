@@ -1284,6 +1284,26 @@ a:hover {
 		box-shadow: var(--shadow);
 		cursor: pointer;
 		pointer-events: auto;
+		-webkit-tap-highlight-color: transparent;
+		transition:
+			transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+			border-color 0.25s ease,
+			background-color 0.25s ease;
+	}
+
+	/* 按下时轻轻一缩，展开的年份标题带一点主题色 */
+	.timeline-year-head:active {
+		transform: scale(0.98);
+	}
+
+	.timeline-year-head[aria-expanded="true"] {
+		border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+		background: color-mix(in srgb, var(--accent-soft) 22%, var(--surface));
+	}
+
+	.timeline-year-panel.is-future .timeline-year-head[aria-expanded="true"] {
+		border-color: color-mix(in srgb, var(--accent-2) 35%, var(--line));
+		background: color-mix(in srgb, var(--accent-2-soft) 22%, var(--surface));
 	}
 
 	.timeline-year-num {
@@ -1317,8 +1337,9 @@ a:hover {
 		display: none;
 	}
 
+	/* 用 padding 而不是 margin：展开 / 收起动画从高度 0 开始时不会跳一下 */
 	.timeline-year-body {
-		margin-top: 0.8rem;
+		padding-top: 0.8rem;
 		gap: 0.6rem;
 	}
 

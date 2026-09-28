@@ -953,15 +953,53 @@ function initTimeline(signal: AbortSignal) {
 			);
 		});
 
-		// 手机端：年份标题折叠 / 展开
+		// 手机端：年份标题折叠 / 展开。高度从 0 滑开、卡片依次浮现；收起时反向，动画中途再点会从当前高度折返
 		const toggle = panel.querySelector<HTMLButtonElement>('[data-timeline-year-toggle]');
+		const body = panel.querySelector<HTMLElement>('.timeline-year-body');
+		let heightAnim: Animation | null = null;
 		toggle?.addEventListener(
 			'click',
 			() => {
-				if (!mobileQuery.matches) return;
+				if (!mobileQuery.matches || !body) return;
 				const expand = toggle.getAttribute('aria-expanded') !== 'true';
 				toggle.setAttribute('aria-expanded', String(expand));
-				panel.classList.toggle('is-folded', !expand);
+
+				const from = heightAnim ? body.offsetHeight : expand ? 0 : body.offsetHeight;
+				heightAnim?.cancel();
+				heightAnim = null;
+				panel.classList.remove('is-folded');
+				if (reducedMotion) {
+					panel.classList.toggle('is-folded', !expand);
+					return;
+				}
+
+				const to = expand ? body.offsetHeight : 0;
+				body.style.overflow = 'hidden';
+				const anim = body.animate(
+					[
+						{ height: `${from}px`, opacity: expand ? 0.4 : 1 },
+						{ height: `${to}px`, opacity: expand ? 1 : 0 },
+					],
+					{ duration: Math.min(560, 260 + Math.abs(to - from) * 0.12), easing: ease },
+				);
+				heightAnim = anim;
+				anim.onfinish = () => {
+					body.style.overflow = '';
+					heightAnim = null;
+					if (!expand) panel.classList.add('is-folded');
+				};
+
+				if (expand) {
+					$all<HTMLElement>('.timeline-detail-title, .timeline-entry, .timeline-future-note', body).forEach((el, i) =>
+						el.animate(
+							[
+								{ opacity: 0, transform: 'translateY(12px)' },
+								{ opacity: 1, transform: 'none' },
+							],
+							{ duration: 360, delay: 20 + Math.min(i, 8) * 50, easing: ease, fill: 'backwards' },
+						),
+					);
+				}
 			},
 			{ signal },
 		);
