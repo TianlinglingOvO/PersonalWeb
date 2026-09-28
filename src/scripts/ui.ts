@@ -964,7 +964,10 @@ function initTimeline(signal: AbortSignal) {
 				const expand = toggle.getAttribute('aria-expanded') !== 'true';
 				toggle.setAttribute('aria-expanded', String(expand));
 
-				const from = heightAnim ? body.offsetHeight : expand ? 0 : body.offsetHeight;
+				// 顶部内边距也要一起缩放，否则高度到 0 后还剩一截内边距，隐藏时会再往上跳一下
+				const folded = !heightAnim && expand;
+				const from = folded ? 0 : body.offsetHeight;
+				const fromPad = folded ? '0px' : getComputedStyle(body).paddingTop;
 				heightAnim?.cancel();
 				heightAnim = null;
 				panel.classList.remove('is-folded');
@@ -974,11 +977,12 @@ function initTimeline(signal: AbortSignal) {
 				}
 
 				const to = expand ? body.offsetHeight : 0;
+				const toPad = expand ? getComputedStyle(body).paddingTop : '0px';
 				body.style.overflow = 'hidden';
 				const anim = body.animate(
 					[
-						{ height: `${from}px`, opacity: expand ? 0.4 : 1 },
-						{ height: `${to}px`, opacity: expand ? 1 : 0 },
+						{ height: `${from}px`, paddingTop: fromPad, opacity: expand ? 0.4 : 1 },
+						{ height: `${to}px`, paddingTop: toPad, opacity: expand ? 1 : 0 },
 					],
 					{ duration: Math.min(560, 260 + Math.abs(to - from) * 0.12), easing: ease },
 				);
