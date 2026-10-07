@@ -1367,6 +1367,38 @@ function initComments(signal: AbortSignal) {
 	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	let account: Account | null = null;
 	let replyForm: HTMLFormElement | null = null;
+	// 楼中楼超过 REPLY_PREVIEW 条时只显示前几条，其余收起；记住展开过的楼，刷新列表后保持展开
+	const REPLY_PREVIEW = 2;
+	const expandedThreads = new Set<number>();
+	const setToggleLabel = (button: HTMLButtonElement, open: boolean) => {
+		button.setAttribute('aria-expanded', String(open));
+		button.textContent = open ? '收起回复' : `展开剩余 ${button.dataset.count} 条回复`;
+	};
+	const threadParts = (thread: HTMLElement) => {
+		const replies = thread.querySelector<HTMLOListElement>(':scope > .comment-body > .comment-replies');
+		return {
+			replies,
+			rest: replies?.querySelector<HTMLElement>(':scope > .comment-replies-rest') ?? null,
+			toggle: replies?.querySelector<HTMLButtonElement>(':scope > .comment-replies-toggle-row > button') ?? null,
+		};
+	};
+	const setThreadOpen = (thread: HTMLElement, open: boolean) => {
+		const { rest, toggle } = threadParts(thread);
+		if (!rest || !toggle || (toggle.getAttribute('aria-expanded') === 'true') === open) return;
+		const id = Number(thread.dataset.commentId);
+		setToggleLabel(toggle, open);
+		if (open) {
+			expandedThreads.add(id);
+			rest.hidden = false;
+			slide(rest, true);
+			staggerIn($all('.comment', rest), 40);
+		} else {
+			expandedThreads.delete(id);
+			slide(rest, false, () => (rest.hidden = true));
+			// 收起后按钮可能跑到屏幕上方，把这一楼拉回视野
+			if (toggle.getBoundingClientRect().top < 80) thread.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	};
 
 	root.querySelector<HTMLAnchorElement>('[data-login-link]')!.href = loginUrl('#comments');
 
@@ -1398,8 +1430,31 @@ function initComments(signal: AbortSignal) {
 		time.title = new Date(c.createdAt * 1000).toLocaleString('zh-CN');
 		q('[data-c-delete]').hidden = !c.canDelete;
 		const replies = q<HTMLOListElement>('[data-c-replies]');
-		if (c.replies?.length) replies.append(...c.replies.map((r) => build(r, threadId)));
-		else replies.remove();
+		const items = (c.replies ?? []).map((r) => build(r, threadId));
+		if (items.length > REPLY_PREVIEW) {
+			const open = expandedThreads.has(threadId);
+			const rest = document.createElement('li');
+			rest.className = 'comment-replies-rest';
+			rest.hidden = !open;
+			const inner = document.createElement('ol');
+			inner.className = 'comment-replies-inner';
+			inner.append(...items.slice(REPLY_PREVIEW));
+			rest.append(inner);
+			const row = document.createElement('li');
+			row.className = 'comment-replies-toggle-row';
+			const toggle = document.createElement('button');
+			toggle.type = 'button';
+			toggle.className = 'comment-replies-toggle';
+			toggle.dataset.cToggleReplies = '';
+			toggle.dataset.count = String(items.length - REPLY_PREVIEW);
+			setToggleLabel(toggle, open);
+			row.append(toggle);
+			replies.append(...items.slice(0, REPLY_PREVIEW), rest, row);
+		} else if (items.length) {
+			replies.append(...items);
+		} else {
+			replies.remove();
+		}
 		return li;
 	};
 
@@ -1479,6 +1534,10 @@ function initComments(signal: AbortSignal) {
 		pending.querySelector<HTMLElement>('[data-c-reply]')!.hidden = true;
 		animateHeight(root, () => {
 			if (replyTo) {
+				// 在这一楼回复：先把收起的回复展开，新回复排在最后
+				const thread = form.closest<HTMLElement>('.comment-list > .comment')!;
+				expandedThreads.add(Number(thread.dataset.commentId));
+				setThreadOpen(thread, true);
 				const body = form.closest('.comment-body')!;
 				let replies = body.querySelector<HTMLOListElement>(':scope > .comment-replies');
 				if (!replies) {
@@ -1486,7 +1545,7 @@ function initComments(signal: AbortSignal) {
 					replies.className = 'comment-replies';
 					body.insertBefore(replies, form);
 				}
-				replies.append(pending);
+				(replies.querySelector('.comment-replies-inner') ?? replies).append(pending);
 			} else {
 				list.prepend(pending);
 				status.hidden = true;
@@ -1562,7 +1621,11 @@ function initComments(signal: AbortSignal) {
 		async (e) => {
 			const target = e.target as HTMLElement;
 			const li = target.closest<HTMLElement>('[data-comment-id]');
-			if (target.closest('[data-c-reply]') && li) {
+			if (target.closest('[data-c-toggle-replies]')) {
+				const thread = target.closest<HTMLElement>('.comment-list > .comment');
+				const toggle = target.closest<HTMLButtonElement>('[data-c-toggle-replies]')!;
+				if (thread) setThreadOpen(thread, toggle.getAttribute('aria-expanded') !== 'true');
+			} else if (target.closest('[data-c-reply]') && li) {
 				if (!account) {
 					toast('登录后才能回复哦');
 					await navigate(loginUrl('#comments'));

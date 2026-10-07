@@ -3375,6 +3375,59 @@ html.js .reveal.is-visible [data-stagger] > * {
 	font-style: italic;
 }
 
+/* 楼中楼折叠：超过两条时其余回复收在“展开剩余 N 条回复”里 */
+.comment-replies-rest,
+.comment-replies-toggle-row {
+	list-style: none;
+}
+
+.comment-replies-inner {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.comment-replies .comment-replies-inner > .comment:first-child {
+	border-top: 1px solid var(--line);
+}
+
+.comment-replies-toggle-row {
+	padding: 0.35rem 0 0.75rem;
+	border-top: 1px dashed var(--line);
+}
+
+.comment-replies-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.2rem 0;
+	border: 0;
+	background: none;
+	color: var(--accent-2);
+	font: inherit;
+	font-size: 0.84rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.comment-replies-toggle::after {
+	content: "";
+	width: 0.4rem;
+	height: 0.4rem;
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: translateY(-2px) rotate(45deg);
+	transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.comment-replies-toggle[aria-expanded="true"]::after {
+	transform: translateY(2px) rotate(-135deg);
+}
+
+.comment-replies-toggle:hover {
+	color: var(--accent-deep);
+}
+
 .comment.is-deleted > .comment-avatar {
 	background: var(--bg-soft);
 }
