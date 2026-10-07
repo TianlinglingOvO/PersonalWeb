@@ -1059,15 +1059,18 @@ let accountRequest: Promise<Account | null> | null = null;
 
 /** 调用本站接口：失败时抛出带中文提示的 Error */
 async function api<T>(url: string, options: { method?: string; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
+	const offline = '网络好像出了点问题，请稍后再试';
 	const res = await fetch(url, {
 		method: options.method ?? (options.body ? 'POST' : 'GET'),
 		headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
 		body: options.body ? JSON.stringify(options.body) : undefined,
 		credentials: 'same-origin',
 		signal: options.signal,
+	}).catch((err: Error) => {
+		throw err.name === 'AbortError' ? err : new Error(offline);
 	});
 	const data = await res.json().catch(() => ({}));
-	if (!res.ok) throw new Error(data.error ?? '网络好像出了点问题，请稍后再试');
+	if (!res.ok) throw new Error(data.error ?? offline);
 	return data as T;
 }
 
@@ -1339,24 +1342,26 @@ function initComments(signal: AbortSignal) {
 		return li;
 	};
 
-	const load = async (highlightId?: number) => {
-		try {
-			const data = await api<{ count: number; comments: CommentData[] }>(
-				`/api/comments?slug=${encodeURIComponent(slug)}`,
-				{ signal },
-			);
-			replyForm = null;
-			list.replaceChildren(...data.comments.map((c) => build(c, c.id)));
-			countEl.textContent = data.count ? String(data.count) : '';
-			status.textContent = '还没有评论，来抢沙发吧～';
-			status.hidden = data.comments.length > 0;
-			const fresh = highlightId ? list.querySelector<HTMLElement>(`[data-comment-id="${highlightId}"]`) : null;
-			if (fresh) {
-				fresh.classList.add('is-new');
-				if (fresh.getBoundingClientRect().top > window.innerHeight || fresh.getBoundingClientRect().top < 0) {
-					fresh.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
-				}
+	type CommentList = { count: number; comments: CommentData[] };
+	const render = (data: CommentList, highlightId?: number) => {
+		replyForm = null;
+		list.replaceChildren(...data.comments.map((c) => build(c, c.id)));
+		countEl.textContent = data.count ? String(data.count) : '';
+		status.textContent = '还没有评论，来抢沙发吧～';
+		status.hidden = data.comments.length > 0;
+		const fresh = highlightId ? list.querySelector<HTMLElement>(`[data-comment-id="${highlightId}"]`) : null;
+		if (fresh) {
+			fresh.classList.add('is-new');
+			const top = fresh.getBoundingClientRect().top;
+			if (top > window.innerHeight || top < 0) {
+				fresh.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
 			}
+		}
+	};
+
+	const load = async () => {
+		try {
+			render(await api<CommentList>(`/api/comments?slug=${encodeURIComponent(slug)}`, { signal }));
 		} catch {
 			if (signal.aborted) return;
 			status.textContent = '评论暂时加载不出来，稍后刷新试试';
@@ -1383,6 +1388,7 @@ function initComments(signal: AbortSignal) {
 		{ signal },
 	);
 
+	// 发送时先把评论以“发送中”的样子放上去（乐观更新），服务器返回最新列表后再整体替换；失败就撤回并把文字还给输入框
 	const send = async (form: HTMLFormElement, replyTo?: number) => {
 		const textarea = form.querySelector('textarea')!;
 		const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
@@ -1391,20 +1397,53 @@ function initComments(signal: AbortSignal) {
 			textarea.focus();
 			return;
 		}
+		if (!account) return;
+
+		const pending = build(
+			{
+				id: 0,
+				user: account,
+				replyTo: form.dataset.replyName ?? null,
+				content,
+				createdAt: Date.now() / 1000,
+				deleted: false,
+				canDelete: false,
+			},
+			0,
+		);
+		pending.classList.add('is-pending');
+		pending.querySelector('[data-c-time]')!.textContent = '发送中…';
+		pending.querySelector<HTMLElement>('[data-c-reply]')!.hidden = true;
+		if (replyTo) {
+			const body = form.closest('.comment-body')!;
+			let replies = body.querySelector<HTMLOListElement>(':scope > .comment-replies');
+			if (!replies) {
+				replies = document.createElement('ol');
+				replies.className = 'comment-replies';
+				body.insertBefore(replies, form);
+			}
+			replies.append(pending);
+		} else {
+			list.prepend(pending);
+			status.hidden = true;
+		}
+		textarea.value = '';
+		textarea.dispatchEvent(new Event('input', { bubbles: true }));
 		button.disabled = true;
-		button.classList.add('is-loading');
+
 		try {
-			const { id } = await api<{ id: number }>('/api/comments', { body: { slug, content, replyTo } });
-			textarea.value = '';
-			textarea.dispatchEvent(new Event('input'));
+			const data = await api<CommentList & { id: number }>('/api/comments', { body: { slug, content, replyTo } });
+			render(data, data.id);
 			toast(replyTo ? '回复成功' : '评论成功，谢谢你的留言～');
-			await load(id);
 		} catch (err) {
+			pending.remove();
+			status.hidden = list.children.length > 0;
+			textarea.value = content;
+			textarea.dispatchEvent(new Event('input', { bubbles: true }));
 			toast((err as Error).message);
 			if ((err as Error).message === '请先登录') setAccount(null);
 		} finally {
 			button.disabled = false;
-			button.classList.remove('is-loading');
 		}
 	};
 
@@ -1420,6 +1459,7 @@ function initComments(signal: AbortSignal) {
 		const form = document.createElement('form');
 		form.className = 'comment-form is-reply';
 		form.dataset.replyTo = String(target);
+		if (li.closest('.comment-replies') && li.dataset.author) form.dataset.replyName = li.dataset.author;
 		const textarea = document.createElement('textarea');
 		textarea.rows = 2;
 		textarea.maxLength = 1000;
@@ -1466,11 +1506,12 @@ function initComments(signal: AbortSignal) {
 				openReply(li);
 			} else if (target.closest('[data-c-delete]') && li) {
 				if (!window.confirm('确定要删除这条评论吗？')) return;
+				li.classList.add('is-removing');
 				try {
-					await api(`/api/comments/${li.dataset.commentId}`, { method: 'DELETE' });
+					render(await api<CommentList>(`/api/comments/${li.dataset.commentId}`, { method: 'DELETE' }));
 					toast('评论已删除');
-					await load();
 				} catch (err) {
+					li.classList.remove('is-removing');
 					toast((err as Error).message);
 				}
 			} else if (target.closest('[data-reply-cancel]')) {

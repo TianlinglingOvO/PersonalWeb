@@ -64,14 +64,24 @@ const cookieOf = (request: Request) =>
 			.filter((pair) => pair.length === 2),
 	)[COOKIE] as string | undefined;
 
-/** 新建登录状态，返回要写给浏览器的 Set-Cookie */
-export async function createSession(env: Env, userId: number) {
+/** 生成一个新的登录 token：数据库只存它的哈希，浏览器拿到 Cookie */
+export async function newSession() {
 	const token = toB64(crypto.getRandomValues(new Uint8Array(32))).replace(/[+/=]/g, (c) => ({ '+': '-', '/': '_', '=': '' })[c]!);
 	const maxAge = SESSION_DAYS * 86400;
+	return {
+		tokenHash: await sha256(token),
+		expiresAt: Math.floor(Date.now() / 1000) + maxAge,
+		cookie: `${COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`,
+	};
+}
+
+/** 新建登录状态并写入数据库，返回要写给浏览器的 Set-Cookie */
+export async function createSession(env: Env, userId: number) {
+	const session = await newSession();
 	await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)')
-		.bind(await sha256(token), userId, Math.floor(Date.now() / 1000) + maxAge)
+		.bind(session.tokenHash, userId, session.expiresAt)
 		.run();
-	return `${COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+	return session.cookie;
 }
 
 export const clearCookie = `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;

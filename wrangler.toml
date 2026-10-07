@@ -8,3 +8,7 @@ binding = "DB"
 database_name = "sutady-db"
 database_id = "41c7c910-37d7-41db-b5b6-65663e70896e"
 migrations_dir = "migrations"
+
+# 智能放置：让接口代码跑在离 D1 数据库近的机房，减少每次查询横跨大洲的延迟
+[placement]
+mode = "smart"

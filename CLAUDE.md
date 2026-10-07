@@ -68,6 +68,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
   - 评论 `functions/api/comments.ts` 与 `comments/[id].ts`：仅限文章页，登录后可发；两层结构（顶层 + 楼中楼，回复楼中楼时记“回复 @谁”）；本人或站长可删，有回复的顶层评论只标记删除。
   - 共用代码在 `functions/_lib/`：`http.ts`（json、限流、同源检查）、`auth.ts`（密码、会话）、`articles.ts`（校验文章是否存在）。
 - 前端：`ui.ts` 的 `initViews` / `initAccount`（顶栏账号入口）/ `initAuthForm`（`/login/` 页）/ `initComments`（`Comments.astro`）。登录状态由 `getAccount()` 缓存，登录或退出后调用 `setAccount()` 广播 `account-change` 事件。用户内容一律用 `textContent` 渲染。
+- 性能约定：D1 在亚太，访客请求常落在美国等远端节点，每次查询都可能要跨洋往返。所以：互不依赖的查询用 `Promise.all` 并行；写入和随后的读取放进同一个 `env.DB.batch`（评论的发表 / 删除直接返回最新列表，前端不再二次请求）；`wrangler.toml` 开启了 Smart Placement；前端发评论、删评论先做乐观更新。
 - 站长管理：`npm run admin -- users | set-admin <名> | reset-password <名> <新密码>`（`scripts/admin.mjs`，加 `--local` 操作本地库）。安全红线和迁移规则见 AGENTS.md 第 6 节。
 - `functions/` 有独立的 `tsconfig.json`（Workers 类型），根 tsconfig 排除了它。本地调试端口 8788 在站长电脑上被占用，用 `wrangler pages dev --port 8911`。
 

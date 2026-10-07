@@ -30,25 +30,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
 	const day = dayOf();
 	const ip = request.headers.get('CF-Connecting-IP') ?? '';
 	const visitor = (await sha256(`${ip}|${request.headers.get('User-Agent') ?? ''}|${day}`)).slice(0, 32);
-	const hit = await env.DB.prepare('INSERT OR IGNORE INTO view_hits (slug, visitor, day) VALUES (?, ?, ?)')
-		.bind(slug, visitor, day)
-		.run();
-
-	let count: number;
-	if (hit.meta.changes > 0) {
-		const row = await env.DB.prepare(
-			'INSERT INTO views (slug, count) VALUES (?, 1) ON CONFLICT (slug) DO UPDATE SET count = count + 1 RETURNING count',
-		)
-			.bind(slug)
-			.first<{ count: number }>();
-		count = row?.count ?? 1;
-		// 顺手清理两天前的去重记录
-		if (Math.random() < 0.05) {
-			waitUntil(env.DB.prepare('DELETE FROM view_hits WHERE day < ?').bind(dayOf(2)).run());
-		}
-	} else {
-		const row = await env.DB.prepare('SELECT count FROM views WHERE slug = ?').bind(slug).first<{ count: number }>();
-		count = row?.count ?? 0;
+	// 去重记录、计数、读取放进同一个 batch（一次往返）：只有去重记录真的插入了，changes() 才大于 0，计数才加一
+	const [, , read] = await env.DB.batch([
+		env.DB.prepare('INSERT OR IGNORE INTO view_hits (slug, visitor, day) VALUES (?, ?, ?)').bind(slug, visitor, day),
+		env.DB.prepare(
+			'INSERT INTO views (slug, count) SELECT ?1, 1 WHERE changes() > 0 ON CONFLICT (slug) DO UPDATE SET count = count + 1',
+		).bind(slug),
+		env.DB.prepare('SELECT count FROM views WHERE slug = ?').bind(slug),
+	]);
+	const count = (read.results[0] as { count: number } | undefined)?.count ?? 0;
+	// 偶尔顺手清理两天前的去重记录
+	if (Math.random() < 0.05) {
+		waitUntil(env.DB.prepare('DELETE FROM view_hits WHERE day < ?').bind(dayOf(2)).run());
 	}
 	return json({ count });
 };

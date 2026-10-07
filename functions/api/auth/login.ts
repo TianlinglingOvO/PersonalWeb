@@ -6,17 +6,16 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
 	if (!isSameOrigin(request)) return fail('请求来源不正确', 403);
 	const body = await readJson<{ username: string; password: string }>(request);
 
-	if (!(await rateLimit(env, `login:${await sha256(clientIp(request))}`, 10, 600))) {
-		return fail('尝试次数太多，请 10 分钟后再试', 429);
-	}
-
 	const username = checkUsername(body.username);
-	const row =
+	const [allowed, row] = await Promise.all([
+		rateLimit(env, `login:${await sha256(clientIp(request))}`, 10, 600),
 		'key' in username
-			? await env.DB.prepare('SELECT id, username, password_hash, is_admin FROM users WHERE username_key = ?')
+			? env.DB.prepare('SELECT id, username, password_hash, is_admin FROM users WHERE username_key = ?')
 					.bind(username.key)
 					.first<{ id: number; username: string; password_hash: string; is_admin: number }>()
-			: null;
+			: null,
+	]);
+	if (!allowed) return fail('尝试次数太多，请 10 分钟后再试', 429);
 	if (!row || !(await verifyPassword(String(body.password ?? ''), row.password_hash))) {
 		return fail('用户名或密码错误', 401);
 	}

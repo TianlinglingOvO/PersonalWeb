@@ -3369,13 +3369,34 @@ html.js .reveal.is-visible [data-stagger] > * {
 	font-size: 0.8rem;
 }
 
-.comment.is-deleted .comment-content {
+/* 只作用于被删的这一条，不影响它下面的回复 */
+.comment.is-deleted > .comment-body > .comment-content {
 	color: var(--muted);
 	font-style: italic;
 }
 
 .comment.is-deleted > .comment-avatar {
 	background: var(--bg-soft);
+}
+
+.comment.is-pending,
+.comment.is-removing {
+	opacity: 0.55;
+	transition: opacity 0.2s ease;
+}
+
+.comment.is-pending > .comment-avatar {
+	animation: pendingPulse 1s ease-in-out infinite alternate;
+}
+
+.comment.is-pending [data-c-delete] {
+	display: none;
+}
+
+@keyframes pendingPulse {
+	to {
+		opacity: 0.5;
+	}
 }
 
 .comment.is-new {
