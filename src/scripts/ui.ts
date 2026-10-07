@@ -45,6 +45,152 @@ function toast(message: string) {
 	}, 1800);
 }
 
+// ============ 通用动效工具 ============
+const EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const heightAnims = new WeakMap<HTMLElement, Animation>();
+
+const boxOf = (el: HTMLElement) => {
+	const cs = getComputedStyle(el);
+	return {
+		height: `${el.getBoundingClientRect().height}px`,
+		paddingTop: cs.paddingTop,
+		paddingBottom: cs.paddingBottom,
+		marginTop: cs.marginTop,
+		marginBottom: cs.marginBottom,
+	};
+};
+
+// 高度变化用比较柔和的 ease-out（cubic），距离越长时间略长，避免第一帧就窜出一大截
+const EASE_HEIGHT = 'cubic-bezier(0.33, 1, 0.68, 1)';
+const durationFor = (distance: number) => Math.min(560, 280 + Math.abs(distance) * 0.15);
+
+/**
+ * 展开 / 收起：元素从当前高度滑到自然高度（open）或 0（收起，结束后调用 onClosed 真正隐藏）。
+ * 内外边距一起缩放，结尾不会跳；动画中途再点会从当前位置折返。展开前调用方要先让元素可见。
+ */
+function slide(el: HTMLElement, open: boolean, onClosed?: () => void) {
+	const running = heightAnims.get(el);
+	const from = running ? boxOf(el) : null;
+	const fromOpacity = running ? getComputedStyle(el).opacity : open ? '0' : '1';
+	running?.cancel();
+	heightAnims.delete(el);
+	el.style.overflow = '';
+	if (prefersReducedMotion()) {
+		if (!open) onClosed?.();
+		return;
+	}
+	const natural = boxOf(el);
+	const zero = { height: '0px', paddingTop: '0px', paddingBottom: '0px', marginTop: '0px', marginBottom: '0px' };
+	const start = from ?? (open ? zero : natural);
+	const end = open ? natural : zero;
+	el.style.overflow = 'hidden';
+	const anim = el.animate([{ ...start, opacity: fromOpacity }, { ...end, opacity: open ? 1 : 0 }], {
+		duration: durationFor(parseFloat(end.height) - parseFloat(start.height)),
+		easing: EASE_HEIGHT,
+	});
+	heightAnims.set(el, anim);
+	anim.onfinish = () => {
+		if (heightAnims.get(el) !== anim) return;
+		heightAnims.delete(el);
+		el.style.overflow = '';
+		if (!open) onClosed?.();
+	};
+}
+
+/** 内容替换时（切分类、切月份、切标签）让容器高度平滑过渡到新高度：先量旧高度，执行 mutate，再量新高度 */
+function animateHeight(el: HTMLElement, mutate: () => void) {
+	const running = heightAnims.get(el);
+	const from = el.getBoundingClientRect().height;
+	running?.cancel();
+	heightAnims.delete(el);
+	mutate();
+	if (prefersReducedMotion()) return;
+	const to = el.getBoundingClientRect().height;
+	if (Math.abs(to - from) < 1) return;
+	el.style.overflow = 'clip';
+	el.style.overflowClipMargin = '24px';
+	const anim = el.animate([{ height: `${from}px` }, { height: `${to}px` }], {
+		duration: durationFor(to - from),
+		easing: EASE_HEIGHT,
+	});
+	heightAnims.set(el, anim);
+	anim.onfinish = () => {
+		if (heightAnims.get(el) !== anim) return;
+		heightAnims.delete(el);
+		el.style.overflow = '';
+		el.style.overflowClipMargin = '';
+	};
+}
+
+/** 一组元素依次淡入上浮 */
+function staggerIn(els: Element[], step = 40) {
+	if (prefersReducedMotion()) return;
+	els.forEach((el, i) =>
+		(el as HTMLElement).animate(
+			[
+				{ opacity: 0, transform: 'translateY(8px)' },
+				{ opacity: 1, transform: 'none' },
+			],
+			{ duration: 320, delay: Math.min(i, 8) * step, easing: EASE_OUT, fill: 'backwards' },
+		),
+	);
+}
+
+/** 和网站风格一致的确认弹窗，代替浏览器自带的 confirm() */
+function confirmDialog(message: string, { title = '确认一下', confirmText = '确定', cancelText = '取消' } = {}) {
+	return new Promise<boolean>((resolve) => {
+		const dialog = document.createElement('dialog');
+		dialog.className = 'confirm-dialog';
+		const card = document.createElement('div');
+		card.className = 'confirm-card';
+		const heading = document.createElement('p');
+		heading.className = 'confirm-title';
+		heading.textContent = title;
+		const text = document.createElement('p');
+		text.className = 'confirm-message';
+		text.textContent = message;
+		const actions = document.createElement('div');
+		actions.className = 'confirm-actions';
+		const cancel = document.createElement('button');
+		cancel.type = 'button';
+		cancel.className = 'btn btn-ghost';
+		cancel.textContent = cancelText;
+		const ok = document.createElement('button');
+		ok.type = 'button';
+		ok.className = 'btn btn-primary';
+		ok.textContent = confirmText;
+		actions.append(cancel, ok);
+		card.append(heading, text, actions);
+		dialog.append(card);
+		document.body.append(dialog);
+
+		let done = false;
+		const finish = (result: boolean) => {
+			if (done) return;
+			done = true;
+			resolve(result);
+			const remove = () => {
+				dialog.close();
+				dialog.remove();
+			};
+			if (prefersReducedMotion()) return remove();
+			dialog.classList.add('is-closing');
+			card.addEventListener('animationend', remove, { once: true });
+			window.setTimeout(remove, 300);
+		};
+		cancel.addEventListener('click', () => finish(false));
+		ok.addEventListener('click', () => finish(true));
+		dialog.addEventListener('cancel', (e) => {
+			e.preventDefault();
+			finish(false);
+		});
+		dialog.addEventListener('click', (e) => e.target === dialog && finish(false));
+		dialog.showModal();
+		cancel.focus();
+	});
+}
+
 async function copyText(text: string) {
 	try {
 		await navigator.clipboard.writeText(text);
@@ -544,7 +690,9 @@ function initArticleController(signal: AbortSignal) {
 					});
 					currentFilter = chip.getAttribute('data-filter') ?? 'all';
 					isExpanded = false;
-					render();
+					// 切换分类：区块高度平滑过渡，留下的卡片依次浮现，下面的区块跟着滑动而不是跳动
+					animateHeight(ctrl, render);
+					staggerIn(cards.filter((c) => !c.hidden), 45);
 				},
 				{ signal },
 			);
@@ -629,12 +777,16 @@ function initSidebarNavFilterAndCollapse(signal: AbortSignal) {
 					setDropdownOpen(false);
 
 					let visible = 0;
-					items.forEach((item) => {
+					const list = items[0]?.parentElement;
+					const apply = () => items.forEach((item) => {
 						const match = val === 'all' || item.getAttribute('data-sidebar-category') === val;
 						item.hidden = !match;
 						item.style.display = match ? '' : 'none';
 						if (match) visible++;
 					});
+					if (list) animateHeight(list, apply);
+					else apply();
+					staggerIn(items.filter((item) => !item.hidden), 30);
 
 					if (emptyHint) {
 						emptyHint.hidden = visible > 0;
@@ -724,79 +876,23 @@ function onKeydown(event: KeyboardEvent) {
 	if (event.key === 'Escape') setNavOpen(false);
 }
 
+// <details> 折叠块（服务卡片“展开说明”、手机端文章目录）：展开 / 收起都带滑动动画
 function initDetailsAnimation(signal: AbortSignal) {
-	const detailsList = $all<HTMLDetailsElement>('.service-card details');
-	if (!detailsList.length) return;
-
-	detailsList.forEach((details) => {
+	$all<HTMLDetailsElement>('.service-card details, .mobile-toc-details').forEach((details) => {
 		const summary = details.querySelector('summary');
-		const prose = details.querySelector('.prose') as HTMLElement | null;
-		if (!summary || !prose) return;
-
-		let animation: Animation | null = null;
-		let isClosing = false;
-		let isExpanding = false;
-
+		const content = details.querySelector<HTMLElement>(':scope > :not(summary)');
+		if (!summary || !content) return;
 		summary.addEventListener(
 			'click',
 			(e) => {
 				e.preventDefault();
-				if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-					details.open = !details.open;
-					return;
-				}
-
-				if (isClosing || !details.open) {
-					if (isClosing && animation) animation.cancel();
-					isClosing = false;
-					isExpanding = true;
-
-					details.open = true;
-					const startHeight = 0;
-					const endHeight = prose.scrollHeight;
-
-					animation = prose.animate(
-						[
-							{ height: `${startHeight}px`, opacity: 0, transform: 'translateY(-6px)' },
-							{ height: `${endHeight}px`, opacity: 1, transform: 'translateY(0)' },
-						],
-						{
-							duration: 300,
-							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-						},
-					);
-
-					animation.onfinish = () => {
-						isExpanding = false;
-						animation = null;
-						prose.style.height = '';
-					};
-				} else if (isExpanding || details.open) {
-					if (isExpanding && animation) animation.cancel();
-					isExpanding = false;
-					isClosing = true;
-
-					const startHeight = prose.offsetHeight;
-					const endHeight = 0;
-
-					animation = prose.animate(
-						[
-							{ height: `${startHeight}px`, opacity: 1, transform: 'translateY(0)' },
-							{ height: `${endHeight}px`, opacity: 0, transform: 'translateY(-6px)' },
-						],
-						{
-							duration: 260,
-							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-						},
-					);
-
-					animation.onfinish = () => {
-						details.open = false;
-						isClosing = false;
-						animation = null;
-						prose.style.height = '';
-					};
-				}
+				const open = !details.open || details.classList.contains('is-closing');
+				details.classList.toggle('is-closing', !open);
+				details.open = true;
+				slide(content, open, () => {
+					details.open = false;
+					details.classList.remove('is-closing');
+				});
 			},
 			{ signal },
 		);
@@ -887,7 +983,10 @@ function initTimeline(signal: AbortSignal) {
 			tab.tabIndex = i === index ? 0 : -1;
 		});
 		const year = tabs[index].dataset.timelineTab;
-		panels.forEach((panel) => panel.classList.toggle('is-active', panel.dataset.timelinePanel === year));
+		const container = panels[0]?.parentElement;
+		const swap = () => panels.forEach((panel) => panel.classList.toggle('is-active', panel.dataset.timelinePanel === year));
+		if (container && !mobileQuery.matches) animateHeight(container, swap);
+		else swap();
 		if (focus) tabs[index].focus();
 		const panel = panels.find((p) => p.dataset.timelinePanel === year);
 		if (panel && index !== current && !reducedMotion) {
@@ -930,7 +1029,9 @@ function initTimeline(signal: AbortSignal) {
 						c.classList.toggle('is-selected', c === cell);
 						c.setAttribute('aria-pressed', String(c === cell));
 					});
-					details.forEach((d) => d.classList.toggle('is-active', d.dataset.timelineMonthDetail === month));
+					animateHeight(panel, () =>
+						details.forEach((d) => d.classList.toggle('is-active', d.dataset.timelineMonthDetail === month)),
+					);
 					const detail = details.find((d) => d.dataset.timelineMonthDetail === month);
 					if (!detail) return;
 					if (!reducedMotion) {
@@ -963,54 +1064,15 @@ function initTimeline(signal: AbortSignal) {
 		// 手机端：年份标题折叠 / 展开。高度从 0 滑开、卡片依次浮现；收起时反向，动画中途再点会从当前高度折返
 		const toggle = panel.querySelector<HTMLButtonElement>('[data-timeline-year-toggle]');
 		const body = panel.querySelector<HTMLElement>('.timeline-year-body');
-		let heightAnim: Animation | null = null;
 		toggle?.addEventListener(
 			'click',
 			() => {
 				if (!mobileQuery.matches || !body) return;
 				const expand = toggle.getAttribute('aria-expanded') !== 'true';
 				toggle.setAttribute('aria-expanded', String(expand));
-
-				// 顶部内边距也要一起缩放，否则高度到 0 后还剩一截内边距，隐藏时会再往上跳一下
-				const folded = !heightAnim && expand;
-				const from = folded ? 0 : body.offsetHeight;
-				const fromPad = folded ? '0px' : getComputedStyle(body).paddingTop;
-				heightAnim?.cancel();
-				heightAnim = null;
 				panel.classList.remove('is-folded');
-				if (reducedMotion) {
-					panel.classList.toggle('is-folded', !expand);
-					return;
-				}
-
-				const to = expand ? body.offsetHeight : 0;
-				const toPad = expand ? getComputedStyle(body).paddingTop : '0px';
-				body.style.overflow = 'hidden';
-				const anim = body.animate(
-					[
-						{ height: `${from}px`, paddingTop: fromPad, opacity: expand ? 0.4 : 1 },
-						{ height: `${to}px`, paddingTop: toPad, opacity: expand ? 1 : 0 },
-					],
-					{ duration: Math.min(560, 260 + Math.abs(to - from) * 0.12), easing: ease },
-				);
-				heightAnim = anim;
-				anim.onfinish = () => {
-					body.style.overflow = '';
-					heightAnim = null;
-					if (!expand) panel.classList.add('is-folded');
-				};
-
-				if (expand) {
-					$all<HTMLElement>('.timeline-detail-title, .timeline-entry, .timeline-future-note', body).forEach((el, i) =>
-						el.animate(
-							[
-								{ opacity: 0, transform: 'translateY(12px)' },
-								{ opacity: 1, transform: 'none' },
-							],
-							{ duration: 360, delay: 20 + Math.min(i, 8) * 50, easing: ease, fill: 'backwards' },
-						),
-					);
-				}
+				slide(body, expand, () => panel.classList.add('is-folded'));
+				if (expand) staggerIn($all('.timeline-detail-title, .timeline-entry, .timeline-future-note', body), 50);
 			},
 			{ signal },
 		);
@@ -1182,8 +1244,11 @@ function initAuthForm(signal: AbortSignal) {
 	document.addEventListener('account-change', () => void getAccount().then(showState), { signal });
 
 	const showError = (message: string) => {
-		error.textContent = message;
-		error.hidden = !message;
+		if (error.hidden === !message && error.textContent === message) return;
+		animateHeight(root, () => {
+			error.textContent = message;
+			error.hidden = !message;
+		});
 		if (message && !reducedMotion) {
 			error.animate(
 				[
@@ -1200,6 +1265,10 @@ function initAuthForm(signal: AbortSignal) {
 
 	const setMode = (mode: string) => {
 		if (form.dataset.mode === mode) return;
+		animateHeight(root, () => applyMode(mode));
+		staggerInAuth();
+	};
+	const applyMode = (mode: string) => {
 		form.dataset.mode = mode;
 		tabs.forEach((tab) => {
 			const on = tab.dataset.authTab === mode;
@@ -1209,20 +1278,12 @@ function initAuthForm(signal: AbortSignal) {
 		$all<HTMLElement>('[data-auth-show]', form).forEach((el) => (el.hidden = el.dataset.authShow !== mode));
 		field('password').autocomplete = mode === 'register' ? 'new-password' : 'current-password';
 		showError('');
-		if (!reducedMotion) {
-			$all<HTMLElement>('.auth-title, .auth-sub, .auth-field, .auth-field-hint, .auth-submit', form)
-				.filter((el) => !el.hidden)
-				.forEach((el, i) =>
-					el.animate(
-						[
-							{ opacity: 0, transform: 'translateY(6px)' },
-							{ opacity: 1, transform: 'none' },
-						],
-						{ duration: 280, delay: i * 30, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'backwards' },
-					),
-				);
-		}
 	};
+	const staggerInAuth = () =>
+		staggerIn(
+			$all<HTMLElement>('.auth-title, .auth-sub, .auth-field, .auth-field-hint, .auth-submit', form).filter((el) => !el.hidden),
+			30,
+		);
 	tabs.forEach((tab) => tab.addEventListener('click', () => setMode(tab.dataset.authTab ?? 'login'), { signal }));
 
 	reveal.addEventListener(
@@ -1344,11 +1405,13 @@ function initComments(signal: AbortSignal) {
 
 	type CommentList = { count: number; comments: CommentData[] };
 	const render = (data: CommentList, highlightId?: number) => {
-		replyForm = null;
-		list.replaceChildren(...data.comments.map((c) => build(c, c.id)));
-		countEl.textContent = data.count ? String(data.count) : '';
-		status.textContent = '还没有评论，来抢沙发吧～';
-		status.hidden = data.comments.length > 0;
+		animateHeight(root, () => {
+			replyForm = null;
+			list.replaceChildren(...data.comments.map((c) => build(c, c.id)));
+			countEl.textContent = data.count ? String(data.count) : '';
+			status.textContent = '还没有评论，来抢沙发吧～';
+			status.hidden = data.comments.length > 0;
+		});
 		const fresh = highlightId ? list.querySelector<HTMLElement>(`[data-comment-id="${highlightId}"]`) : null;
 		if (fresh) {
 			fresh.classList.add('is-new');
@@ -1414,19 +1477,22 @@ function initComments(signal: AbortSignal) {
 		pending.classList.add('is-pending');
 		pending.querySelector('[data-c-time]')!.textContent = '发送中…';
 		pending.querySelector<HTMLElement>('[data-c-reply]')!.hidden = true;
-		if (replyTo) {
-			const body = form.closest('.comment-body')!;
-			let replies = body.querySelector<HTMLOListElement>(':scope > .comment-replies');
-			if (!replies) {
-				replies = document.createElement('ol');
-				replies.className = 'comment-replies';
-				body.insertBefore(replies, form);
+		animateHeight(root, () => {
+			if (replyTo) {
+				const body = form.closest('.comment-body')!;
+				let replies = body.querySelector<HTMLOListElement>(':scope > .comment-replies');
+				if (!replies) {
+					replies = document.createElement('ol');
+					replies.className = 'comment-replies';
+					body.insertBefore(replies, form);
+				}
+				replies.append(pending);
+			} else {
+				list.prepend(pending);
+				status.hidden = true;
 			}
-			replies.append(pending);
-		} else {
-			list.prepend(pending);
-			status.hidden = true;
-		}
+		});
+		staggerIn([pending]);
 		textarea.value = '';
 		textarea.dispatchEvent(new Event('input', { bubbles: true }));
 		button.disabled = true;
@@ -1436,8 +1502,10 @@ function initComments(signal: AbortSignal) {
 			render(data, data.id);
 			toast(replyTo ? '回复成功' : '评论成功，谢谢你的留言～');
 		} catch (err) {
-			pending.remove();
-			status.hidden = list.children.length > 0;
+			animateHeight(root, () => {
+				pending.remove();
+				status.hidden = list.children.length > 0;
+			});
 			textarea.value = content;
 			textarea.dispatchEvent(new Event('input', { bubbles: true }));
 			toast((err as Error).message);
@@ -1447,13 +1515,18 @@ function initComments(signal: AbortSignal) {
 		}
 	};
 
+	const closeReply = () => {
+		const form = replyForm;
+		replyForm = null;
+		if (form) slide(form, false, () => form.remove());
+	};
+
 	const openReply = (li: HTMLElement) => {
 		const thread = list.querySelector<HTMLElement>(`:scope > [data-comment-id="${li.dataset.threadId}"]`);
 		if (!thread) return;
 		const target = Number(li.dataset.commentId);
 		const same = replyForm && Number(replyForm.dataset.replyTo) === target;
-		replyForm?.remove();
-		replyForm = null;
+		closeReply();
 		if (same) return;
 
 		const form = document.createElement('form');
@@ -1481,15 +1554,7 @@ function initComments(signal: AbortSignal) {
 		thread.querySelector(':scope > .comment-body')!.append(form);
 		replyForm = form;
 		textarea.focus({ preventScroll: true });
-		if (!reducedMotion) {
-			form.animate(
-				[
-					{ opacity: 0, transform: 'translateY(-6px)' },
-					{ opacity: 1, transform: 'none' },
-				],
-				{ duration: 240, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
-			);
-		}
+		slide(form, true);
 	};
 
 	root.addEventListener(
@@ -1505,7 +1570,12 @@ function initComments(signal: AbortSignal) {
 				}
 				openReply(li);
 			} else if (target.closest('[data-c-delete]') && li) {
-				if (!window.confirm('确定要删除这条评论吗？')) return;
+				const hasReplies = Boolean(li.querySelector(':scope > .comment-body > .comment-replies'));
+				const ok = await confirmDialog(
+					hasReplies ? '删除后无法恢复，下面的回复会保留。' : '删除后无法恢复哦。',
+					{ title: '要删除这条评论吗？', confirmText: '删除' },
+				);
+				if (!ok) return;
 				li.classList.add('is-removing');
 				try {
 					render(await api<CommentList>(`/api/comments/${li.dataset.commentId}`, { method: 'DELETE' }));
@@ -1515,8 +1585,7 @@ function initComments(signal: AbortSignal) {
 					toast((err as Error).message);
 				}
 			} else if (target.closest('[data-reply-cancel]')) {
-				replyForm?.remove();
-				replyForm = null;
+				closeReply();
 			}
 		},
 		{ signal },

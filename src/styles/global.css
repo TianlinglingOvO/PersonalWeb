@@ -1610,7 +1610,7 @@ a:hover {
 	transition: transform 0.22s ease, color 0.18s ease;
 }
 
-.service-card details[open] summary::after {
+.service-card details[open]:not(.is-closing) summary::after {
 	content: "－";
 }
 
@@ -2421,7 +2421,7 @@ a:hover {
 	transition: transform 0.2s ease;
 }
 
-.mobile-toc-details[open] .mobile-toc-chevron {
+.mobile-toc-details[open]:not(.is-closing) .mobile-toc-chevron {
 	transform: rotate(180deg);
 }
 
@@ -3399,14 +3399,110 @@ html.js .reveal.is-visible [data-stagger] > * {
 	}
 }
 
-.comment.is-new {
-	animation: commentNew 1.6s ease-out;
+/* 新发出的评论闪一下：用伪元素铺一块圆角底色，左右各多出一点，不会被切成一条 */
+.comment {
+	position: relative;
+	isolation: isolate;
+}
+
+.comment.is-new::before {
+	content: "";
+	position: absolute;
+	inset: 0.35rem -0.6rem;
+	z-index: -1;
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--accent-soft) 75%, transparent);
+	opacity: 0;
+	animation: commentNew 1.8s ease-out;
+	pointer-events: none;
+}
+
+.comment-replies .comment.is-new::before {
+	inset: 0.2rem -0.5rem;
 }
 
 @keyframes commentNew {
 	0%,
-	30% {
-		background: color-mix(in srgb, var(--accent-soft) 70%, transparent);
+	35% {
+		opacity: 1;
+	}
+}
+
+/* --- 确认弹窗（代替浏览器自带的 confirm） --- */
+.confirm-dialog {
+	width: min(calc(100% - 2rem), 360px);
+	max-width: none;
+	padding: 0;
+	border: 0;
+	background: none;
+	overflow: visible;
+}
+
+.confirm-dialog::backdrop {
+	background: color-mix(in srgb, var(--ink) 32%, transparent);
+	backdrop-filter: blur(3px);
+	animation: fadeIn 0.2s ease both;
+}
+
+.confirm-dialog.is-closing::backdrop {
+	animation: fadeOut 0.18s ease forwards;
+}
+
+.confirm-card {
+	padding: 1.5rem 1.4rem 1.25rem;
+	border: 1px solid var(--line);
+	border-radius: calc(var(--radius) + 4px);
+	background: var(--surface);
+	box-shadow: 0 24px 60px color-mix(in srgb, var(--ink) 22%, transparent);
+	animation: dialogIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.confirm-dialog.is-closing .confirm-card {
+	animation: dialogOut 0.18s ease forwards;
+}
+
+.confirm-title {
+	margin: 0 0 0.4rem;
+	font-size: 1.1rem;
+	font-weight: 800;
+	color: var(--ink);
+}
+
+.confirm-message {
+	margin: 0 0 1.3rem;
+	color: var(--muted);
+	font-size: 0.92rem;
+	line-height: 1.7;
+}
+
+.confirm-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.6rem;
+}
+
+.confirm-actions .btn {
+	min-height: 40px;
+	min-width: 5.5rem;
+}
+
+@keyframes dialogIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px) scale(0.96);
+	}
+}
+
+@keyframes dialogOut {
+	to {
+		opacity: 0;
+		transform: translateY(6px) scale(0.97);
+	}
+}
+
+@keyframes fadeOut {
+	to {
+		opacity: 0;
 	}
 }
 

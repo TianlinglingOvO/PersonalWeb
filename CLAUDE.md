@@ -40,6 +40,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 **客户端脚本 `src/scripts/ui.ts`（约 1500 行，所有交互都在这里）**
 - 由于启用了 ClientRouter，页面切换时不会重新加载脚本。`initPage()` 挂在 `astro:page-load` 上，每次导航都会 `abort` 上一个 `AbortController`，再依次调用各个 `initXxx(signal)`。**新加的监听器、Observer、rAF 都必须挂到这个 `signal` 上**（`{ signal }` 或 `signal.addEventListener('abort', …)`），否则页面来回切换后会重复绑定。
 - 滚动事件统一走一条 rAF 节流的总线：用 `subscribeScroll(cb, signal)` 订阅，不要自己再加 `window` 的 scroll 监听。
+- **展开 / 收起一律要有动画**（站长明确要求）：用 `ui.ts` 顶部的通用工具，不要直接切 `hidden` / `display`。`slide(el, open, onClosed)` 用于折叠块（服务说明、手机目录、手机时间线年份、回复框），中途反向会从当前高度折返；`animateHeight(container, mutate)` 用于内容替换导致高度变化的地方（文章分类、时间线切年份或月份、登录注册切换、评论列表刷新）；`staggerIn(els)` 让新出现的元素依次浮现。需要确认的操作用 `confirmDialog()`，不要用浏览器自带的 `confirm()`。
 - 点击和键盘事件在文档级别用事件委托处理（`onClick` / `onKeydown`），只绑定一次，靠 `data-*` 属性分发。组件和脚本之间通过 `data-*` 钩子（如 `data-timeline-track`、`data-article-controller`）对接，改 DOM 结构时要同步检查 `ui.ts`。
 
 **样式 `src/styles/global.css`（约 3500 行，单文件）**
