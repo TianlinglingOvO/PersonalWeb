@@ -11,7 +11,8 @@ export interface User {
 // 迭代次数写进哈希字符串里，以后调高也不影响旧密码验证
 const ITERATIONS = 50_000;
 const SESSION_DAYS = 30;
-const COOKIE = 'sid';
+// __Host- 前缀：浏览器只接受本域名、HTTPS、Path=/ 设置的这个 Cookie，子域名无法伪造或覆盖登录状态
+const COOKIE = '__Host-sid';
 const RESERVED = new Set(['站长', '管理员', '管理', 'admin', 'administrator', 'root', 'system', '系统', '官方', '已注销用户']);
 /** 注销后的账号显示名 */
 export const CLOSED_NAME = '已注销用户';

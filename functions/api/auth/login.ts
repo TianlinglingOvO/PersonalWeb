@@ -7,8 +7,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
 	const body = await readJson<{ username: string; password: string }>(request);
 
 	const username = checkUsername(body.username);
-	const [allowed, row] = await Promise.all([
+	// 两道限流：同一 IP 10 分钟 10 次；同一账号 1 小时 20 次（防止换很多 IP 轮流猜同一个账号的密码）
+	const [allowed, accountAllowed, row] = await Promise.all([
 		rateLimit(env, `login:${await sha256(clientIp(request))}`, 10, 600),
+		'key' in username ? rateLimit(env, `login-user:${await sha256(username.key)}`, 20, 3600) : true,
 		'key' in username
 			? env.DB.prepare('SELECT id, username, password_hash, is_admin FROM users WHERE username_key = ?')
 					.bind(username.key)
@@ -16,6 +18,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
 			: null,
 	]);
 	if (!allowed) return fail('尝试次数太多，请 10 分钟后再试', 429);
+	if (!accountAllowed) return fail('这个账号的登录尝试太多了，请过一会儿再试', 429);
 	if (!row || !(await verifyPassword(String(body.password ?? ''), row.password_hash))) {
 		return fail('用户名或密码错误', 401);
 	}
@@ -27,7 +30,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
 		waitUntil(
 			env.DB.batch([
 				env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),
-				env.DB.prepare('DELETE FROM rate_limits WHERE window_start < ?').bind(now - 86400),
 			]),
 		);
 	}

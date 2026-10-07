@@ -4,11 +4,12 @@
 //     顶层评论下还有回复时只标记为“已删除”，保留回复；否则直接删掉（连同它的回复）
 import { getUser } from '../../_lib/auth';
 import { buildList, cleanContent, listStatement, MAX_LENGTH } from '../../_lib/comments';
-import { fail, isSameOrigin, json, rateLimit, readJson, type Env } from '../../_lib/http';
+import { fail, isSameOrigin, json, rateLimit, readJson, toId, type Env } from '../../_lib/http';
 
 export const onRequestPatch: PagesFunction<Env, 'id'> = async ({ request, env, params }) => {
 	if (!isSameOrigin(request)) return fail('请求来源不正确', 403);
-	const id = Number(params.id);
+	const id = toId(params.id);
+	if (!id) return fail('评论不存在', 404);
 	const [user, body, comment] = await Promise.all([
 		getUser(request, env),
 		readJson<{ content: string }>(request),
@@ -38,7 +39,8 @@ export const onRequestPatch: PagesFunction<Env, 'id'> = async ({ request, env, p
 
 export const onRequestDelete: PagesFunction<Env, 'id'> = async ({ request, env, params }) => {
 	if (!isSameOrigin(request)) return fail('请求来源不正确', 403);
-	const id = Number(params.id);
+	const id = toId(params.id);
+	if (!id) return fail('评论不存在', 404);
 	const [user, comment] = await Promise.all([
 		getUser(request, env),
 		env.DB.prepare(

@@ -1,5 +1,5 @@
 import { articleExists, SLUG } from '../_lib/articles';
-import { json, sha256, type Env } from '../_lib/http';
+import { clientIp, json, rateLimit, sha256, type Env } from '../_lib/http';
 
 // 文章浏览量接口
 //   GET  /api/views?slugs=a,b,c  → { a: 12, b: 3 }（文章卡片批量查询，没有记录的不返回）
@@ -28,8 +28,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
 	if (!(await articleExists(env, request, slug))) return json({ error: 'not found' }, 404);
 
 	const day = dayOf();
-	const ip = request.headers.get('CF-Connecting-IP') ?? '';
+	const ip = clientIp(request);
 	const visitor = (await sha256(`${ip}|${request.headers.get('User-Agent') ?? ''}|${day}`)).slice(0, 32);
+	// 防刷：同一 IP 每小时最多计入 60 次阅读（换 User-Agent 也绕不过去），超出后只返回当前数字不再加
+	if (!(await rateLimit(env, `view:${await sha256(ip)}`, 60, 3600))) {
+		const row = await env.DB.prepare('SELECT count FROM views WHERE slug = ?').bind(slug).first<{ count: number }>();
+		return json({ count: row?.count ?? 0 });
+	}
+
 	// 去重记录、计数、读取放进同一个 batch（一次往返）：只有去重记录真的插入了，changes() 才大于 0，计数才加一
 	const [, , read] = await env.DB.batch([
 		env.DB.prepare('INSERT OR IGNORE INTO view_hits (slug, visitor, day) VALUES (?, ?, ?)').bind(slug, visitor, day),

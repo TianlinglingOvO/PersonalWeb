@@ -1331,8 +1331,9 @@ function initAuthForm(signal: AbortSignal) {
 	const reveal = form.querySelector<HTMLButtonElement>('[data-auth-reveal]')!;
 	const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
 	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	const nextParam = new URLSearchParams(location.search).get('next') ?? '/';
-	const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/';
+	// 登录后跳回原页面：按浏览器的规则解析后必须仍是本站地址，防止 ?next=/\evil.com 这类链接把人带去别的网站
+	const nextUrl = new URL(new URLSearchParams(location.search).get('next') ?? '/', location.origin);
+	const next = nextUrl.origin === location.origin ? nextUrl.pathname + nextUrl.search + nextUrl.hash : '/';
 
 	const showState = (account: Account | null) => {
 		signedIn.hidden = !account;

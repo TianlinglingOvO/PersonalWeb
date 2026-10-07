@@ -56,9 +56,13 @@ export function buildList(rows: unknown[], viewer: User | null) {
 
 export const MAX_LENGTH = 1000;
 
-/** 统一整理评论内容：换行规范化、最多保留两行空行、去掉首尾空白 */
+/**
+ * 统一整理评论内容：去掉看不见的控制字符（包括能把文字倒过来显示、用来伪装内容的方向控制符），
+ * 换行规范化、最多保留两行空行、去掉首尾空白
+ */
 export const cleanContent = (raw: unknown) =>
 	String(raw ?? '')
+		.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
 		.replace(/\r\n?/g, '\n')
 		.replace(/\n{4,}/g, '\n\n\n')
 		.trim();

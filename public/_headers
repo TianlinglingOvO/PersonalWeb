@@ -1,6 +1,11 @@
+# 安全头。CSP 只允许加载本站的脚本和接口：以后要接入外部脚本、字体或统计（如 Cloudflare Web Analytics）时，需要把对应域名加进 script-src / connect-src
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Strict-Transport-Security: max-age=15552000
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
 
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable

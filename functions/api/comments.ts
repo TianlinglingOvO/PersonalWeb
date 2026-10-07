@@ -4,7 +4,7 @@
 import { articleExists, SLUG } from '../_lib/articles';
 import { getUser } from '../_lib/auth';
 import { buildList, cleanContent, listStatement, MAX_LENGTH } from '../_lib/comments';
-import { fail, isSameOrigin, json, rateLimit, readJson, type Env } from '../_lib/http';
+import { fail, isSameOrigin, json, rateLimit, readJson, toId, type Env } from '../_lib/http';
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 	const slug = new URL(request.url).searchParams.get('slug') ?? '';
@@ -23,6 +23,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
 	const slug = String(body.slug ?? '');
 	const content = cleanContent(body.content);
+	const replyTo = body.replyTo == null ? null : toId(body.replyTo);
+	if (body.replyTo != null && !replyTo) return fail('要回复的评论已经不存在了', 404);
 	if (!content) return fail('评论内容不能为空');
 	if (content.length > MAX_LENGTH) return fail(`评论最多 ${MAX_LENGTH} 字`);
 
@@ -30,9 +32,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 	const [exists, allowed, target] = await Promise.all([
 		articleExists(env, request, slug),
 		rateLimit(env, `comment:${user.id}`, 5, 60),
-		body.replyTo != null
+		replyTo
 			? env.DB.prepare('SELECT id, parent_id, user_id, deleted FROM comments WHERE id = ? AND slug = ?')
-					.bind(Number(body.replyTo), slug)
+					.bind(replyTo, slug)
 					.first<{ id: number; parent_id: number | null; user_id: number; deleted: number }>()
 			: null,
 	]);
@@ -42,7 +44,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 	// 回复：挂到被回复评论所在的顶层评论下面；回复的是楼中楼里的某条时，记下“回复 @谁”
 	let parentId: number | null = null;
 	let replyToUserId: number | null = null;
-	if (body.replyTo != null) {
+	if (replyTo) {
 		if (!target || target.deleted) return fail('要回复的评论已经不存在了', 404);
 		parentId = target.parent_id ?? target.id;
 		if (target.parent_id !== null) replyToUserId = target.user_id;

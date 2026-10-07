@@ -116,6 +116,10 @@ npm run build
   2. 所有写操作接口必须先检查 `isSameOrigin`（防 CSRF），需要登录的再用 `getUser` 校验，删除等操作要核对是本人或站长；
   3. 密码只能用 `functions/_lib/auth.ts` 的 PBKDF2 加盐哈希保存。免费版每次请求约 10ms CPU，PBKDF2 迭代次数不要超过 10 万（Workers 的上限），现在用 5 万次；
   4. 登录 Cookie 保持 `HttpOnly; Secure; SameSite=Lax`，数据库里只存 token 的哈希；
-  5. 不要把任何密钥写进仓库（`wrangler.toml` 里的 `database_id` 不是密钥，可以提交）。
+  5. 不要把任何密钥写进仓库（`wrangler.toml` 里的 `database_id` 不是密钥，可以提交）；
+  6. 限流一律用 `clientIp()`（IPv6 按 /64 计），登录同时按 IP 和按账号限流；路径或请求体里的编号用 `toId()` 校验；请求体用 `readJson()`（自带 16KB 上限）；
+  7. 登录后的跳转地址必须用 `new URL()` 解析并确认仍是本站，防止开放重定向；
+  8. `public/_headers` 里有内容安全策略（CSP），只允许本站脚本和接口。**接入任何外部脚本、字体、统计或接口前，先把对应域名加进 CSP**，否则会被浏览器静默拦截；
+  9. `functions/api/_middleware.ts` 兜底捕获接口异常，返回统一的中文错误，不暴露内部细节。
 * **接口不可用时要优雅降级**：`npm run dev` 没有接口，浏览量、账号、评论在这种情况下应安静隐藏或提示“加载不出来”，不能让页面报错。
 * **本地完整测试**：`npm run preview:full`（构建后用 wrangler 同时跑静态页和接口，地址 http://localhost:8911 ）。
