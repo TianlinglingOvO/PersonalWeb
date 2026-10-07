@@ -37,13 +37,13 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 - 首页 `src/pages/index.astro` 是单页，由 Hero、About、Timeline、Articles、Services、Connect 几个 section 拼成。各集合的**排序逻辑都写在这个页面里**，不在组件中。
 - 所有页面都套用 `src/layouts/BaseLayout.astro`，其中启用了 `<ClientRouter />`（View Transitions），并在 body 底部加载唯一的客户端脚本 `src/scripts/ui.ts`。
 
-**客户端脚本 `src/scripts/ui.ts`（约 1500 行，所有交互都在这里）**
+**客户端脚本 `src/scripts/ui.ts`（约 1700 行，所有交互都在这里）**
 - 由于启用了 ClientRouter，页面切换时不会重新加载脚本。`initPage()` 挂在 `astro:page-load` 上，每次导航都会 `abort` 上一个 `AbortController`，再依次调用各个 `initXxx(signal)`。**新加的监听器、Observer、rAF 都必须挂到这个 `signal` 上**（`{ signal }` 或 `signal.addEventListener('abort', …)`），否则页面来回切换后会重复绑定。
 - 滚动事件统一走一条 rAF 节流的总线：用 `subscribeScroll(cb, signal)` 订阅，不要自己再加 `window` 的 scroll 监听。
-- **展开 / 收起一律要有动画**（站长明确要求）：用 `ui.ts` 顶部的通用工具，不要直接切 `hidden` / `display`。`slide(el, open, onClosed)` 用于折叠块（服务说明、手机目录、手机时间线年份、回复框），中途反向会从当前高度折返；`animateHeight(container, mutate)` 用于内容替换导致高度变化的地方（文章分类、时间线切年份或月份、登录注册切换、评论列表刷新）；`staggerIn(els)` 让新出现的元素依次浮现。需要确认的操作用 `confirmDialog()`，不要用浏览器自带的 `confirm()`。
+- **展开 / 收起一律要有动画**（站长明确要求）：用 `ui.ts` 顶部的通用工具，不要直接切 `hidden` / `display`。`slide(el, open, onClosed)` 用于折叠块（服务说明、手机目录、手机时间线年份、回复框），中途反向会从当前高度折返；`animateHeight(container, mutate)` 用于内容替换导致高度变化的地方（文章分类、时间线切年份或月份、登录注册切换、评论列表刷新）；`staggerIn(els)` 让新出现的元素依次浮现，`shake(el)` 输错时晃一下。缓动用常量 `EASE_OUT` / `EASE_HEIGHT`，减少动态效果用 `prefersReducedMotion()` 判断，不要再各自手写。显示隐藏统一用 `hidden` 属性（全局 `[hidden]` 是 `display: none !important`），不要再额外写 `style.display`。需要确认的操作用 `confirmDialog()`，不要用浏览器自带的 `confirm()`。
 - 点击和键盘事件在文档级别用事件委托处理（`onClick` / `onKeydown`），只绑定一次，靠 `data-*` 属性分发。组件和脚本之间通过 `data-*` 钩子（如 `data-timeline-track`、`data-article-controller`）对接，改 DOM 结构时要同步检查 `ui.ts`。
 
-**样式 `src/styles/global.css`（约 3500 行，单文件）**
+**样式 `src/styles/global.css`（约 3750 行，单文件）**
 - 只写原生 CSS 和 CSS 变量，按 section 分块。设计 token、圆角层级、动效曲线都以 AGENTS.md 第 3 节为准，禁止硬编码颜色。
 
 **时间线（Section 02）**
@@ -74,6 +74,10 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 - 站长操作手册（给不懂代码的站长看的）在 `ADMIN_GUIDE.md`，改动管理命令或访客规则时要同步更新它。
 - 站长管理：`npm run admin -- users | set-admin <名> | reset-password <名> <新密码>`（`scripts/admin.mjs`，加 `--local` 操作本地库）。安全红线和迁移规则见 AGENTS.md 第 6 节。
 - `functions/` 有独立的 `tsconfig.json`（Workers 类型），根 tsconfig 排除了它。本地调试端口 8788 在站长电脑上被占用，用 `wrangler pages dev --port 8911`。
+
+## 待办
+
+已讨论但暂缓的事项（Cloudflare 速率限制规则、评论图片、用户自助改密码）记在 `MAINTENANCE.md` 第六章，站长说“做待办里的某条”时去那里看。
 
 ## 仓库约定
 

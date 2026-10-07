@@ -10,6 +10,7 @@
 	--accent-2: #5c6bc0;
 	--accent-2-soft: #dde1f5;
 	--line: #e8dfd8;
+	--shadow-tint: rgb(90 50 70);
 	--shadow: 0 10px 30px rgba(90, 50, 70, 0.08);
 	--shadow-hover: 0 16px 36px rgba(90, 50, 70, 0.14);
 	--radius: 20px;
@@ -19,7 +20,6 @@
 		-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
 		"Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", "WenQuanYi Micro Hei",
 		system-ui, sans-serif;
-	--space: 1.15rem;
 	--max: 1080px;
 }
 
@@ -124,7 +124,7 @@ a:hover {
 	top: -48px;
 	z-index: 80;
 	background: var(--ink);
-	color: #fff;
+	color: var(--surface);
 	padding: 0.5rem 0.8rem;
 	border-radius: 8px;
 }
@@ -160,8 +160,8 @@ a:hover {
 
 .site-header.is-scrolled {
 	border-bottom-color: var(--line);
-	box-shadow: 0 8px 24px rgba(90, 50, 70, 0.06);
-	background: #fbf7f2;
+	box-shadow: 0 8px 24px color-mix(in srgb, var(--shadow-tint) 6%, transparent);
+	background: var(--bg);
 }
 
 .header-inner {
@@ -195,7 +195,7 @@ a:hover {
 	object-fit: cover;
 	object-position: 50% 30%;
 	border: 1.5px solid var(--accent-soft);
-	box-shadow: 0 2px 6px rgba(226, 92, 122, 0.16);
+	box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 16%, transparent);
 	display: inline-block;
 }
 
@@ -280,14 +280,14 @@ a:hover {
 
 .nav a:hover {
 	color: var(--ink);
-	background: rgba(248, 213, 221, 0.55);
+	background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
 }
 
 .nav a.is-active {
 	color: var(--accent-deep);
 	background: var(--accent-soft);
 	font-weight: 600;
-	box-shadow: 0 2px 8px rgba(226, 92, 122, 0.12);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .nav-backdrop {
@@ -312,7 +312,7 @@ a:hover {
 	height: 88px;
 	border-radius: 50%;
 	object-fit: cover;
-	border: 3px solid #fff;
+	border: 3px solid var(--surface);
 	box-shadow: var(--shadow);
 	margin-bottom: 1.1rem;
 }
@@ -358,7 +358,7 @@ a:hover {
 	color: var(--ink);
 	font-size: 0.88rem;
 	text-decoration: none;
-	box-shadow: 0 4px 14px rgba(90, 50, 70, 0.06);
+	box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow-tint) 6%, transparent);
 	transition:
 		border-color 0.2s ease,
 		color 0.2s ease,
@@ -533,13 +533,13 @@ a:hover {
 
 .btn-primary {
 	background: var(--accent);
-	color: #fff;
-	box-shadow: 0 8px 18px rgba(226, 92, 122, 0.28);
+	color: var(--surface);
+	box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .btn-primary:hover {
 	background: var(--accent-deep);
-	color: #fff;
+	color: var(--surface);
 	box-shadow: var(--shadow-hover);
 }
 
@@ -552,7 +552,7 @@ a:hover {
 .btn-ghost:hover {
 	border-color: var(--accent);
 	color: var(--accent-deep);
-	background: #fff;
+	background: var(--surface);
 }
 
 .section,
@@ -608,7 +608,7 @@ a:hover {
 	font-size: 0.88rem;
 	white-space: nowrap;
 	align-self: flex-end;
-	box-shadow: 0 2px 8px rgba(90, 50, 70, 0.04);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-tint) 4%, transparent);
 	transition:
 		color 0.2s ease,
 		border-color 0.2s ease,
@@ -622,7 +622,7 @@ a:hover {
 	color: var(--accent-deep);
 	background: var(--accent-soft);
 	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(226, 92, 122, 0.16);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .section-more:active {
@@ -1483,8 +1483,7 @@ a:hover {
 	margin: 0 auto;
 }
 
-.prose figcaption,
-.prose .caption {
+.prose figcaption {
 	font-size: 0.86rem;
 	color: var(--muted);
 	margin-top: 0.4rem;
@@ -1513,7 +1512,7 @@ a:hover {
 .prose code {
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	font-size: 0.88em;
-	background: rgba(226, 92, 122, 0.08);
+	background: color-mix(in srgb, var(--accent) 8%, transparent);
 	color: var(--accent-deep);
 	padding: 0.15rem 0.4rem;
 	border-radius: 4px;
@@ -1754,7 +1753,7 @@ a:hover {
 	pointer-events: none;
 	opacity: 0;
 	border-radius: 0 999px 999px 0;
-	box-shadow: 0 1px 8px rgba(226, 92, 122, 0.6);
+	box-shadow: 0 1px 8px color-mix(in srgb, var(--accent) 60%, transparent);
 	transition: width 0.25s ease, opacity 0.2s ease;
 }
 
@@ -1800,7 +1799,7 @@ a:hover {
 
 .toast {
 	background: var(--ink);
-	color: #fff;
+	color: var(--surface);
 	padding: 0.7rem 1rem;
 	border-radius: 12px;
 	box-shadow: var(--shadow-hover);
@@ -2089,7 +2088,7 @@ a:hover {
 	border-radius: 12px;
 	padding: 0.35rem;
 	box-shadow:
-		0 10px 28px rgba(226, 92, 122, 0.14),
+		0 10px 28px color-mix(in srgb, var(--accent) 14%, transparent),
 		0 2px 8px rgba(34, 25, 36, 0.06);
 	z-index: 50;
 	display: flex;
@@ -2233,7 +2232,7 @@ a:hover {
 .sidebar-article-link.is-current {
 	background: var(--accent-soft);
 	border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-	box-shadow: 0 2px 8px rgba(226, 92, 122, 0.12);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .sidebar-article-meta {
@@ -2698,9 +2697,9 @@ html.js .reveal.is-visible [data-stagger] > * {
 	}
 
 	.site-header.is-scrolled {
-		background: #fbf7f2;
+		background: var(--bg);
 		border-bottom-color: var(--line);
-		box-shadow: 0 8px 24px rgba(90, 50, 70, 0.06);
+		box-shadow: 0 8px 24px color-mix(in srgb, var(--shadow-tint) 6%, transparent);
 	}
 
 	/* 菜单打开时：顶栏与菜单融合成一张无缝纯白卡片，消除底边线 */
@@ -2720,7 +2719,7 @@ html.js .reveal.is-visible [data-stagger] > * {
 		position: fixed;
 		inset: 0;
 		z-index: 90;
-		background: rgba(42, 38, 44, 0.42);
+		background: color-mix(in srgb, var(--ink) 42%, transparent);
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
 		opacity: 0;
@@ -2744,7 +2743,7 @@ html.js .reveal.is-visible [data-stagger] > * {
 		border-top: none !important;
 		border-bottom: 1px solid var(--line);
 		border-radius: 0 0 24px 24px;
-		box-shadow: 0 24px 50px rgba(90, 50, 70, 0.2);
+		box-shadow: 0 24px 50px color-mix(in srgb, var(--shadow-tint) 20%, transparent);
 		flex-direction: column;
 		padding: 0.2rem 1.2rem 1.4rem;
 		max-height: calc(100dvh - var(--header-h) - 1.5rem);

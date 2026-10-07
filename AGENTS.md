@@ -59,6 +59,7 @@
   --accent-deep: #c44763;   /* 交互强调深洋红 */
   --accent-2: #5c6bc0;      /* 辅助靛蓝（次要链接、时间线“未来”节点） */
   --accent-2-soft: #dde1f5; /* 淡靛蓝底 */
+  --shadow-tint: rgb(90 50 70); /* 暖色阴影底色，用 color-mix 调透明度 */
 }
 ```
 

@@ -123,6 +123,21 @@ function animateHeight(el: HTMLElement, mutate: () => void) {
 	};
 }
 
+/** 左右轻轻晃一下，用于输错时的提示 */
+function shake(el: HTMLElement) {
+	if (prefersReducedMotion()) return;
+	el.animate(
+		[
+			{ transform: 'translateX(0)' },
+			{ transform: 'translateX(-6px)' },
+			{ transform: 'translateX(5px)' },
+			{ transform: 'translateX(-3px)' },
+			{ transform: 'translateX(0)' },
+		],
+		{ duration: 300, easing: 'ease-out' },
+	);
+}
+
 /** 一组元素依次淡入上浮 */
 function staggerIn(els: Element[], step = 40) {
 	if (prefersReducedMotion()) return;
@@ -211,15 +226,7 @@ function confirmDialog(
 			if (!problem) return finish(true);
 			error.textContent = problem;
 			error.hidden = false;
-			card.animate(
-				[
-					{ transform: 'translateX(0)' },
-					{ transform: 'translateX(-6px)' },
-					{ transform: 'translateX(5px)' },
-					{ transform: 'translateX(0)' },
-				],
-				{ duration: 280, easing: 'ease-out' },
-			);
+			shake(card);
 			field?.select();
 		});
 		dialog.addEventListener('cancel', (e) => {
@@ -452,7 +459,7 @@ function initReveal(signal: AbortSignal) {
 			(child as HTMLElement).style.setProperty('--stagger-i', String(Math.min(i, 8)));
 		});
 	});
-	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+	if (prefersReducedMotion()) {
 		els.forEach((el) => el.classList.add('is-visible'));
 		return;
 	}
@@ -486,260 +493,85 @@ function initReveal(signal: AbortSignal) {
 	signal.addEventListener('abort', () => io.disconnect());
 }
 
+// 文章列表：按分类筛选；首页只先显示 limit 篇，其余收在“展开更多文章”里
 function initArticleController(signal: AbortSignal) {
-	const controllers = $all<HTMLElement>('[data-article-controller]');
-	if (!controllers.length) return;
-
-	controllers.forEach((ctrl) => {
-		const limit = parseInt(ctrl.getAttribute('data-limit') || '0', 10);
-		const grid = $('[data-article-list]', ctrl) as HTMLElement | null;
+	$all<HTMLElement>('[data-article-controller]').forEach((ctrl) => {
+		const limit = Number(ctrl.dataset.limit) || 0;
 		const cards = $all<HTMLElement>('[data-article-list] [data-category]', ctrl);
-		const empty = $('[data-article-empty]', ctrl) as HTMLElement | null;
 		const chips = $all<HTMLButtonElement>('[data-filter]', ctrl);
+		const empty = $('[data-article-empty]', ctrl) as HTMLElement | null;
 		const expandRow = $('[data-articles-expand-row]', ctrl) as HTMLElement | null;
-		const toggleBtn = $('[data-articles-toggle]', ctrl) as HTMLButtonElement | null;
-		const textSpan = toggleBtn?.querySelector('.expand-btn-text') as HTMLElement | null;
+		const toggle = $('[data-articles-toggle]', ctrl) as HTMLButtonElement | null;
+		const label = toggle?.querySelector<HTMLElement>('.expand-btn-text');
+		let filter = 'all';
+		let expanded = false;
+		let busy = false;
 
-		let currentFilter = 'all';
-		let isExpanded = false;
-		let currentAnimation: Animation | null = null;
-		let isAnimating = false;
-
-		const getMatchedCards = () =>
-			cards.filter((card) => {
-				const cat = card.getAttribute('data-category');
-				return currentFilter === 'all' || cat === currentFilter;
-			});
-
+		const matched = () => cards.filter((card) => filter === 'all' || card.dataset.category === filter);
 		const render = () => {
-			if (currentAnimation) {
-				currentAnimation.cancel();
-				currentAnimation = null;
-			}
-			isAnimating = false;
-			if (grid) {
-				grid.style.height = '';
-				grid.style.overflow = '';
-			}
-
-			const matchedCards = getMatchedCards();
-
-			cards.forEach((c) => {
-				c.hidden = true;
-				c.style.display = 'none';
-				c.style.opacity = '';
-				c.classList.remove('article-card-overflow');
-			});
-
-			const total = matchedCards.length;
-			if (empty) {
-				empty.hidden = total > 0;
-				empty.style.display = total > 0 ? 'none' : '';
-			}
-
-			if (limit > 0 && total > limit) {
-				if (expandRow) {
-					expandRow.hidden = false;
-					expandRow.style.display = 'flex';
-				}
-				const visibleCount = isExpanded ? total : limit;
-				matchedCards.forEach((card, idx) => {
-					const show = idx < visibleCount;
-					card.hidden = !show;
-					card.style.display = show ? '' : 'none';
-					if (!show) card.classList.add('article-card-overflow');
-				});
-
-				if (toggleBtn) {
-					toggleBtn.setAttribute('aria-expanded', String(isExpanded));
-					toggleBtn.classList.toggle('is-active', isExpanded);
-				}
-				if (textSpan) {
-					const remaining = total - limit;
-					textSpan.textContent = isExpanded
-						? '收起文章 ↑'
-						: `展开更多文章 (还有 ${remaining} 篇) ↓`;
-				}
-			} else {
-				if (expandRow) {
-					expandRow.hidden = true;
-					expandRow.style.display = 'none';
-				}
-				matchedCards.forEach((card) => {
-					card.hidden = false;
-					card.style.display = '';
-				});
-				if (toggleBtn) {
-					toggleBtn.setAttribute('aria-expanded', 'false');
-					toggleBtn.classList.remove('is-active');
-				}
-			}
+			const list = matched();
+			const folds = limit > 0 && list.length > limit;
+			const open = folds && expanded;
+			const shown = new Set(folds && !expanded ? list.slice(0, limit) : list);
+			cards.forEach((card) => (card.hidden = !shown.has(card)));
+			if (empty) empty.hidden = list.length > 0;
+			if (expandRow) expandRow.hidden = !folds;
+			toggle?.setAttribute('aria-expanded', String(open));
+			toggle?.classList.toggle('is-active', open);
+			if (label && folds) label.textContent = open ? '收起文章 ↑' : `展开更多文章 (还有 ${list.length - limit} 篇) ↓`;
 		};
 
-		const toggleExpandWithAnimation = () => {
-			if (!grid || isAnimating) return;
-
-			if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-				isExpanded = !isExpanded;
-				render();
-				return;
-			}
-
-			const matchedCards = getMatchedCards();
-			const total = matchedCards.length;
-			if (total <= limit) return;
-
-			const overflowCards = matchedCards.slice(limit);
-
-			if (!isExpanded) {
-				// 展开动画 (丝滑高度延展 + 卡片轻柔滑入淡出)
-				const startHeight = grid.offsetHeight;
-				isExpanded = true;
-
-				overflowCards.forEach((card) => {
-					card.hidden = false;
-					card.style.display = '';
-					card.style.opacity = '0';
-					card.classList.remove('article-card-overflow');
-				});
-
-				const targetHeight = grid.offsetHeight;
-
-				if (toggleBtn) {
-					toggleBtn.setAttribute('aria-expanded', 'true');
-					toggleBtn.classList.add('is-active');
-				}
-				if (textSpan) {
-					textSpan.textContent = '收起文章 ↑';
-				}
-
-				grid.style.overflow = 'hidden';
-				isAnimating = true;
-
-				currentAnimation = grid.animate(
-					[
-						{ height: `${startHeight}px` },
-						{ height: `${targetHeight}px` },
-					],
-					{
-						duration: 320,
-						easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-					},
-				);
-
-				overflowCards.forEach((card, idx) => {
-					card.animate(
-						[
-							{ opacity: 0, transform: 'translateY(-10px)' },
-							{ opacity: 1, transform: 'translateY(0)' },
-						],
-						{
-							duration: 300,
-							delay: Math.min(idx * 35, 120),
-							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-							fill: 'forwards',
-						},
-					);
-				});
-
-				currentAnimation.onfinish = () => {
-					grid.style.height = '';
-					grid.style.overflow = '';
-					overflowCards.forEach((c) => {
-						c.style.opacity = '';
-					});
-					isAnimating = false;
-					currentAnimation = null;
-				};
-			} else {
-				// 收起动画 (卡片平缓淡出 + 容器高度丝滑回弹)
-				const startHeight = grid.offsetHeight;
-				const firstCard = matchedCards[0];
-				const lastInitialCard = matchedCards[limit - 1];
-				const targetHeight =
-					firstCard && lastInitialCard
-						? lastInitialCard.offsetTop + lastInitialCard.offsetHeight - firstCard.offsetTop
-						: startHeight;
-
-				isExpanded = false;
-
-				if (toggleBtn) {
-					toggleBtn.setAttribute('aria-expanded', 'false');
-					toggleBtn.classList.remove('is-active');
-				}
-				if (textSpan) {
-					const remaining = total - limit;
-					textSpan.textContent = `展开更多文章 (还有 ${remaining} 篇) ↓`;
-				}
-
-				grid.style.overflow = 'hidden';
-				isAnimating = true;
-
-				overflowCards.forEach((card) => {
-					card.animate(
-						[
-							{ opacity: 1, transform: 'translateY(0)' },
-							{ opacity: 0, transform: 'translateY(-8px)' },
-						],
-						{
-							duration: 220,
-							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-						},
-					);
-				});
-
-				currentAnimation = grid.animate(
-					[
-						{ height: `${startHeight}px` },
-						{ height: `${targetHeight}px` },
-					],
-					{
-						duration: 280,
-						easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-					},
-				);
-
-				currentAnimation.onfinish = () => {
-					overflowCards.forEach((c) => {
-						c.hidden = true;
-						c.style.display = 'none';
-						c.style.opacity = '';
-						c.classList.add('article-card-overflow');
-					});
-					grid.style.height = '';
-					grid.style.overflow = '';
-					isAnimating = false;
-					currentAnimation = null;
-
-					const section = ctrl.closest('section') ?? ctrl;
-					const rect = section.getBoundingClientRect();
-					if (rect.top < 60) {
-						section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-					}
-				};
-			}
-		};
-
-		chips.forEach((chip) => {
+		// 切换分类：区块高度平滑过渡，留下的卡片依次浮现，下面的区块跟着滑动而不是跳动
+		chips.forEach((chip) =>
 			chip.addEventListener(
 				'click',
 				() => {
 					chips.forEach((c) => {
-						const on = c === chip;
-						c.classList.toggle('is-active', on);
-						c.setAttribute('aria-pressed', String(on));
+						c.classList.toggle('is-active', c === chip);
+						c.setAttribute('aria-pressed', String(c === chip));
 					});
-					currentFilter = chip.getAttribute('data-filter') ?? 'all';
-					isExpanded = false;
-					// 切换分类：区块高度平滑过渡，留下的卡片依次浮现，下面的区块跟着滑动而不是跳动
+					filter = chip.dataset.filter ?? 'all';
+					expanded = false;
 					animateHeight(ctrl, render);
-					staggerIn(cards.filter((c) => !c.hidden), 45);
+					staggerIn(cards.filter((card) => !card.hidden), 45);
 				},
 				{ signal },
-			);
-		});
+			),
+		);
 
-		toggleBtn?.addEventListener('click', toggleExpandWithAnimation, { signal });
+		// 展开：高度滑开、多出的卡片依次浮现；收起：多出的卡片先淡出再收高度，按钮跑到屏幕上方时把区块拉回视野
+		toggle?.addEventListener(
+			'click',
+			async () => {
+				if (busy) return;
+				busy = true;
+				const extra = matched().slice(limit);
+				let fading: Animation[] = [];
+				if (expanded && !prefersReducedMotion()) {
+					fading = extra.map((card) =>
+						card.animate(
+							[
+								{ opacity: 1, transform: 'none' },
+								{ opacity: 0, transform: 'translateY(-8px)' },
+							],
+							{ duration: 200, easing: EASE_OUT, fill: 'forwards' },
+						),
+					);
+					await Promise.all(fading.map((a) => a.finished.catch(() => undefined)));
+				}
+				expanded = !expanded;
+				animateHeight(ctrl, render);
+				fading.forEach((a) => a.cancel());
+				if (expanded) {
+					staggerIn(extra, 35);
+				} else {
+					const section = ctrl.closest('section') ?? ctrl;
+					if (section.getBoundingClientRect().top < 60) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				}
+				busy = false;
+			},
+			{ signal },
+		);
 
 		render();
 	});
@@ -819,20 +651,17 @@ function initSidebarNavFilterAndCollapse(signal: AbortSignal) {
 
 					let visible = 0;
 					const list = items[0]?.parentElement;
-					const apply = () => items.forEach((item) => {
-						const match = val === 'all' || item.getAttribute('data-sidebar-category') === val;
-						item.hidden = !match;
-						item.style.display = match ? '' : 'none';
-						if (match) visible++;
-					});
+					const apply = () =>
+						items.forEach((item) => {
+							const match = val === 'all' || item.getAttribute('data-sidebar-category') === val;
+							item.hidden = !match;
+							if (match) visible++;
+						});
 					if (list) animateHeight(list, apply);
 					else apply();
 					staggerIn(items.filter((item) => !item.hidden), 30);
 
-					if (emptyHint) {
-						emptyHint.hidden = visible > 0;
-						emptyHint.style.display = visible > 0 ? 'none' : 'block';
-					}
+					if (emptyHint) emptyHint.hidden = visible > 0;
 				},
 				{ signal },
 			);
@@ -1038,8 +867,7 @@ function initTimeline(signal: AbortSignal) {
 	const tabs = $all<HTMLButtonElement>('[data-timeline-tab]', section);
 	const panels = $all<HTMLElement>('[data-timeline-panel]', section);
 	const mobileQuery = window.matchMedia('(max-width: 860px)');
-	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	const ease = 'cubic-bezier(0.16, 1, 0.3, 1)';
+	const reducedMotion = prefersReducedMotion();
 
 	// 切换年份：往后的年份从右侧翻入，往前的年份从左侧翻入
 	const showYear = (index: number, focus = false) => {
@@ -1063,7 +891,7 @@ function initTimeline(signal: AbortSignal) {
 					{ opacity: 0, transform: `translateX(${dx}px)` },
 					{ opacity: 1, transform: 'none' },
 				],
-				{ duration: 380, easing: ease },
+				{ duration: 380, easing: EASE_OUT },
 			);
 		}
 	};
@@ -1101,17 +929,7 @@ function initTimeline(signal: AbortSignal) {
 					);
 					const detail = details.find((d) => d.dataset.timelineMonthDetail === month);
 					if (!detail) return;
-					if (!reducedMotion) {
-						[...detail.children].forEach((child, i) =>
-							(child as HTMLElement).animate(
-								[
-									{ opacity: 0, transform: 'translateY(10px)' },
-									{ opacity: 1, transform: 'none' },
-								],
-								{ duration: 320, delay: i * 60, easing: ease, fill: 'backwards' },
-							),
-						);
-					}
+					staggerIn([...detail.children], 60);
 					const ref = (e.target as HTMLElement).closest<HTMLElement>('[data-entry-ref]')?.dataset.entryRef;
 					const entry = ref ? detail.querySelector<HTMLElement>(`[data-entry="${CSS.escape(ref)}"]`) : null;
 					if (entry) {
@@ -1330,7 +1148,6 @@ function initAuthForm(signal: AbortSignal) {
 	const submit = form.querySelector<HTMLButtonElement>('[data-auth-submit]')!;
 	const reveal = form.querySelector<HTMLButtonElement>('[data-auth-reveal]')!;
 	const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
-	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	// 登录后跳回原页面：按浏览器的规则解析后必须仍是本站地址，防止 ?next=/\evil.com 这类链接把人带去别的网站
 	const nextUrl = new URL(new URLSearchParams(location.search).get('next') ?? '/', location.origin);
 	const next = nextUrl.origin === location.origin ? nextUrl.pathname + nextUrl.search + nextUrl.hash : '/';
@@ -1352,18 +1169,7 @@ function initAuthForm(signal: AbortSignal) {
 			error.textContent = message;
 			error.hidden = !message;
 		});
-		if (message && !reducedMotion) {
-			error.animate(
-				[
-					{ transform: 'translateX(0)' },
-					{ transform: 'translateX(-6px)' },
-					{ transform: 'translateX(5px)' },
-					{ transform: 'translateX(-3px)' },
-					{ transform: 'translateX(0)' },
-				],
-				{ duration: 320, easing: 'ease-out' },
-			);
-		}
+		if (message) shake(error);
 	};
 
 	const setMode = (mode: string) => {
@@ -1481,7 +1287,7 @@ function initComments(signal: AbortSignal) {
 	const mainForm = root.querySelector<HTMLFormElement>('[data-comment-form]')!;
 	const loginTip = root.querySelector<HTMLElement>('[data-comment-login]')!;
 	const template = root.querySelector<HTMLTemplateElement>('[data-comment-template]')!;
-	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const reducedMotion = prefersReducedMotion();
 	let account: Account | null = null;
 	let replyForm: HTMLFormElement | null = null;
 	let editForm: HTMLFormElement | null = null;

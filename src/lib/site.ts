@@ -1,7 +1,7 @@
 import siteJson from '../../content/site.json';
 import socialJson from '../../content/social.json';
 
-export type SocialAction = 'link' | 'copy';
+type SocialAction = 'link' | 'copy';
 export type SocialGroup = 'im' | 'social' | 'dev';
 
 export type SocialItem = {
@@ -28,7 +28,6 @@ export const nav = [
 ] as const;
 
 export const articleCategories = ['教程', '科普'] as const;
-export type ArticleCategory = (typeof articleCategories)[number];
 
 export function formatDate(date: Date) {
 	return date.toLocaleDateString('zh-CN', {
