@@ -45,7 +45,9 @@ const { slug } = Astro.props;
 				<p class="comment-content" data-c-content></p>
 				<p class="comment-meta">
 					<time data-c-time></time>
+					<span class="comment-edited" data-c-edited hidden>已编辑</span>
 					<button type="button" class="comment-action" data-c-reply>回复</button>
+					<button type="button" class="comment-action" data-c-edit hidden>编辑</button>
 					<button type="button" class="comment-action is-danger" data-c-delete hidden>删除</button>
 				</p>
 				<ol class="comment-replies" data-c-replies></ol>

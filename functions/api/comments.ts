@@ -3,10 +3,8 @@
 //   POST /api/comments          { slug, content, replyTo? } → 发表评论，返回新评论 id 和最新列表；replyTo 是被回复的评论 id（需登录）
 import { articleExists, SLUG } from '../_lib/articles';
 import { getUser } from '../_lib/auth';
-import { buildList, listStatement } from '../_lib/comments';
+import { buildList, cleanContent, listStatement, MAX_LENGTH } from '../_lib/comments';
 import { fail, isSameOrigin, json, rateLimit, readJson, type Env } from '../_lib/http';
-
-const MAX_LENGTH = 1000;
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 	const slug = new URL(request.url).searchParams.get('slug') ?? '';
@@ -24,10 +22,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 	if (!user) return fail('请先登录', 401);
 
 	const slug = String(body.slug ?? '');
-	const content = String(body.content ?? '')
-		.replace(/\r\n?/g, '\n')
-		.replace(/\n{4,}/g, '\n\n\n')
-		.trim();
+	const content = cleanContent(body.content);
 	if (!content) return fail('评论内容不能为空');
 	if (content.length > MAX_LENGTH) return fail(`评论最多 ${MAX_LENGTH} 字`);
 

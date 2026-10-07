@@ -137,31 +137,51 @@ function staggerIn(els: Element[], step = 40) {
 	);
 }
 
-/** 和网站风格一致的确认弹窗，代替浏览器自带的 confirm() */
-function confirmDialog(message: string, { title = '确认一下', confirmText = '确定', cancelText = '取消' } = {}) {
+/**
+ * 和网站风格一致的确认弹窗，代替浏览器自带的 confirm()。
+ * 传 input 时弹窗里带一个输入框（如注销时确认密码）；传 onConfirm 时点确定会先执行它，
+ * 返回字符串表示出错：在弹窗里显示错误并保持打开。
+ */
+function confirmDialog(
+	message: string,
+	{
+		title = '确认一下',
+		confirmText = '确定',
+		cancelText = '取消',
+		input,
+		onConfirm,
+	}: {
+		title?: string;
+		confirmText?: string;
+		cancelText?: string;
+		input?: { type?: string; placeholder?: string; autocomplete?: string };
+		onConfirm?: (value: string) => Promise<string | void>;
+	} = {},
+) {
 	return new Promise<boolean>((resolve) => {
-		const dialog = document.createElement('dialog');
-		dialog.className = 'confirm-dialog';
-		const card = document.createElement('div');
-		card.className = 'confirm-card';
-		const heading = document.createElement('p');
-		heading.className = 'confirm-title';
-		heading.textContent = title;
-		const text = document.createElement('p');
-		text.className = 'confirm-message';
-		text.textContent = message;
-		const actions = document.createElement('div');
-		actions.className = 'confirm-actions';
-		const cancel = document.createElement('button');
+		const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = '') => {
+			const node = document.createElement(tag);
+			node.className = className;
+			node.textContent = text;
+			return node;
+		};
+		const dialog = el('dialog', 'confirm-dialog');
+		const card = el('form', 'confirm-card');
+		const field = input ? el('input', 'confirm-input') : null;
+		if (field && input) {
+			field.type = input.type ?? 'text';
+			field.placeholder = input.placeholder ?? '';
+			field.autocomplete = (input.autocomplete ?? 'off') as AutoFill;
+		}
+		const error = el('p', 'confirm-error');
+		error.hidden = true;
+		const actions = el('div', 'confirm-actions');
+		const cancel = el('button', 'btn btn-ghost', cancelText);
 		cancel.type = 'button';
-		cancel.className = 'btn btn-ghost';
-		cancel.textContent = cancelText;
-		const ok = document.createElement('button');
-		ok.type = 'button';
-		ok.className = 'btn btn-primary';
-		ok.textContent = confirmText;
+		const ok = el('button', 'btn btn-primary', confirmText);
+		ok.type = 'submit';
 		actions.append(cancel, ok);
-		card.append(heading, text, actions);
+		card.append(el('p', 'confirm-title', title), el('p', 'confirm-message', message), ...(field ? [field] : []), error, actions);
 		dialog.append(card);
 		document.body.append(dialog);
 
@@ -180,14 +200,35 @@ function confirmDialog(message: string, { title = '确认一下', confirmText = 
 			window.setTimeout(remove, 300);
 		};
 		cancel.addEventListener('click', () => finish(false));
-		ok.addEventListener('click', () => finish(true));
+		card.addEventListener('submit', async (e) => {
+			e.preventDefault();
+			if (!onConfirm) return finish(true);
+			ok.disabled = true;
+			ok.classList.add('is-loading');
+			const problem = await onConfirm(field?.value ?? '');
+			ok.disabled = false;
+			ok.classList.remove('is-loading');
+			if (!problem) return finish(true);
+			error.textContent = problem;
+			error.hidden = false;
+			card.animate(
+				[
+					{ transform: 'translateX(0)' },
+					{ transform: 'translateX(-6px)' },
+					{ transform: 'translateX(5px)' },
+					{ transform: 'translateX(0)' },
+				],
+				{ duration: 280, easing: 'ease-out' },
+			);
+			field?.select();
+		});
 		dialog.addEventListener('cancel', (e) => {
 			e.preventDefault();
 			finish(false);
 		});
 		dialog.addEventListener('click', (e) => e.target === dialog && finish(false));
 		dialog.showModal();
-		cancel.focus();
+		(field ?? cancel).focus();
 	});
 }
 
@@ -852,6 +893,11 @@ function onClick(event: Event) {
 		return;
 	}
 
+	if (target.closest('[data-close-account]')) {
+		void closeAccount();
+		return;
+	}
+
 	const copyBtn = target.closest('[data-copy]');
 	if (copyBtn) {
 		const text = copyBtn.getAttribute('data-copy') ?? '';
@@ -1183,6 +1229,36 @@ async function logout() {
 	toast('已退出登录');
 }
 
+// 注销账号：弹窗里再输一次密码确认
+async function closeAccount() {
+	setNavOpen(false);
+	const account = await getAccount();
+	if (!account) return;
+	if (account.isAdmin) {
+		toast('站长账号不能在网页上注销');
+		return;
+	}
+	const closed = await confirmDialog(
+		'注销后你的评论会被全部删除（别人回复你的内容会保留），用户名也会释放出来，无法恢复。请输入密码确认：',
+		{
+			title: `确定要注销「${account.username}」吗？`,
+			confirmText: '确认注销',
+			input: { type: 'password', placeholder: '当前密码', autocomplete: 'current-password' },
+			onConfirm: async (password) => {
+				if (!password) return '请输入密码';
+				try {
+					await api('/api/auth/delete', { body: { password } });
+				} catch (err) {
+					return (err as Error).message;
+				}
+			},
+		},
+	);
+	if (!closed) return;
+	setAccount(null);
+	toast('账号已注销，江湖再见～');
+}
+
 const initialOf = (name: string) => (Array.from(name)[0] ?? '?').toUpperCase();
 const loginUrl = (hash = '') => `/login/?next=${encodeURIComponent(location.pathname + hash)}`;
 
@@ -1205,6 +1281,8 @@ function initAccount(signal: AbortSignal) {
 			root.querySelector('[data-account-name]')!.textContent = account.username;
 			root.querySelector('[data-account-initial]')!.textContent = initialOf(account.username);
 			root.querySelector<HTMLElement>('[data-account-admin]')!.hidden = !account.isAdmin;
+			// 站长账号不能在网页上注销，不显示入口
+			root.querySelector<HTMLElement>('[data-account-close]')!.hidden = account.isAdmin;
 		} else {
 			setMenu(false);
 		}
@@ -1238,7 +1316,10 @@ function initAuthForm(signal: AbortSignal) {
 	const showState = (account: Account | null) => {
 		signedIn.hidden = !account;
 		form.hidden = Boolean(account);
-		if (account) signedIn.querySelector('[data-auth-current]')!.textContent = account.username;
+		if (account) {
+			signedIn.querySelector('[data-auth-current]')!.textContent = account.username;
+			signedIn.querySelector<HTMLElement>('[data-account-close]')!.hidden = account.isAdmin;
+		}
 	};
 	void getAccount().then(showState);
 	document.addEventListener('account-change', () => void getAccount().then(showState), { signal });
@@ -1285,6 +1366,18 @@ function initAuthForm(signal: AbortSignal) {
 			30,
 		);
 	tabs.forEach((tab) => tab.addEventListener('click', () => setMode(tab.dataset.authTab ?? 'login'), { signal }));
+	// 表单底部“还没有账号？去创建一个吧～”这类切换提示
+	$all<HTMLButtonElement>('[data-auth-switch]', form).forEach((button) =>
+		button.addEventListener(
+			'click',
+			() => {
+				setMode(button.dataset.authSwitch ?? 'login');
+				field('username').focus({ preventScroll: true });
+			},
+			{ signal },
+		),
+	);
+	if (location.hash === '#register') applyMode('register');
 
 	reveal.addEventListener(
 		'click',
@@ -1339,7 +1432,9 @@ interface CommentData {
 	replyTo: string | null;
 	content: string;
 	createdAt: number;
+	edited?: boolean;
 	deleted: boolean;
+	canEdit?: boolean;
 	canDelete: boolean;
 	replies?: CommentData[];
 }
@@ -1367,6 +1462,7 @@ function initComments(signal: AbortSignal) {
 	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	let account: Account | null = null;
 	let replyForm: HTMLFormElement | null = null;
+	let editForm: HTMLFormElement | null = null;
 	// 楼中楼超过 REPLY_PREVIEW 条时只显示前几条，其余收起；记住展开过的楼，刷新列表后保持展开
 	const REPLY_PREVIEW = 2;
 	const expandedThreads = new Set<number>();
@@ -1429,6 +1525,8 @@ function initComments(signal: AbortSignal) {
 		time.dateTime = new Date(c.createdAt * 1000).toISOString();
 		time.title = new Date(c.createdAt * 1000).toLocaleString('zh-CN');
 		q('[data-c-delete]').hidden = !c.canDelete;
+		q('[data-c-edit]').hidden = !c.canEdit;
+		q('[data-c-edited]').hidden = !c.edited;
 		const replies = q<HTMLOListElement>('[data-c-replies]');
 		const items = (c.replies ?? []).map((r) => build(r, threadId));
 		if (items.length > REPLY_PREVIEW) {
@@ -1462,6 +1560,7 @@ function initComments(signal: AbortSignal) {
 	const render = (data: CommentList, highlightId?: number) => {
 		animateHeight(root, () => {
 			replyForm = null;
+			editForm = null;
 			list.replaceChildren(...data.comments.map((c) => build(c, c.id)));
 			countEl.textContent = data.count ? String(data.count) : '';
 			status.textContent = '还没有评论，来抢沙发吧～';
@@ -1574,6 +1673,75 @@ function initComments(signal: AbortSignal) {
 		}
 	};
 
+	// 编辑：评论内容原地换成输入框，保存后先乐观显示新内容，服务器确认后整体刷新
+	const closeEdit = () => {
+		const form = editForm;
+		editForm = null;
+		if (!form) return;
+		const content = form.previousElementSibling as HTMLElement | null;
+		slide(form, false, () => {
+			form.remove();
+			if (content) {
+				content.hidden = false;
+				staggerIn([content]);
+			}
+		});
+	};
+	const openEdit = (li: HTMLElement) => {
+		const content = li.querySelector<HTMLElement>(':scope > .comment-body > .comment-content')!;
+		if (editForm && editForm.previousElementSibling === content) return closeEdit();
+		closeEdit();
+		const form = document.createElement('form');
+		form.className = 'comment-form is-edit';
+		form.dataset.editId = li.dataset.commentId;
+		const textarea = document.createElement('textarea');
+		textarea.rows = 3;
+		textarea.maxLength = 1000;
+		textarea.value = content.textContent ?? '';
+		textarea.setAttribute('aria-label', '编辑评论');
+		const foot = document.createElement('div');
+		foot.className = 'comment-form-foot';
+		const cancel = document.createElement('button');
+		cancel.type = 'button';
+		cancel.className = 'btn btn-ghost';
+		cancel.textContent = '取消';
+		cancel.dataset.editCancel = '';
+		const save = document.createElement('button');
+		save.type = 'submit';
+		save.className = 'btn btn-primary comment-submit';
+		save.textContent = '保存';
+		foot.append(cancel, save);
+		form.append(textarea, foot);
+		content.after(form);
+		content.hidden = true;
+		editForm = form;
+		textarea.focus({ preventScroll: true });
+		textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+		slide(form, true);
+	};
+	const saveEdit = async (form: HTMLFormElement) => {
+		const textarea = form.querySelector('textarea')!;
+		const content = textarea.value.trim();
+		const target = form.previousElementSibling as HTMLElement;
+		if (!content) return textarea.focus();
+		if (content === target.textContent?.trim()) return closeEdit();
+		const li = form.closest<HTMLElement>('[data-comment-id]')!;
+		const before = target.textContent ?? '';
+		target.textContent = content;
+		li.classList.add('is-pending');
+		editForm = null;
+		form.remove();
+		target.hidden = false;
+		try {
+			render(await api<CommentList>(`/api/comments/${form.dataset.editId}`, { method: 'PATCH', body: { content } }), Number(form.dataset.editId));
+			toast('已保存修改');
+		} catch (err) {
+			target.textContent = before;
+			li.classList.remove('is-pending');
+			toast((err as Error).message);
+		}
+	};
+
 	const closeReply = () => {
 		const form = replyForm;
 		replyForm = null;
@@ -1647,8 +1815,12 @@ function initComments(signal: AbortSignal) {
 					li.classList.remove('is-removing');
 					toast((err as Error).message);
 				}
+			} else if (target.closest('[data-c-edit]') && li) {
+				openEdit(li);
 			} else if (target.closest('[data-reply-cancel]')) {
 				closeReply();
+			} else if (target.closest('[data-edit-cancel]')) {
+				closeEdit();
 			}
 		},
 		{ signal },
@@ -1659,7 +1831,8 @@ function initComments(signal: AbortSignal) {
 		(e) => {
 			e.preventDefault();
 			const form = e.target as HTMLFormElement;
-			void send(form, form.dataset.replyTo ? Number(form.dataset.replyTo) : undefined);
+			if (form.dataset.editId) void saveEdit(form);
+			else void send(form, form.dataset.replyTo ? Number(form.dataset.replyTo) : undefined);
 		},
 		{ signal },
 	);

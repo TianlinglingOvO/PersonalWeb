@@ -2984,6 +2984,11 @@ html.js .reveal.is-visible [data-stagger] > * {
 	color: var(--accent-deep);
 }
 
+.nav-account-menu button.is-danger {
+	color: var(--muted);
+	font-size: 0.85rem;
+}
+
 /* --- 登录 / 注册页 --- */
 .auth-page {
 	display: grid;
@@ -3162,6 +3167,43 @@ html.js .reveal.is-visible [data-stagger] > * {
 	margin-top: 0.3rem;
 }
 
+/* 登录页底部“还没有账号？去创建一个吧～” */
+.auth-switch {
+	margin: 0.2rem 0 0;
+	color: var(--muted);
+	font-size: 0.88rem;
+	text-align: center;
+}
+
+.auth-switch button {
+	padding: 0 0.1rem;
+	border: 0;
+	background: none;
+	color: var(--accent-deep);
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent);
+	text-underline-offset: 3px;
+	transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.auth-switch button:hover {
+	color: var(--accent);
+	text-decoration-color: currentColor;
+}
+
+.auth-close {
+	margin-top: 0.8rem;
+	font-size: 0.82rem;
+}
+
+.auth-close button {
+	color: var(--muted);
+	font-weight: 600;
+}
+
 .auth-actions {
 	display: flex;
 	flex-wrap: wrap;
@@ -3326,6 +3368,16 @@ html.js .reveal.is-visible [data-stagger] > * {
 	margin: 0.35rem 0 0;
 	color: var(--muted);
 	font-size: 0.8rem;
+}
+
+.comment-edited {
+	font-size: 0.78rem;
+	opacity: 0.8;
+}
+
+.comment-form.is-edit {
+	display: block;
+	margin: 0.3rem 0 0.2rem;
 }
 
 .comment-action {
@@ -3528,6 +3580,31 @@ html.js .reveal.is-visible [data-stagger] > * {
 	line-height: 1.7;
 }
 
+.confirm-input {
+	width: 100%;
+	margin: -0.4rem 0 0.9rem;
+	padding: 0.65rem 0.85rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: var(--ink);
+	font: inherit;
+}
+
+.confirm-input:focus {
+	outline: none;
+	border-color: var(--accent);
+	background: var(--surface);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.confirm-error {
+	margin: -0.4rem 0 0.9rem;
+	color: var(--accent-deep);
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
 .confirm-actions {
 	display: flex;
 	justify-content: flex-end;
@@ -3580,6 +3657,7 @@ html.js .reveal.is-visible [data-stagger] > * {
 	}
 
 	.nav-account-chip {
+		min-width: 0;
 		padding: 0;
 		border: 0;
 		background: none;
@@ -3606,12 +3684,24 @@ html.js .reveal.is-visible [data-stagger] > * {
 		transform: none;
 	}
 
+	.nav-account-menu {
+		display: flex;
+		gap: 0.4rem;
+	}
+
 	.nav-account-menu button {
+		width: auto;
 		padding: 0.5rem 0.9rem;
 		border: 1px solid var(--line);
 		border-radius: 999px;
 		color: var(--muted);
 		text-align: center;
+		white-space: nowrap;
+	}
+
+	.nav-account-menu button.is-danger {
+		padding-inline: 0.7rem;
+		border-color: transparent;
 	}
 
 	.comments {

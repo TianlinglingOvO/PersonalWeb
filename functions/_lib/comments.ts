@@ -11,13 +11,14 @@ interface Row {
 	reply_to_name: string | null;
 	content: string;
 	created_at: number;
+	edited_at: number | null;
 	deleted: number;
 }
 
 export const listStatement = (env: Env, slug: string) =>
 	env.DB.prepare(
 		`SELECT c.id, c.parent_id, c.user_id, u.username, u.is_admin, r.username AS reply_to_name,
-		        c.content, c.created_at, c.deleted
+		        c.content, c.created_at, c.edited_at, c.deleted
 		 FROM comments c
 		 JOIN users u ON u.id = c.user_id
 		 LEFT JOIN users r ON r.id = c.reply_to_user_id
@@ -31,7 +32,10 @@ const toComment = (row: Row, viewer: User | null) => ({
 	replyTo: row.reply_to_name,
 	content: row.deleted ? '' : row.content,
 	createdAt: row.created_at,
+	edited: !row.deleted && row.edited_at !== null,
 	deleted: row.deleted === 1,
+	// 编辑只能本人；删除本人或站长
+	canEdit: !row.deleted && !!viewer && viewer.id === row.user_id,
 	canDelete: !row.deleted && !!viewer && (viewer.isAdmin || viewer.id === row.user_id),
 });
 
@@ -49,3 +53,12 @@ export function buildList(rows: unknown[], viewer: User | null) {
 	const count = comments.reduce((n, c) => n + (c.deleted ? 0 : 1) + c.replies.length, 0);
 	return { count, comments };
 }
+
+export const MAX_LENGTH = 1000;
+
+/** 统一整理评论内容：换行规范化、最多保留两行空行、去掉首尾空白 */
+export const cleanContent = (raw: unknown) =>
+	String(raw ?? '')
+		.replace(/\r\n?/g, '\n')
+		.replace(/\n{4,}/g, '\n\n\n')
+		.trim();

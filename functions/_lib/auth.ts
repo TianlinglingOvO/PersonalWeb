@@ -12,7 +12,9 @@ export interface User {
 const ITERATIONS = 50_000;
 const SESSION_DAYS = 30;
 const COOKIE = 'sid';
-const RESERVED = new Set(['站长', '管理员', '管理', 'admin', 'administrator', 'root', 'system', '系统', '官方']);
+const RESERVED = new Set(['站长', '管理员', '管理', 'admin', 'administrator', 'root', 'system', '系统', '官方', '已注销用户']);
+/** 注销后的账号显示名 */
+export const CLOSED_NAME = '已注销用户';
 
 const toB64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
 const fromB64 = (text: string) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0));

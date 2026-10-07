@@ -16,6 +16,9 @@ import { site } from '../lib/site';
 					<a class="btn btn-primary" href="/">回到首页</a>
 					<button type="button" class="btn btn-ghost" data-logout>退出登录</button>
 				</div>
+				<p class="auth-switch auth-close" data-account-close>
+					不想用了？<button type="button" data-close-account>注销账号</button>
+				</p>
 			</div>
 
 			<form class="auth-form" data-auth-form data-mode="login" novalidate>
@@ -64,6 +67,11 @@ import { site } from '../lib/site';
 					<span data-auth-show="login">登录</span>
 					<span data-auth-show="register" hidden>注册并登录</span>
 				</button>
+
+				<p class="auth-switch">
+					<span data-auth-show="login">还没有账号？<button type="button" data-auth-switch="register">去创建一个吧～</button></span>
+					<span data-auth-show="register" hidden>已经有账号了？<button type="button" data-auth-switch="login">直接登录</button></span>
+				</p>
 			</form>
 		</div>
 	</section>

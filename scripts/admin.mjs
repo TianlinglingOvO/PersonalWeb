@@ -44,7 +44,7 @@ switch (command) {
 				`SELECT u.username AS 用户名, CASE u.is_admin WHEN 1 THEN '站长' ELSE '' END AS 身份,
 				        datetime(u.created_at, 'unixepoch', '+8 hours') AS 注册时间,
 				        (SELECT COUNT(*) FROM comments c WHERE c.user_id = u.id AND c.deleted = 0) AS 评论数
-				 FROM users u ORDER BY u.id`,
+				 FROM users u WHERE u.username_key NOT LIKE 'closed:%' ORDER BY u.id`,
 			),
 		);
 		break;
