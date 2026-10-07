@@ -58,6 +58,7 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 				<p class="meta">
 					<span class="badge">{post.data.category}</span>
 					{formatDate(post.data.date)} · 约 {readingMinutes(post.body)} 分钟
+					<span data-views={post.id} data-views-count hidden />
 				</p>
 				<h1>{post.data.title}</h1>
 

@@ -2,6 +2,8 @@
 dist/
 # generated types
 .astro/
+# wrangler 本地开发数据（本地模拟的 D1 数据库等）
+.wrangler/
 
 # dependencies
 node_modules/

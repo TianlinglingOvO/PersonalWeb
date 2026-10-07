@@ -1,0 +1,10 @@
+# Cloudflare Pages 配置：静态页面在 dist/，动态接口在 functions/（Pages Functions），数据在 D1
+name = "personalweb"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-09-05"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sutady-db"
+database_id = "41c7c910-37d7-41db-b5b6-65663e70896e"
+migrations_dir = "migrations"

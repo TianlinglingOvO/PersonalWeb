@@ -10,16 +10,21 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check": "astro check"
+    "check": "astro check && tsc -p functions",
+    "preview:full": "astro build && wrangler pages dev --port 8911",
+    "db:migrate": "wrangler d1 migrations apply sutady-db --remote"
   },
   "dependencies": {
     "astro": "^7.3.1"
   },
   "allowScripts": {
-    "esbuild": true
+    "esbuild": true,
+    "workerd": true
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "typescript": "^6.0.3"
+    "@cloudflare/workers-types": "^5.20261007.1",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.148.0"
   }
 }

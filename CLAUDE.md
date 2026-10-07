@@ -16,7 +16,9 @@ Sutady 的个人网站与技术博客，线上地址 https://sutady.top 。Astro
 npm run dev       # 本地开发服务器，默认 http://localhost:4321
 npm run build     # 静态构建到 dist/，这是唯一的验收手段
 npm run preview   # 预览 dist/ 构建产物
-npm run check     # astro check：对 .astro / .ts 做 TypeScript 类型检查
+npm run check     # astro check + functions/ 的 tsc：TypeScript 类型检查
+npm run preview:full  # 构建后用 wrangler 在本地同时跑静态页和 /api 接口（本地模拟 D1）
+npm run db:migrate    # 把 migrations/ 里的新表结构应用到线上 D1（需先 npx wrangler login）
 ```
 
 - 项目没有测试和 lint。`astro build` 不做类型检查，所以改完代码先跑 `npm run check`（需 0 errors），再按 AGENTS.md 的要求跑 `npm run build`，输出 `Complete!`、0 错误、0 警告后才能声明完成。
@@ -53,6 +55,13 @@ npm run check     # astro check：对 .astro / .ts 做 TypeScript 类型检查
 **页面过场**
 - 顶栏和回到顶部按钮用 `transition:name` 固定，换页时只有正文“翻页”；浏览器后退时用 `html[data-astro-transition="back"]` 反向翻页。
 - 从文章卡片进入文章页的“卡片展开”效果由 `ui.ts` 的 `initArticleMorph` 临时挂上 `view-transition-name`，过场结束后移除。**不要把这个名字写死在模板里**，否则文章之间切换会失去翻页效果。
+
+**动态接口（Cloudflare Pages Functions + D1）**
+- 站点仍是纯静态构建；`functions/` 下的文件由 Cloudflare Pages 部署为 `/api/...` 接口，数据存在 D1 数据库 `sutady-db`（绑定名 `DB`，配置见 `wrangler.toml`）。前端在 `ui.ts` 里用 `fetch` 调用，接口不可用时（如 `npm run dev`）静默隐藏对应 UI。
+- 接口必须走 `sutady.top/api/...` 同域调用：`*.pages.dev` 在中国大陆经常无法访问。
+- 表结构改动只能新增 `migrations/000N_xxx.sql`，再本地 `wrangler d1 migrations apply sutady-db --local` 测试、`npm run db:migrate` 上线；不要改已应用过的迁移文件。
+- 已有：浏览量 `functions/api/views.ts`（文章页 POST 计数，同一访客同一天只算一次；卡片 GET 批量查询）。计划中：用户名密码账号、文章评论（含楼中楼）。
+- `functions/` 有独立的 `tsconfig.json`（Workers 类型），根 tsconfig 排除了它。本地调试端口 8788 在站长电脑上被占用，用 `wrangler pages dev --port 8911`。
 
 ## 仓库约定
 
