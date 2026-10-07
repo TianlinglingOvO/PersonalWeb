@@ -264,6 +264,7 @@ git restore .
   1. 在手机浏览器设置中清除“浏览历史与网站数据”；
   2. 或者开启“无痕浏览 / 隐私标签页”访问站点；
   3. 对于图片素材，在引用路径末尾加版本号，例如 `/images/avatar.jpg?v=2`。
+  4. 首页、文章页和登录页允许浏览器缓存 5 分钟（为了点文章时秒开，见 `public/_headers`），所以刚发布的修改最多要等 5 分钟或刷新一下才看得到。
 
 ### 故障 4：本地构建成功，但 Cloudflare Pages 线上部署失败？
 * 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → 找到本项目；

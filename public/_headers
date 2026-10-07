@@ -10,3 +10,14 @@
 
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# 页面 HTML 允许浏览器缓存 5 分钟：首页上提前预加载（prefetch）的文章页点开时直接用缓存，不用再等网络。
+# 页面里没有动态内容（浏览量、评论、登录状态都由接口单独加载），更新文章后最多 5 分钟内看到旧版
+/
+  Cache-Control: public, max-age=300
+
+/articles/*
+  Cache-Control: public, max-age=300
+
+/login/
+  Cache-Control: public, max-age=300
