@@ -48,7 +48,9 @@ import { site } from '../lib/site';
 					<span class="auth-password">
 						<input name="password" type="password" autocomplete="current-password" maxlength="64" required />
 						<button type="button" class="auth-eye" data-auth-reveal aria-label="显示密码" aria-pressed="false">
-							<Icon name="eye" class="icon" />
+							<!-- 密码隐藏时闭眼，显示时睁眼 -->
+							<Icon name="eye-closed" class="icon auth-eye-closed" />
+							<Icon name="eye" class="icon auth-eye-open" />
 						</button>
 					</span>
 				</label>

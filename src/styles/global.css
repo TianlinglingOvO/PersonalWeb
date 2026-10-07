@@ -3132,11 +3132,33 @@ html.js .reveal.is-visible [data-stagger] > * {
 	transform: translateY(-50%);
 }
 
-.auth-eye .icon {
-	width: 20px;
-	height: 20px;
+.auth-eye {
+	display: grid;
+	place-items: center;
 }
 
+/* 两个图标叠在同一格：隐藏密码时闭眼，显示密码时睁眼，切换时像眨眼一样纵向张合 */
+.auth-eye .icon {
+	grid-area: 1 / 1;
+	width: 20px;
+	height: 20px;
+	transition:
+		opacity 0.18s ease,
+		transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-eye .auth-eye-open,
+.auth-eye[aria-pressed="true"] .auth-eye-closed {
+	opacity: 0;
+	transform: scaleY(0.2);
+}
+
+.auth-eye[aria-pressed="true"] .auth-eye-open {
+	opacity: 1;
+	transform: none;
+}
+
+.auth-eye:hover,
 .auth-eye[aria-pressed="true"] {
 	color: var(--accent);
 }

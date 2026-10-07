@@ -32,7 +32,7 @@
 | :--- | :--- | :--- |
 | [📘 MAINTENANCE.md](./MAINTENANCE.md) | **站长自用** | 日常发文 SOP、文章插图防 404 规范、时间线/服务卡片维护、发布前安全检查清单与 Git 一键部署 |
 | [🤖 AGENTS.md](./AGENTS.md) | **AI 助手** | 后续任何 AI（Cursor/Claude/Antigravity/Grok 等）辅助开发时的架构底线、移动端排版红线与 Token 约束 |
-| [📜 CHANGELOG.md](./CHANGELOG.md) | **所有人** | 各正式版本的更新内容（当前 v2.0.0） |
+| [📜 CHANGELOG.md](./CHANGELOG.md) | **所有人** | 各正式版本的更新内容（当前 v2.0.1） |
 | [🧭 CLAUDE.md](./CLAUDE.md) | **AI 助手** | 代码架构速览（内容层、`ui.ts` 交互约定、时间线与过场实现）与常用命令，供 Claude Code 等 AI 快速上手 |
 | `update_plan/` | **版本历史（仅本地）** | 历次迭代需求、规划与补丁文档，已被 `.gitignore` 排除，不在 GitHub 仓库中 |
 
