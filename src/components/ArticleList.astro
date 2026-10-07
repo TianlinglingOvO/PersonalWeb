@@ -48,7 +48,7 @@ const hasOverflow = Boolean(showExpand && limit > 0 && articles.length > limit);
 						<p class="meta">
 							<span class="badge">{article.data.category}</span>
 							{formatDate(article.data.date)} · 约 {readingMinutes(article.body)} 分钟
-							<span data-views={article.id} hidden />
+							<span class="view-count" data-views={article.id} hidden>{' · '}<Icon name="eye" class="icon view-count-icon" /><span data-views-num /></span>
 						</p>
 						<h3>{article.data.title}</h3>
 						<p>{article.data.description}</p>

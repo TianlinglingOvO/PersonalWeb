@@ -8,11 +8,12 @@
 
 ## 1. 技术底座与依赖约束 (Tech Stack & Boundaries)
 
-* **核心框架**：[Astro v7](https://astro.build/)（Pure Static SSG 纯静态模式）
+* **核心框架**：[Astro v7](https://astro.build/)（Pure Static SSG 纯静态模式，页面全部在构建时生成）
+* **动态接口**：Cloudflare Pages Functions（`functions/` 目录，部署为 `sutady.top/api/...`）+ D1 数据库（SQLite），用于浏览量、账号和评论，详见第 6 节
 * **脚本逻辑**：原生 TypeScript (`src/scripts/ui.ts`)，无任何前端运行时框架
 * **样式方案**：纯原生 CSS (`src/styles/global.css`)，基于标准 CSS 自定义属性（CSS Variables）
 * **内容驱动**：Astro Content Collections (`content/`)
-* **部署平台**：Cloudflare Pages / GitHub Pages
+* **部署平台**：Cloudflare Pages（GitHub `main` 分支推送即自动部署；有了动态接口后不能再用 GitHub Pages 这类纯静态托管）
 
 ### 🚫 严厉禁止的行为（绝对红线）
 1. **严禁引入重量级前端框架**：禁止安装 React、Vue、Svelte、Solid 等框架依赖，站点不需要臃肿的虚拟 DOM 运行时；
@@ -99,3 +100,22 @@ npm run build
   1. 所有静态路由（当前包括首页、文章列表、各文章详情页、404 等）100% 编译通过；
   2. 终端显示 `Complete!` 且 **0 错误、0 警告**；
   3. 未经 `npm run build` 验证通过的代码，绝对不可向用户声明已完成。
+
+---
+
+## 6. 动态功能守则（Pages Functions + D1）
+
+浏览量、账号（用户名 + 密码）和文章评论（含楼中楼）由 `functions/` 下的接口提供，数据存在 D1 数据库 `sutady-db`。
+
+* **目录约定**：`functions/api/**` 每个文件对应一个接口；共用代码放 `functions/_lib/`（下划线目录不会变成路由）。`functions/` 有独立的 `tsconfig.json`，`npm run check` 会一并检查。
+* **绑定与配置**：`wrangler.toml` 是 Pages 配置的唯一来源（数据库绑定名 `DB`）。不要在 Cloudflare 后台另改绑定。
+* **数据库结构只能“新增迁移”**：改表时新增 `migrations/000N_xxx.sql`，先 `npx wrangler d1 migrations apply sutady-db --local` 本地测试，再 `npm run db:migrate` 上线。**严禁修改或删除已经应用过的迁移文件**，否则线上和本地会对不上。上线顺序：先迁移数据库，再推送代码。
+* **同域调用**：前端一律请求相对路径 `/api/...`。不要换成 `*.pages.dev` 或第三方域名，`pages.dev` 在中国大陆经常无法访问。
+* **安全红线**：
+  1. 用户输入的内容（用户名、评论）在前端**只能用 `textContent` 渲染，禁止 `innerHTML`**，防止 XSS；
+  2. 所有写操作接口必须先检查 `isSameOrigin`（防 CSRF），需要登录的再用 `getUser` 校验，删除等操作要核对是本人或站长；
+  3. 密码只能用 `functions/_lib/auth.ts` 的 PBKDF2 加盐哈希保存。免费版每次请求约 10ms CPU，PBKDF2 迭代次数不要超过 10 万（Workers 的上限），现在用 5 万次；
+  4. 登录 Cookie 保持 `HttpOnly; Secure; SameSite=Lax`，数据库里只存 token 的哈希；
+  5. 不要把任何密钥写进仓库（`wrangler.toml` 里的 `database_id` 不是密钥，可以提交）。
+* **接口不可用时要优雅降级**：`npm run dev` 没有接口，浏览量、账号、评论在这种情况下应安静隐藏或提示“加载不出来”，不能让页面报错。
+* **本地完整测试**：`npm run preview:full`（构建后用 wrangler 同时跑静态页和接口，地址 http://localhost:8911 ）。

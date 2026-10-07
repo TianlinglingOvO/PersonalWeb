@@ -12,7 +12,8 @@
     "astro": "astro",
     "check": "astro check && tsc -p functions",
     "preview:full": "astro build && wrangler pages dev --port 8911",
-    "db:migrate": "wrangler d1 migrations apply sutady-db --remote"
+    "db:migrate": "wrangler d1 migrations apply sutady-db --remote",
+    "admin": "node scripts/admin.mjs"
   },
   "dependencies": {
     "astro": "^7.3.1"

@@ -9,6 +9,8 @@ import '../styles/global.css';
 interface Props {
 	title?: string;
 	description?: string;
+	/** 登录页这类不需要被搜索引擎收录的页面 */
+	noindex?: boolean;
 }
 
 const title = Astro.props.title ?? site.title;
@@ -25,6 +27,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 		<title>{title}</title>
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical} />
+		{Astro.props.noindex && <meta name="robots" content="noindex" />}
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<link rel="icon" href="/favicon.png?v=8" type="image/png" />

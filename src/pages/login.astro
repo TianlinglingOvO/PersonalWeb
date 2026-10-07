@@ -1,0 +1,70 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { site } from '../lib/site';
+---
+
+<BaseLayout title={`登录 · ${site.name}`} description="登录或注册账号后即可参与评论。" noindex>
+	<section class="auth-page wrap">
+		<div class="auth-card" data-auth>
+			<!-- 已登录时显示 -->
+			<div class="auth-signed-in" data-auth-signed-in hidden>
+				<p class="kicker">Hi~</p>
+				<h1>你已经登录啦</h1>
+				<p class="auth-hint">当前账号：<strong data-auth-current></strong></p>
+				<div class="auth-actions">
+					<a class="btn btn-primary" href="/">回到首页</a>
+					<button type="button" class="btn btn-ghost" data-logout>退出登录</button>
+				</div>
+			</div>
+
+			<form class="auth-form" data-auth-form data-mode="login" novalidate>
+				<div class="auth-tabs" role="tablist" aria-label="登录或注册">
+					<button type="button" role="tab" class="auth-tab is-active" aria-selected="true" data-auth-tab="login">登录</button>
+					<button type="button" role="tab" class="auth-tab" aria-selected="false" data-auth-tab="register">注册</button>
+					<span class="auth-tab-indicator" aria-hidden="true"></span>
+				</div>
+
+				<h1 class="auth-title">
+					<span data-auth-show="login">欢迎回来</span>
+					<span data-auth-show="register" hidden>注册新账号</span>
+				</h1>
+				<p class="auth-sub">
+					<span data-auth-show="login">登录后就可以在文章下面留言啦</span>
+					<span data-auth-show="register" hidden>只要用户名和密码，不需要邮箱或手机号</span>
+				</p>
+
+				<label class="auth-field">
+					<span>用户名</span>
+					<input name="username" type="text" autocomplete="username" maxlength="16" required spellcheck="false" autocapitalize="off" />
+				</label>
+				<p class="auth-field-hint" data-auth-show="register" hidden>2–16 个字符，可以用中文、字母、数字和下划线</p>
+
+				<label class="auth-field">
+					<span>密码</span>
+					<span class="auth-password">
+						<input name="password" type="password" autocomplete="current-password" maxlength="64" required />
+						<button type="button" class="auth-eye" data-auth-reveal aria-label="显示密码" aria-pressed="false">
+							<Icon name="eye" class="icon" />
+						</button>
+					</span>
+				</label>
+
+				<label class="auth-field" data-auth-show="register" hidden>
+					<span>确认密码</span>
+					<input name="confirm" type="password" autocomplete="new-password" maxlength="64" />
+				</label>
+				<p class="auth-field-hint" data-auth-show="register" hidden>
+					至少 6 位。<strong>请不要使用和其他网站相同的密码</strong>，忘记密码可以联系站长重置。
+				</p>
+
+				<p class="auth-error" data-auth-error role="alert" hidden></p>
+
+				<button type="submit" class="btn btn-primary auth-submit" data-auth-submit>
+					<span data-auth-show="login">登录</span>
+					<span data-auth-show="register" hidden>注册并登录</span>
+				</button>
+			</form>
+		</div>
+	</section>
+</BaseLayout>

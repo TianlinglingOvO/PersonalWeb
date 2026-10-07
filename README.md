@@ -1,6 +1,6 @@
 # Sutady's Personal Web · 个人空间与技术博客
 
-这是一个基于 **Astro v7** 构建的**极简、轻量、治愈系粉白二次元美学**个人空间与技术博客静态网站。
+这是一个基于 **Astro v7** 构建的**极简、轻量、治愈系粉白二次元美学**个人空间与技术博客。页面全部静态生成，浏览量、账号与评论由 Cloudflare Pages Functions + D1 数据库提供。
 
 > 🎀 **在线站点**：[https://sutady.top](https://sutady.top)
 > 
@@ -21,6 +21,7 @@
   - 文章底部支持上一篇 / 下一篇平滑切换与书本翻页过渡；
   - 首页首屏自动展示“最近更新”的文章入口；
   - 移动端配备折叠式目录与流畅回顶部按钮；
+- 💬 **浏览量、账号与评论**：文章卡片与文章页显示阅读次数；用户名 + 密码即可注册登录（支持中文用户名）；文章底部评论区支持楼中楼回复，站长评论带“站长”标签并可管理评论；
 - 📋 **即时反馈交互**：社交联系方式一键点击复制与马卡龙 Toast 浮层提醒。
 
 ---
@@ -60,8 +61,12 @@ npm run check
 # 执行完整静态打包（验证所有页面路由）
 npm run build
 
-# 本地预览打包产物
+# 本地预览打包产物（只有静态页，没有浏览量、登录和评论）
 npm run preview
+
+# 完整预览：静态页 + /api 接口 + 本地模拟数据库，打开 http://localhost:8911
+# 第一次需要先建本地表：npx wrangler d1 migrations apply sutady-db --local
+npm run preview:full
 ```
 
 ---
@@ -89,7 +94,8 @@ npm run preview
 本项目已接入 Cloudflare Pages CI/CD 自动部署流水线：
 
 1. **自动构建部署**：每次向 GitHub 仓库的 `main` 分支执行 `git push`，Cloudflare Pages 会自动监听并执行 `npm run build`，1~2 分钟内全球 CDN 同步生效；
-2. **构建设置参考**：
+2. **动态接口与数据库**：`functions/` 目录由 Pages 自动部署为 `/api/...` 接口，数据库绑定写在 `wrangler.toml`（D1 数据库 `sutady-db`，绑定名 `DB`）。数据库结构变更用 `npm run db:migrate` 上线；
+3. **构建设置参考**：
    - **Framework preset**：`Astro`
    - **Build command**：`npm run build`
    - **Build output directory**：`dist`

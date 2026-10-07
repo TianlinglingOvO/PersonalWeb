@@ -1,3 +1,5 @@
+import { navigate } from 'astro:transitions/client';
+
 let pageAbort: AbortController | null = null;
 
 let scrollTicking = false;
@@ -689,8 +691,13 @@ function onClick(event: Event) {
 		return;
 	}
 
-	if (target.closest('[data-nav-backdrop]') || target.closest('[data-nav-link]')) {
+	if (target.closest('[data-nav-backdrop]') || target.closest('[data-nav-link]') || target.closest('[data-account-login]')) {
 		setNavOpen(false);
+	}
+
+	if (target.closest('[data-logout]')) {
+		void logout();
+		return;
 	}
 
 	const copyBtn = target.closest('[data-copy]');
@@ -1016,7 +1023,9 @@ function initViews(signal: AbortSignal) {
 	if (!slots.length) return;
 	const show = (slot: HTMLElement, count?: number) => {
 		if (!count) return;
-		slot.textContent = ` · ${count.toLocaleString('zh-CN')} 次阅读`;
+		const num = slot.querySelector('[data-views-num]');
+		if (num) num.textContent = count.toLocaleString('zh-CN');
+		slot.title = `${count} 次阅读`;
 		slot.hidden = false;
 	};
 	const getJson = (url: string, init?: RequestInit) =>
@@ -1039,6 +1048,471 @@ function initViews(signal: AbortSignal) {
 	}
 }
 
+// ============ 账号（/api/auth/*，后端在 functions/） ============
+interface Account {
+	username: string;
+	isAdmin: boolean;
+}
+
+const ACCOUNT_KEY = 'sutady:account';
+let accountRequest: Promise<Account | null> | null = null;
+
+/** 调用本站接口：失败时抛出带中文提示的 Error */
+async function api<T>(url: string, options: { method?: string; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
+	const res = await fetch(url, {
+		method: options.method ?? (options.body ? 'POST' : 'GET'),
+		headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+		body: options.body ? JSON.stringify(options.body) : undefined,
+		credentials: 'same-origin',
+		signal: options.signal,
+	});
+	const data = await res.json().catch(() => ({}));
+	if (!res.ok) throw new Error(data.error ?? '网络好像出了点问题，请稍后再试');
+	return data as T;
+}
+
+// 上次的登录状态记在本地，先用它渲染顶栏，避免“登录”闪一下再变成用户名
+function cachedAccount(): Account | null {
+	try {
+		return JSON.parse(localStorage.getItem(ACCOUNT_KEY) ?? 'null');
+	} catch {
+		return null;
+	}
+}
+
+function storeAccount(account: Account | null) {
+	try {
+		if (account) localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+		else localStorage.removeItem(ACCOUNT_KEY);
+	} catch {
+		/* 隐私模式等情况下存不了，无所谓 */
+	}
+}
+
+/** 当前登录用户。整页加载只问一次服务器，ClientRouter 换页时复用 */
+function getAccount() {
+	accountRequest ??= api<{ user: Account | null }>('/api/auth/me')
+		.then(({ user }) => {
+			storeAccount(user);
+			return user;
+		})
+		.catch(() => cachedAccount());
+	return accountRequest;
+}
+
+/** 登录 / 注册 / 退出后调用：更新缓存并通知顶栏、评论区、登录页刷新 */
+function setAccount(account: Account | null) {
+	accountRequest = Promise.resolve(account);
+	storeAccount(account);
+	document.dispatchEvent(new CustomEvent('account-change'));
+}
+
+async function logout() {
+	try {
+		await api('/api/auth/logout', { method: 'POST' });
+	} catch {
+		/* 服务器那边失败也照样清掉本地状态 */
+	}
+	setNavOpen(false);
+	setAccount(null);
+	toast('已退出登录');
+}
+
+const initialOf = (name: string) => (Array.from(name)[0] ?? '?').toUpperCase();
+const loginUrl = (hash = '') => `/login/?next=${encodeURIComponent(location.pathname + hash)}`;
+
+// 顶栏账号入口：未登录显示“登录”，登录后显示头像字母 + 用户名，电脑端点开是下拉菜单，手机端在抽屉里直接列出
+function initAccount(signal: AbortSignal) {
+	const root = $('[data-account]') as HTMLElement | null;
+	if (!root) return;
+	const login = root.querySelector<HTMLAnchorElement>('[data-account-login]')!;
+	const user = root.querySelector<HTMLElement>('[data-account-user]')!;
+	const toggle = root.querySelector<HTMLButtonElement>('[data-account-toggle]')!;
+
+	const setMenu = (open: boolean) => {
+		toggle.setAttribute('aria-expanded', String(open));
+		root.classList.toggle('is-menu-open', open);
+	};
+	const render = (account: Account | null) => {
+		login.hidden = Boolean(account);
+		user.hidden = !account;
+		if (account) {
+			root.querySelector('[data-account-name]')!.textContent = account.username;
+			root.querySelector('[data-account-initial]')!.textContent = initialOf(account.username);
+			root.querySelector<HTMLElement>('[data-account-admin]')!.hidden = !account.isAdmin;
+		} else {
+			setMenu(false);
+		}
+	};
+
+	if (!location.pathname.startsWith('/login')) login.href = loginUrl();
+	render(cachedAccount());
+	void getAccount().then(render);
+	document.addEventListener('account-change', () => void getAccount().then(render), { signal });
+
+	toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'), { signal });
+	document.addEventListener('click', (e) => !root.contains(e.target as Node) && setMenu(false), { signal });
+	document.addEventListener('keydown', (e) => e.key === 'Escape' && setMenu(false), { signal });
+}
+
+// 登录页：登录 / 注册两个标签共用一张表单
+function initAuthForm(signal: AbortSignal) {
+	const root = $('[data-auth]') as HTMLElement | null;
+	if (!root) return;
+	const form = root.querySelector<HTMLFormElement>('[data-auth-form]')!;
+	const signedIn = root.querySelector<HTMLElement>('[data-auth-signed-in]')!;
+	const tabs = $all<HTMLButtonElement>('[data-auth-tab]', form);
+	const error = form.querySelector<HTMLElement>('[data-auth-error]')!;
+	const submit = form.querySelector<HTMLButtonElement>('[data-auth-submit]')!;
+	const reveal = form.querySelector<HTMLButtonElement>('[data-auth-reveal]')!;
+	const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const nextParam = new URLSearchParams(location.search).get('next') ?? '/';
+	const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/';
+
+	const showState = (account: Account | null) => {
+		signedIn.hidden = !account;
+		form.hidden = Boolean(account);
+		if (account) signedIn.querySelector('[data-auth-current]')!.textContent = account.username;
+	};
+	void getAccount().then(showState);
+	document.addEventListener('account-change', () => void getAccount().then(showState), { signal });
+
+	const showError = (message: string) => {
+		error.textContent = message;
+		error.hidden = !message;
+		if (message && !reducedMotion) {
+			error.animate(
+				[
+					{ transform: 'translateX(0)' },
+					{ transform: 'translateX(-6px)' },
+					{ transform: 'translateX(5px)' },
+					{ transform: 'translateX(-3px)' },
+					{ transform: 'translateX(0)' },
+				],
+				{ duration: 320, easing: 'ease-out' },
+			);
+		}
+	};
+
+	const setMode = (mode: string) => {
+		if (form.dataset.mode === mode) return;
+		form.dataset.mode = mode;
+		tabs.forEach((tab) => {
+			const on = tab.dataset.authTab === mode;
+			tab.classList.toggle('is-active', on);
+			tab.setAttribute('aria-selected', String(on));
+		});
+		$all<HTMLElement>('[data-auth-show]', form).forEach((el) => (el.hidden = el.dataset.authShow !== mode));
+		field('password').autocomplete = mode === 'register' ? 'new-password' : 'current-password';
+		showError('');
+		if (!reducedMotion) {
+			$all<HTMLElement>('.auth-title, .auth-sub, .auth-field, .auth-field-hint, .auth-submit', form)
+				.filter((el) => !el.hidden)
+				.forEach((el, i) =>
+					el.animate(
+						[
+							{ opacity: 0, transform: 'translateY(6px)' },
+							{ opacity: 1, transform: 'none' },
+						],
+						{ duration: 280, delay: i * 30, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'backwards' },
+					),
+				);
+		}
+	};
+	tabs.forEach((tab) => tab.addEventListener('click', () => setMode(tab.dataset.authTab ?? 'login'), { signal }));
+
+	reveal.addEventListener(
+		'click',
+		() => {
+			const show = reveal.getAttribute('aria-pressed') !== 'true';
+			reveal.setAttribute('aria-pressed', String(show));
+			reveal.setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
+			field('password').type = field('confirm').type = show ? 'text' : 'password';
+		},
+		{ signal },
+	);
+
+	form.addEventListener(
+		'submit',
+		async (e) => {
+			e.preventDefault();
+			const mode = form.dataset.mode === 'register' ? 'register' : 'login';
+			const username = field('username').value.normalize('NFKC').trim();
+			const password = field('password').value;
+			if (!username || !password) return showError('请填写用户名和密码');
+			if (mode === 'register') {
+				if (!/^[\p{L}\p{N}_]{2,16}$/u.test(username)) {
+					return showError('用户名需为 2–16 个字符，只能包含中文、字母、数字和下划线');
+				}
+				if (password.length < 6) return showError('密码至少 6 位');
+				if (password !== field('confirm').value) return showError('两次输入的密码不一样');
+			}
+
+			showError('');
+			submit.disabled = true;
+			submit.classList.add('is-loading');
+			try {
+				const { user } = await api<{ user: Account }>(`/api/auth/${mode}`, { body: { username, password } });
+				setAccount(user);
+				toast(mode === 'register' ? `注册成功，欢迎你，${user.username}！` : `欢迎回来，${user.username}～`);
+				await navigate(next);
+			} catch (err) {
+				showError((err as Error).message);
+			} finally {
+				submit.disabled = false;
+				submit.classList.remove('is-loading');
+			}
+		},
+		{ signal },
+	);
+}
+
+// ============ 评论区（/api/comments） ============
+interface CommentData {
+	id: number;
+	user: Account | null;
+	replyTo: string | null;
+	content: string;
+	createdAt: number;
+	deleted: boolean;
+	canDelete: boolean;
+	replies?: CommentData[];
+}
+
+function timeAgo(sec: number) {
+	const diff = Date.now() / 1000 - sec;
+	if (diff < 60) return '刚刚';
+	if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
+	if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
+	if (diff < 86400 * 7) return `${Math.floor(diff / 86400)} 天前`;
+	const d = new Date(sec * 1000);
+	return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+function initComments(signal: AbortSignal) {
+	const root = $('[data-comments]') as HTMLElement | null;
+	if (!root) return;
+	const slug = root.dataset.comments ?? '';
+	const list = root.querySelector<HTMLOListElement>('[data-comment-list]')!;
+	const status = root.querySelector<HTMLElement>('[data-comment-status]')!;
+	const countEl = root.querySelector<HTMLElement>('[data-comments-count]')!;
+	const mainForm = root.querySelector<HTMLFormElement>('[data-comment-form]')!;
+	const loginTip = root.querySelector<HTMLElement>('[data-comment-login]')!;
+	const template = root.querySelector<HTMLTemplateElement>('[data-comment-template]')!;
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	let account: Account | null = null;
+	let replyForm: HTMLFormElement | null = null;
+
+	root.querySelector<HTMLAnchorElement>('[data-login-link]')!.href = loginUrl('#comments');
+
+	const build = (c: CommentData, threadId: number) => {
+		const li = template.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+		const q = <T extends HTMLElement>(sel: string) => li.querySelector<T>(sel)!;
+		li.dataset.commentId = String(c.id);
+		li.dataset.threadId = String(threadId);
+		if (c.deleted || !c.user) {
+			li.classList.add('is-deleted');
+			q('[data-c-content]').textContent = '这条评论已被删除';
+			q('[data-c-name]').textContent = '';
+			q('[data-c-reply]').hidden = true;
+		} else {
+			q('[data-c-avatar]').textContent = initialOf(c.user.username);
+			q('[data-c-avatar]').classList.toggle('is-admin', c.user.isAdmin);
+			q('[data-c-name]').textContent = c.user.username;
+			q('[data-c-admin]').hidden = !c.user.isAdmin;
+			q('[data-c-content]').textContent = c.content;
+			li.dataset.author = c.user.username;
+		}
+		if (c.replyTo) {
+			q('[data-c-reply-to]').textContent = `回复 @${c.replyTo}`;
+			q('[data-c-reply-to]').hidden = false;
+		}
+		const time = q<HTMLTimeElement>('[data-c-time]');
+		time.textContent = timeAgo(c.createdAt);
+		time.dateTime = new Date(c.createdAt * 1000).toISOString();
+		time.title = new Date(c.createdAt * 1000).toLocaleString('zh-CN');
+		q('[data-c-delete]').hidden = !c.canDelete;
+		const replies = q<HTMLOListElement>('[data-c-replies]');
+		if (c.replies?.length) replies.append(...c.replies.map((r) => build(r, threadId)));
+		else replies.remove();
+		return li;
+	};
+
+	const load = async (highlightId?: number) => {
+		try {
+			const data = await api<{ count: number; comments: CommentData[] }>(
+				`/api/comments?slug=${encodeURIComponent(slug)}`,
+				{ signal },
+			);
+			replyForm = null;
+			list.replaceChildren(...data.comments.map((c) => build(c, c.id)));
+			countEl.textContent = data.count ? String(data.count) : '';
+			status.textContent = '还没有评论，来抢沙发吧～';
+			status.hidden = data.comments.length > 0;
+			const fresh = highlightId ? list.querySelector<HTMLElement>(`[data-comment-id="${highlightId}"]`) : null;
+			if (fresh) {
+				fresh.classList.add('is-new');
+				if (fresh.getBoundingClientRect().top > window.innerHeight || fresh.getBoundingClientRect().top < 0) {
+					fresh.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+				}
+			}
+		} catch {
+			if (signal.aborted) return;
+			status.textContent = '评论暂时加载不出来，稍后刷新试试';
+			status.hidden = false;
+		}
+	};
+
+	const showAccount = (a: Account | null) => {
+		account = a;
+		mainForm.hidden = !a;
+		loginTip.hidden = Boolean(a);
+		const avatar = root.querySelector<HTMLElement>('[data-comment-form-avatar]')!;
+		avatar.textContent = a ? initialOf(a.username) : '';
+		avatar.classList.toggle('is-admin', Boolean(a?.isAdmin));
+	};
+	void getAccount().then(showAccount);
+	void load();
+	document.addEventListener(
+		'account-change',
+		() => {
+			void getAccount().then(showAccount);
+			void load();
+		},
+		{ signal },
+	);
+
+	const send = async (form: HTMLFormElement, replyTo?: number) => {
+		const textarea = form.querySelector('textarea')!;
+		const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+		const content = textarea.value.trim();
+		if (!content) {
+			textarea.focus();
+			return;
+		}
+		button.disabled = true;
+		button.classList.add('is-loading');
+		try {
+			const { id } = await api<{ id: number }>('/api/comments', { body: { slug, content, replyTo } });
+			textarea.value = '';
+			textarea.dispatchEvent(new Event('input'));
+			toast(replyTo ? '回复成功' : '评论成功，谢谢你的留言～');
+			await load(id);
+		} catch (err) {
+			toast((err as Error).message);
+			if ((err as Error).message === '请先登录') setAccount(null);
+		} finally {
+			button.disabled = false;
+			button.classList.remove('is-loading');
+		}
+	};
+
+	const openReply = (li: HTMLElement) => {
+		const thread = list.querySelector<HTMLElement>(`:scope > [data-comment-id="${li.dataset.threadId}"]`);
+		if (!thread) return;
+		const target = Number(li.dataset.commentId);
+		const same = replyForm && Number(replyForm.dataset.replyTo) === target;
+		replyForm?.remove();
+		replyForm = null;
+		if (same) return;
+
+		const form = document.createElement('form');
+		form.className = 'comment-form is-reply';
+		form.dataset.replyTo = String(target);
+		const textarea = document.createElement('textarea');
+		textarea.rows = 2;
+		textarea.maxLength = 1000;
+		textarea.placeholder = `回复 @${li.dataset.author ?? ''}：`;
+		textarea.setAttribute('aria-label', textarea.placeholder);
+		const foot = document.createElement('div');
+		foot.className = 'comment-form-foot';
+		const cancel = document.createElement('button');
+		cancel.type = 'button';
+		cancel.className = 'btn btn-ghost';
+		cancel.textContent = '取消';
+		cancel.dataset.replyCancel = '';
+		const submit = document.createElement('button');
+		submit.type = 'submit';
+		submit.className = 'btn btn-primary comment-submit';
+		submit.textContent = '回复';
+		foot.append(cancel, submit);
+		form.append(textarea, foot);
+		thread.querySelector(':scope > .comment-body')!.append(form);
+		replyForm = form;
+		textarea.focus({ preventScroll: true });
+		if (!reducedMotion) {
+			form.animate(
+				[
+					{ opacity: 0, transform: 'translateY(-6px)' },
+					{ opacity: 1, transform: 'none' },
+				],
+				{ duration: 240, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+			);
+		}
+	};
+
+	root.addEventListener(
+		'click',
+		async (e) => {
+			const target = e.target as HTMLElement;
+			const li = target.closest<HTMLElement>('[data-comment-id]');
+			if (target.closest('[data-c-reply]') && li) {
+				if (!account) {
+					toast('登录后才能回复哦');
+					await navigate(loginUrl('#comments'));
+					return;
+				}
+				openReply(li);
+			} else if (target.closest('[data-c-delete]') && li) {
+				if (!window.confirm('确定要删除这条评论吗？')) return;
+				try {
+					await api(`/api/comments/${li.dataset.commentId}`, { method: 'DELETE' });
+					toast('评论已删除');
+					await load();
+				} catch (err) {
+					toast((err as Error).message);
+				}
+			} else if (target.closest('[data-reply-cancel]')) {
+				replyForm?.remove();
+				replyForm = null;
+			}
+		},
+		{ signal },
+	);
+
+	root.addEventListener(
+		'submit',
+		(e) => {
+			e.preventDefault();
+			const form = e.target as HTMLFormElement;
+			void send(form, form.dataset.replyTo ? Number(form.dataset.replyTo) : undefined);
+		},
+		{ signal },
+	);
+	root.addEventListener(
+		'keydown',
+		(e) => {
+			const textarea = e.target as HTMLElement;
+			if (textarea.tagName === 'TEXTAREA' && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+				e.preventDefault();
+				(textarea.closest('form') as HTMLFormElement | null)?.requestSubmit();
+			}
+		},
+		{ signal },
+	);
+	root.addEventListener(
+		'input',
+		(e) => {
+			const textarea = e.target as HTMLTextAreaElement;
+			if (textarea.closest('[data-comment-form]')) {
+				root.querySelector('[data-comment-counter]')!.textContent = `${textarea.value.length} / 1000`;
+			}
+		},
+		{ signal },
+	);
+}
+
 function initPage() {
 	pageAbort?.abort();
 	pageAbort = new AbortController();
@@ -1050,6 +1524,9 @@ function initPage() {
 	initReveal(signal);
 	initTimeline(signal);
 	initViews(signal);
+	initAccount(signal);
+	initAuthForm(signal);
+	initComments(signal);
 	initArticleController(signal);
 	initSidebarNavFilterAndCollapse(signal);
 	initDetailsAnimation(signal);

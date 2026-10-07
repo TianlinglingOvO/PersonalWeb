@@ -1,0 +1,55 @@
+---
+// 文章底部评论区。内容全部由 ui.ts 的 initComments 通过 /api/comments 加载和渲染（用 textContent，不插入 HTML）
+interface Props {
+	slug: string;
+}
+
+const { slug } = Astro.props;
+---
+
+<section class="comments" id="comments" data-comments={slug} aria-labelledby="comments-title">
+	<h2 class="comments-title" id="comments-title">
+		评论 <span class="comments-count" data-comments-count></span>
+	</h2>
+
+	<form class="comment-form" data-comment-form hidden>
+		<span class="comment-avatar" data-comment-form-avatar aria-hidden="true"></span>
+		<div class="comment-form-main">
+			<textarea name="content" rows="3" maxlength="1000" placeholder="说点什么吧～遇到问题也可以在这里提问" aria-label="评论内容"></textarea>
+			<div class="comment-form-foot">
+				<span class="comment-form-tip">Ctrl + Enter 发送</span>
+				<span class="comment-form-counter" data-comment-counter>0 / 1000</span>
+				<button type="submit" class="btn btn-primary comment-submit">发表评论</button>
+			</div>
+		</div>
+	</form>
+
+	<div class="comment-login" data-comment-login hidden>
+		<span>登录后才能发表评论哦</span>
+		<a class="btn btn-ghost" href="/login/" data-login-link>登录 / 注册</a>
+	</div>
+
+	<p class="comment-status" data-comment-status>评论加载中…</p>
+	<ol class="comment-list" data-comment-list></ol>
+
+	<!-- 单条评论的模板，ui.ts 克隆后填内容 -->
+	<template data-comment-template>
+		<li class="comment">
+			<span class="comment-avatar" data-c-avatar aria-hidden="true"></span>
+			<div class="comment-body">
+				<p class="comment-head">
+					<span class="comment-name" data-c-name></span>
+					<span class="role-badge" data-c-admin hidden>站长</span>
+					<span class="comment-reply-to" data-c-reply-to hidden></span>
+				</p>
+				<p class="comment-content" data-c-content></p>
+				<p class="comment-meta">
+					<time data-c-time></time>
+					<button type="button" class="comment-action" data-c-reply>回复</button>
+					<button type="button" class="comment-action is-danger" data-c-delete hidden>删除</button>
+				</p>
+				<ol class="comment-replies" data-c-replies></ol>
+			</div>
+		</li>
+	</template>
+</section>

@@ -2785,6 +2785,685 @@ html.js .reveal.is-visible [data-stagger] > * {
 	}
 }
 
+/* ==========================================================================
+   动态功能：浏览量 / 账号 / 评论（数据来自 functions/ 下的接口）
+   ========================================================================== */
+
+/* --- 浏览量（文章卡片、文章页 meta 行） --- */
+.view-count {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2em;
+	white-space: pre;
+	animation: fadeIn 0.3s ease both;
+}
+
+.view-count-icon {
+	width: 1.05em;
+	height: 1.05em;
+	opacity: 0.8;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+}
+
+/* --- 通用：头像字母、站长标签、按钮加载中 --- */
+.role-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.05rem 0.4rem;
+	border-radius: 6px;
+	background: var(--accent);
+	color: var(--surface);
+	font-size: 0.68rem;
+	font-weight: 700;
+	line-height: 1.5;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+}
+
+.comment-avatar,
+.nav-account-avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--accent-soft);
+	color: var(--accent-deep);
+	font-weight: 800;
+	font-size: 1.05rem;
+	user-select: none;
+}
+
+.comment-avatar.is-admin {
+	background: var(--accent);
+	color: var(--surface);
+	box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.btn.is-loading {
+	position: relative;
+	color: transparent !important;
+	pointer-events: none;
+}
+
+.btn.is-loading::after {
+	content: "";
+	position: absolute;
+	width: 1.1em;
+	height: 1.1em;
+	border: 2px solid var(--surface);
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: spin 0.7s linear infinite;
+}
+
+.btn-ghost.is-loading::after {
+	border-color: var(--accent);
+	border-right-color: transparent;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* --- 顶栏账号入口 --- */
+.nav-account {
+	position: relative;
+	display: flex;
+	align-items: center;
+	margin-left: 0.5rem;
+	padding-left: 0.7rem;
+	border-left: 1px solid var(--line);
+}
+
+.nav .nav-account-login {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	color: var(--accent-deep);
+	font-weight: 600;
+}
+
+.nav-account-login .icon {
+	width: 1.05em;
+	height: 1.05em;
+}
+
+.nav-account-user {
+	display: flex;
+	align-items: center;
+}
+
+.nav-account-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	max-width: 15rem;
+	padding: 0.2rem 0.75rem 0.2rem 0.2rem;
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+	font-size: 0.92rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		border-color 0.18s ease,
+		box-shadow 0.18s ease;
+}
+
+.nav-account-chip:hover,
+.nav-account-chip[aria-expanded="true"] {
+	border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.nav-account-avatar {
+	width: 28px;
+	height: 28px;
+	font-size: 0.85rem;
+}
+
+.nav-account-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.nav-account-menu {
+	position: absolute;
+	top: calc(100% + 0.6rem);
+	right: 0;
+	min-width: 9rem;
+	padding: 0.35rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	box-shadow: var(--shadow-hover);
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-6px) scale(0.98);
+	transform-origin: top right;
+	transition:
+		opacity 0.18s ease,
+		transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+		visibility 0.18s;
+}
+
+.nav-account.is-menu-open .nav-account-menu {
+	opacity: 1;
+	visibility: visible;
+	transform: none;
+}
+
+.nav-account-menu button {
+	width: 100%;
+	padding: 0.55rem 0.8rem;
+	border: 0;
+	border-radius: 8px;
+	background: none;
+	color: var(--ink);
+	font: inherit;
+	font-size: 0.92rem;
+	text-align: left;
+	cursor: pointer;
+}
+
+.nav-account-menu button:hover {
+	background: var(--accent-soft);
+	color: var(--accent-deep);
+}
+
+/* --- 登录 / 注册页 --- */
+.auth-page {
+	display: grid;
+	place-items: center;
+	min-height: calc(100dvh - var(--header-h) - 12rem);
+	padding-block: 2.5rem 4rem;
+}
+
+.auth-card {
+	width: min(100%, 420px);
+	padding: 1.8rem 1.6rem 1.9rem;
+	border: 1px solid var(--line);
+	border-radius: calc(var(--radius) + 4px);
+	background: var(--surface);
+	box-shadow: var(--shadow-hover);
+	animation: authIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes authIn {
+	from {
+		opacity: 0;
+		transform: translateY(14px) scale(0.98);
+	}
+}
+
+.auth-form,
+.auth-signed-in {
+	display: grid;
+	gap: 0.85rem;
+}
+
+.auth-tabs {
+	position: relative;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	padding: 0.25rem;
+	border-radius: 999px;
+	background: var(--bg-soft);
+}
+
+.auth-tab {
+	position: relative;
+	z-index: 1;
+	padding: 0.5rem;
+	border: 0;
+	background: none;
+	color: var(--muted);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	transition: color 0.2s ease;
+}
+
+.auth-tab.is-active {
+	color: var(--accent-deep);
+}
+
+.auth-tab-indicator {
+	position: absolute;
+	inset: 0.25rem auto 0.25rem 0.25rem;
+	width: calc(50% - 0.25rem);
+	border-radius: 999px;
+	background: var(--surface);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 18%, transparent);
+	transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-form[data-mode="register"] .auth-tab-indicator {
+	transform: translateX(100%);
+}
+
+.auth-title,
+.auth-signed-in h1 {
+	margin: 0.6rem 0 0;
+	font-size: 1.55rem;
+}
+
+.auth-sub,
+.auth-hint {
+	margin: -0.4rem 0 0.3rem;
+	color: var(--muted);
+	font-size: 0.92rem;
+}
+
+.auth-signed-in .kicker {
+	margin: 0;
+	font-size: 1.6rem;
+}
+
+.auth-field {
+	display: grid;
+	gap: 0.35rem;
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+.auth-field input,
+.comment-form textarea {
+	width: 100%;
+	padding: 0.7rem 0.9rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: var(--ink);
+	font: inherit;
+	font-weight: 400;
+	transition:
+		border-color 0.18s ease,
+		box-shadow 0.18s ease,
+		background-color 0.18s ease;
+}
+
+.auth-field input:focus,
+.comment-form textarea:focus {
+	outline: none;
+	border-color: var(--accent);
+	background: var(--surface);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.auth-password {
+	position: relative;
+	display: block;
+}
+
+.auth-password input {
+	padding-right: 3rem;
+}
+
+.auth-eye {
+	position: absolute;
+	top: 50%;
+	right: 0.4rem;
+	display: inline-flex;
+	padding: 0.4rem;
+	border: 0;
+	border-radius: 8px;
+	background: none;
+	color: var(--muted);
+	cursor: pointer;
+	transform: translateY(-50%);
+}
+
+.auth-eye .icon {
+	width: 20px;
+	height: 20px;
+}
+
+.auth-eye[aria-pressed="true"] {
+	color: var(--accent);
+}
+
+.auth-field-hint {
+	margin: -0.45rem 0 0;
+	color: var(--muted);
+	font-size: 0.8rem;
+	line-height: 1.6;
+}
+
+.auth-field-hint strong {
+	color: var(--accent-deep);
+}
+
+.auth-error {
+	margin: 0;
+	padding: 0.6rem 0.8rem;
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface));
+	color: var(--accent-deep);
+	font-size: 0.88rem;
+	font-weight: 600;
+}
+
+.auth-submit {
+	width: 100%;
+	margin-top: 0.3rem;
+}
+
+.auth-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+	margin-top: 0.4rem;
+}
+
+/* --- 文章评论区 --- */
+.comments {
+	margin-block: 1.4rem 3rem;
+	padding: 1.8rem 1.5rem 2rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--surface);
+	box-shadow: var(--shadow);
+}
+
+.comments-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0 0 1.2rem;
+	font-size: 1.3rem;
+}
+
+.comments-count {
+	padding: 0 0.55rem;
+	border-radius: 999px;
+	background: var(--accent-soft);
+	color: var(--accent-deep);
+	font-size: 0.85rem;
+	line-height: 1.6;
+}
+
+.comments-count:empty {
+	display: none;
+}
+
+.comment-form {
+	display: flex;
+	gap: 0.8rem;
+	margin-bottom: 1.4rem;
+}
+
+.comment-form-main {
+	flex: 1;
+	min-width: 0;
+}
+
+.comment-form textarea {
+	display: block;
+	min-height: 5.2rem;
+	resize: vertical;
+	line-height: 1.7;
+}
+
+.comment-form-foot {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.8rem;
+	margin-top: 0.6rem;
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+.comment-form-tip {
+	margin-right: auto;
+}
+
+.comment-form .btn {
+	min-height: 38px;
+	padding-block: 0.4rem;
+}
+
+.comment-form.is-reply {
+	display: block;
+	margin: 0.8rem 0 0.2rem;
+}
+
+.comment-form.is-reply textarea {
+	min-height: 3.6rem;
+}
+
+.comment-login {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.8rem;
+	margin-bottom: 1.4rem;
+	padding: 0.9rem 1rem;
+	border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--line));
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--accent-soft) 25%, var(--surface));
+	color: var(--muted);
+}
+
+.comment-login .btn {
+	min-height: 38px;
+}
+
+.comment-status {
+	margin: 1.6rem 0 0.4rem;
+	color: var(--muted);
+	text-align: center;
+}
+
+.comment-list,
+.comment-replies {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.comment {
+	display: flex;
+	gap: 0.8rem;
+	padding: 1.1rem 0;
+	border-top: 1px solid var(--line);
+}
+
+.comment-list > .comment:first-child {
+	border-top: 0;
+}
+
+.comment-body {
+	flex: 1;
+	min-width: 0;
+}
+
+.comment-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem 0.45rem;
+	margin: 0.1rem 0 0.3rem;
+	font-size: 0.9rem;
+}
+
+.comment-name {
+	font-weight: 700;
+	color: var(--ink);
+}
+
+.comment-reply-to {
+	color: var(--accent-2);
+	font-size: 0.85rem;
+}
+
+.comment-content {
+	margin: 0;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	line-height: 1.75;
+}
+
+.comment-meta {
+	display: flex;
+	align-items: center;
+	gap: 0.9rem;
+	margin: 0.35rem 0 0;
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+.comment-action {
+	padding: 0.15rem 0;
+	border: 0;
+	background: none;
+	color: var(--muted);
+	font: inherit;
+	cursor: pointer;
+	transition: color 0.15s ease;
+}
+
+.comment-action:hover {
+	color: var(--accent-deep);
+}
+
+.comment-action.is-danger:hover {
+	color: var(--accent);
+}
+
+/* 楼中楼：收在一块浅色底里，头像缩小 */
+.comment-replies {
+	margin-top: 0.8rem;
+	padding: 0.2rem 0.9rem;
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--bg-soft) 55%, var(--surface));
+}
+
+.comment-replies .comment {
+	padding: 0.8rem 0;
+	gap: 0.6rem;
+}
+
+.comment-replies .comment:first-child {
+	border-top: 0;
+}
+
+.comment-replies .comment-avatar {
+	width: 28px;
+	height: 28px;
+	font-size: 0.8rem;
+}
+
+.comment.is-deleted .comment-content {
+	color: var(--muted);
+	font-style: italic;
+}
+
+.comment.is-deleted > .comment-avatar {
+	background: var(--bg-soft);
+}
+
+.comment.is-new {
+	animation: commentNew 1.6s ease-out;
+}
+
+@keyframes commentNew {
+	0%,
+	30% {
+		background: color-mix(in srgb, var(--accent-soft) 70%, transparent);
+	}
+}
+
+@media (max-width: 860px) {
+	/* 手机端账号入口在抽屉菜单底部，直接列出“退出登录” */
+	.nav-account {
+		margin: 0.4rem 0 0;
+		padding: 0.8rem 0 0;
+		border-left: 0;
+		border-top: 1px solid var(--line);
+	}
+
+	.nav .nav-account-login {
+		flex: 1;
+	}
+
+	.nav-account-user {
+		flex: 1;
+		justify-content: space-between;
+		gap: 0.6rem;
+		padding-left: 0.4rem;
+	}
+
+	.nav-account-chip {
+		padding: 0;
+		border: 0;
+		background: none;
+		box-shadow: none !important;
+		font-size: 1rem;
+		cursor: default;
+	}
+
+	.nav-account-avatar {
+		width: 34px;
+		height: 34px;
+		font-size: 0.95rem;
+	}
+
+	.nav-account-menu {
+		position: static;
+		min-width: 0;
+		padding: 0;
+		border: 0;
+		background: none;
+		box-shadow: none;
+		opacity: 1;
+		visibility: visible;
+		transform: none;
+	}
+
+	.nav-account-menu button {
+		padding: 0.5rem 0.9rem;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		color: var(--muted);
+		text-align: center;
+	}
+
+	.comments {
+		padding: 1.4rem 1.1rem 1.6rem;
+	}
+
+	.comment-form > .comment-avatar,
+	.comment-form-tip {
+		display: none;
+	}
+
+	.comment-avatar {
+		width: 34px;
+		height: 34px;
+		font-size: 0.95rem;
+	}
+
+	.comment-replies {
+		padding-inline: 0.7rem;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	html {
 		scroll-behavior: auto;

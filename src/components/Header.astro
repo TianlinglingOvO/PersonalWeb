@@ -1,4 +1,5 @@
 ---
+import Icon from './Icon.astro';
 import { nav, site } from '../lib/site';
 
 // 文章页没有首页的区块锚点，滚动高亮不会接管，这里直接在 SSR 时点亮“文章”
@@ -35,6 +36,28 @@ const isArticlePage = Astro.url.pathname.startsWith('/articles');
 					</a>
 				))
 			}
+			<!-- 账号入口：默认显示“登录”，ui.ts 的 initAccount 查到登录状态后换成用户名 -->
+			<div class="nav-account" data-account>
+				<a class="nav-account-login" href="/login/" data-account-login>
+					<Icon name="user" class="icon" />登录
+				</a>
+				<div class="nav-account-user" data-account-user hidden>
+					<button
+						type="button"
+						class="nav-account-chip"
+						data-account-toggle
+						aria-expanded="false"
+						aria-haspopup="menu"
+					>
+						<span class="nav-account-avatar" data-account-initial aria-hidden="true"></span>
+						<span class="nav-account-name" data-account-name></span>
+						<span class="role-badge" data-account-admin hidden>站长</span>
+					</button>
+					<div class="nav-account-menu" data-account-menu role="menu">
+						<button type="button" role="menuitem" data-logout>退出登录</button>
+					</div>
+				</div>
+			</div>
 		</nav>
 	</div>
 </header>

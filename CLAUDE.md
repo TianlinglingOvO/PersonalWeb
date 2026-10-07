@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Sutady 的个人网站与技术博客，线上地址 https://sutady.top 。Astro 纯静态站点（SSG），不用任何前端运行时框架。
+Sutady 的个人网站与技术博客，线上地址 https://sutady.top 。Astro 纯静态站点（SSG），不用任何前端运行时框架；浏览量、账号和评论由 Cloudflare Pages Functions + D1 提供。
 
 ## 协作背景（先读）
 
@@ -19,8 +19,10 @@ npm run preview   # 预览 dist/ 构建产物
 npm run check     # astro check + functions/ 的 tsc：TypeScript 类型检查
 npm run preview:full  # 构建后用 wrangler 在本地同时跑静态页和 /api 接口（本地模拟 D1）
 npm run db:migrate    # 把 migrations/ 里的新表结构应用到线上 D1（需先 npx wrangler login）
+npm run admin -- users   # 站长管理账号：列用户、设站长、重置密码（见 scripts/admin.mjs）
 ```
 
+- `npm run dev` 只有静态页，没有 `/api` 接口；要测浏览量、登录、评论用 `npm run preview:full`。
 - 项目没有测试和 lint。`astro build` 不做类型检查，所以改完代码先跑 `npm run check`（需 0 errors），再按 AGENTS.md 的要求跑 `npm run build`，输出 `Complete!`、0 错误、0 警告后才能声明完成。
 - Node 版本以 `package.json` 的 `engines` 为准（`>=22.12.0`，`.nvmrc` 写的是 22）。
 
@@ -35,12 +37,12 @@ npm run db:migrate    # 把 migrations/ 里的新表结构应用到线上 D1（�
 - 首页 `src/pages/index.astro` 是单页，由 Hero、About、Timeline、Articles、Services、Connect 几个 section 拼成。各集合的**排序逻辑都写在这个页面里**，不在组件中。
 - 所有页面都套用 `src/layouts/BaseLayout.astro`，其中启用了 `<ClientRouter />`（View Transitions），并在 body 底部加载唯一的客户端脚本 `src/scripts/ui.ts`。
 
-**客户端脚本 `src/scripts/ui.ts`（约 1000 行，所有交互都在这里）**
+**客户端脚本 `src/scripts/ui.ts`（约 1500 行，所有交互都在这里）**
 - 由于启用了 ClientRouter，页面切换时不会重新加载脚本。`initPage()` 挂在 `astro:page-load` 上，每次导航都会 `abort` 上一个 `AbortController`，再依次调用各个 `initXxx(signal)`。**新加的监听器、Observer、rAF 都必须挂到这个 `signal` 上**（`{ signal }` 或 `signal.addEventListener('abort', …)`），否则页面来回切换后会重复绑定。
 - 滚动事件统一走一条 rAF 节流的总线：用 `subscribeScroll(cb, signal)` 订阅，不要自己再加 `window` 的 scroll 监听。
 - 点击和键盘事件在文档级别用事件委托处理（`onClick` / `onKeydown`），只绑定一次，靠 `data-*` 属性分发。组件和脚本之间通过 `data-*` 钩子（如 `data-timeline-track`、`data-article-controller`）对接，改 DOM 结构时要同步检查 `ui.ts`。
 
-**样式 `src/styles/global.css`（约 2800 行，单文件）**
+**样式 `src/styles/global.css`（约 3500 行，单文件）**
 - 只写原生 CSS 和 CSS 变量，按 section 分块。设计 token、圆角层级、动效曲线都以 AGENTS.md 第 3 节为准，禁止硬编码颜色。
 
 **时间线（Section 02）**
@@ -60,7 +62,13 @@ npm run db:migrate    # 把 migrations/ 里的新表结构应用到线上 D1（�
 - 站点仍是纯静态构建；`functions/` 下的文件由 Cloudflare Pages 部署为 `/api/...` 接口，数据存在 D1 数据库 `sutady-db`（绑定名 `DB`，配置见 `wrangler.toml`）。前端在 `ui.ts` 里用 `fetch` 调用，接口不可用时（如 `npm run dev`）静默隐藏对应 UI。
 - 接口必须走 `sutady.top/api/...` 同域调用：`*.pages.dev` 在中国大陆经常无法访问。
 - 表结构改动只能新增 `migrations/000N_xxx.sql`，再本地 `wrangler d1 migrations apply sutady-db --local` 测试、`npm run db:migrate` 上线；不要改已应用过的迁移文件。
-- 已有：浏览量 `functions/api/views.ts`（文章页 POST 计数，同一访客同一天只算一次；卡片 GET 批量查询）。计划中：用户名密码账号、文章评论（含楼中楼）。
+- 已有功能：
+  - 浏览量 `functions/api/views.ts`：文章页 POST 计数，同一访客同一天只算一次；文章卡片 GET 批量查询。
+  - 账号 `functions/api/auth/*`：用户名 + 密码注册登录，用户名不区分大小写、允许中文；PBKDF2 哈希；30 天的 HttpOnly Cookie；登录和注册按 IP 限流。
+  - 评论 `functions/api/comments.ts` 与 `comments/[id].ts`：仅限文章页，登录后可发；两层结构（顶层 + 楼中楼，回复楼中楼时记“回复 @谁”）；本人或站长可删，有回复的顶层评论只标记删除。
+  - 共用代码在 `functions/_lib/`：`http.ts`（json、限流、同源检查）、`auth.ts`（密码、会话）、`articles.ts`（校验文章是否存在）。
+- 前端：`ui.ts` 的 `initViews` / `initAccount`（顶栏账号入口）/ `initAuthForm`（`/login/` 页）/ `initComments`（`Comments.astro`）。登录状态由 `getAccount()` 缓存，登录或退出后调用 `setAccount()` 广播 `account-change` 事件。用户内容一律用 `textContent` 渲染。
+- 站长管理：`npm run admin -- users | set-admin <名> | reset-password <名> <新密码>`（`scripts/admin.mjs`，加 `--local` 操作本地库）。安全红线和迁移规则见 AGENTS.md 第 6 节。
 - `functions/` 有独立的 `tsconfig.json`（Workers 类型），根 tsconfig 排除了它。本地调试端口 8788 在站长电脑上被占用，用 `wrangler pages dev --port 8911`。
 
 ## 仓库约定

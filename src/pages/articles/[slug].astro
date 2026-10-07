@@ -5,6 +5,7 @@ import Icon from '../../components/Icon.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import ArticleSidebarNav from '../../components/ArticleSidebarNav.astro';
 import { formatDate, readingMinutes, site } from '../../lib/site';
+import Comments from '../../components/Comments.astro';
 
 export async function getStaticPaths() {
 	const posts = (await getCollection('articles')).sort(
@@ -58,7 +59,7 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 				<p class="meta">
 					<span class="badge">{post.data.category}</span>
 					{formatDate(post.data.date)} · 约 {readingMinutes(post.body)} 分钟
-					<span data-views={post.id} data-views-count hidden />
+					<span class="view-count" data-views={post.id} data-views-count hidden>{' · '}<Icon name="eye" class="icon view-count-icon" /><span data-views-num /></span>
 				</p>
 				<h1>{post.data.title}</h1>
 
@@ -105,6 +106,8 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 					}
 				</nav>
 			</article>
+
+			<Comments slug={post.id} />
 		</main>
 
 		<!-- 右侧：目录大纲树 (桌面宽屏) -->
