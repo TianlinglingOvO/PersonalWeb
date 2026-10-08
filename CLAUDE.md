@@ -82,6 +82,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 ## 仓库约定
 
 - 图片放在 `public/images/`，Markdown 里用 `/images/...` 根路径引用，目录和文件名一律全小写，详见 AGENTS.md 第 4 节。`public/_headers` 把 `/images/*` 缓存 7 天，所以替换同名图片时，需要在引用处把 `?v=N` 加一来刷新缓存。
+- `docs/screenshots/` 是 README 用的网站截图（webp，不会部署到网站）；界面大改后可以重新截图替换。
 - **移动端顶栏的固定定位和抽屉卡片样式是反复踩坑后确定的红线**，包括 `position: fixed` 不能改回 `sticky`，完整规则见 AGENTS.md 第 2 节。
 - 以下内容都被 gitignore，只存在于本地：`update_plan/`（历次需求和方案档案，`updata_plan`、`update` 是指向它的软链接）、`my_image/`（原图）、`Timeline事件簿.md`。
 - Commit 信息使用 `feat:` / `fix:` / `style:` / `docs:` / `chore:` 等前缀，并带 scope，描述用中文，例如 `feat(timeline): …`。

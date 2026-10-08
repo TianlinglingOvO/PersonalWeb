@@ -1,110 +1,146 @@
-# Sutady's Personal Web · 个人空间与技术博客
+<div align="center">
 
-这是一个基于 **Astro v7** 构建的**极简、轻量、治愈系粉白二次元美学**个人空间与技术博客。页面全部静态生成，浏览量、账号与评论由 Cloudflare Pages Functions + D1 数据库提供。
+<img src="public/images/avatar_square.jpg" width="120" alt="Sutady 的头像" />
 
-> 🎀 **在线站点**：[https://sutady.top](https://sutady.top)
-> 
-> *“Study makes perfect, what Sutady wants to be.”*
+# Sutady 的小屋
 
----
+*Study makes perfect, what Sutady wants to be.*
 
-## ✨ 核心特性
+粉白治愈系的个人网站与技术博客
 
-- 🌸 **温润马卡龙设计系统**：采用粉白与柔和深洋红配色，搭配手绘插画与浮动二次元矢量背景，视觉清新治愈；
-- ⚡ **零前端运行时负担**：全静态生成（SSG），采用原生 TypeScript 驱动交互逻辑与平滑滚动，极速轻量秒开；
-- ⏳ **年历式个人历程**：电脑端按年份翻页，每年一张 12 个月的年历，点月份查看当月经历；手机端按年份折叠的竖向时间线；
-- 🎬 **流畅的动效与过场**：首屏元素依次浮现、卡片错落出场；换页时顶栏保持静止、正文翻页，浏览器后退反向翻页；从文章卡片进入时卡片展开成文章页；
-- 📱 **移动端深度适配**：移动端顶栏绝对锁定（`position: fixed`）吸附，下拉菜单与顶栏 100% 融合成一张无缝纯白大圆角卡片，手势防穿透体验极佳；
-- 📖 **优雅的文章阅读体系**：
-  - 桌面端支持文章切换侧栏、自定义马卡龙圆角分类下拉选择器、右侧大纲目录树（TOC）；
-  - 文章卡片与文章页显示预计阅读时长，文章页顶部有阅读进度条；
-  - 文章底部支持上一篇 / 下一篇平滑切换与书本翻页过渡；
-  - 首页首屏自动展示“最近更新”的文章入口；
-  - 移动端配备折叠式目录与流畅回顶部按钮；
-- 💬 **浏览量、账号与评论**：文章卡片与文章页显示阅读次数；用户名 + 密码即可注册登录（支持中文用户名）；文章底部评论区支持楼中楼回复，站长评论带“站长”标签并可管理评论；
-- 📋 **即时反馈交互**：社交联系方式一键点击复制与马卡龙 Toast 浮层提醒。
+[![网站](https://img.shields.io/badge/在线访问-sutady.top-e25c7a?style=flat-square)](https://sutady.top)
+[![版本](https://img.shields.io/github/v/release/TianlinglingOvO/PersonalWeb?style=flat-square&color=f0a5b5&label=版本)](./CHANGELOG.md)
+[![Astro](https://img.shields.io/badge/Astro-7-ff5d01?style=flat-square&logo=astro&logoColor=white)](https://astro.build)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages%20%2B%20D1-f38020?style=flat-square&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com)
 
----
+</div>
 
-## 📚 维护与开发文档导航
-
-| 文档 | 适用对象 | 内容说明 |
-| :--- | :--- | :--- |
-| [📘 MAINTENANCE.md](./MAINTENANCE.md) | **站长自用** | 日常发文 SOP、文章插图防 404 规范、时间线/服务卡片维护、发布前安全检查清单与 Git 一键部署 |
-| [📗 ADMIN_GUIDE.md](./ADMIN_GUIDE.md) | **站长自用** | 零基础站长手册：查看用户、帮人重置密码、设站长、删评论、在 Cloudflare 后台看数据 |
-| [🤖 AGENTS.md](./AGENTS.md) | **AI 助手** | 后续任何 AI（Cursor/Claude/Antigravity/Grok 等）辅助开发时的架构底线、移动端排版红线与 Token 约束 |
-| [📜 CHANGELOG.md](./CHANGELOG.md) | **所有人** | 各正式版本的更新内容（当前 v2.0.4） |
-| [🧭 CLAUDE.md](./CLAUDE.md) | **AI 助手** | 代码架构速览（内容层、`ui.ts` 交互约定、时间线与过场实现）与常用命令，供 Claude Code 等 AI 快速上手 |
-| `update_plan/` | **版本历史（仅本地）** | 历次迭代需求、规划与补丁文档，已被 `.gitignore` 排除，不在 GitHub 仓库中 |
+<table>
+  <tr>
+    <td width="78%" align="center"><img src="docs/screenshots/home.webp" alt="首页" /><br /><sub>首页</sub></td>
+    <td width="22%" align="center"><img src="docs/screenshots/mobile.webp" alt="手机端" /><br /><sub>手机端</sub></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/timeline.webp" alt="年历式时间线" /><br /><sub>年历式成长时间线</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/article.webp" alt="文章页" /><br /><sub>文章页：切换侧栏、目录、浏览量</sub></td>
+  </tr>
+</table>
 
 ---
 
-## 🛠️ 本地运行与预览
+## ✨ 特色
 
-### 依赖环境
-- [Node.js](https://nodejs.org/) 22.12 或更高（见 `.nvmrc` 与 `package.json` 的 `engines`）
-- npm（仓库使用 `package-lock.json` 锁定依赖版本）
+| 功能 | 说明 |
+| :--- | :--- |
+| 🌸 **粉白插画风** | 马卡龙配色、手绘插画和浮动小图案背景，所有颜色都来自统一的设计变量 |
+| ⏳ **年历式时间线** | 电脑端按年份翻页，每年一张 12 个月的格子，点月份看当月经历；手机端按年份折叠 |
+| 📖 **舒服的阅读体验** | 阅读时长、阅读进度条、目录跟随、文章切换侧栏、上一篇 / 下一篇 |
+| 🎬 **细腻的动效** | 首屏依次浮现、卡片错落出场、换页翻书、从卡片展开成文章；所有展开 / 收起都有过渡；尊重系统的“减少动态效果”设置 |
+| 👀 **浏览量** | 文章卡片和文章页显示阅读次数，同一访客一天只算一次 |
+| 💬 **账号与评论** | 用户名 + 密码注册（支持中文用户名），评论支持楼中楼、编辑、删除；站长评论带“站长”标签 |
+| 📱 **手机端适配** | 固定顶栏 + 一体化下拉菜单、折叠目录、回到顶部 |
+| 🔒 **安全** | 密码加盐哈希、HttpOnly 会话、按 IP 限流、同源校验、CSP 等安全响应头 |
 
-### 启动步骤
-```bash
-# 1. 安装依赖
-npm install
+## 🧱 技术栈
 
-# 2. 启动本地开发服务（热更新预览）
-npm run dev
+- **页面**：[Astro 7](https://astro.build) 纯静态生成，不用 React / Vue 等前端框架；交互全部由一个原生 TypeScript 脚本完成
+- **样式**：原生 CSS + CSS 变量，没有 UI 库
+- **接口**：[Cloudflare Pages Functions](https://developers.cloudflare.com/pages/functions/)，部署在同域 `/api/...`
+- **数据库**：[Cloudflare D1](https://developers.cloudflare.com/d1/)（SQLite），存浏览量、账号和评论
+- **部署**：推送到 `main` 后 Cloudflare Pages 自动构建上线，不需要服务器
+
+## 🗂️ 项目结构
+
+```text
+PersonalWeb/
+├── content/              # ✏️ 网站内容：改这里就能更新网站
+│   ├── site.json         #    昵称、标语、插画等全局信息
+│   ├── social.json       #    联系方式
+│   ├── about.md          #    关于我
+│   ├── articles/         #    文章
+│   ├── timeline/         #    时间线经历
+│   └── services/         #    服务卡片
+├── public/images/        # 🖼️ 图片素材
+├── src/
+│   ├── components/       #    页面各区块（Hero、Timeline、Comments…）
+│   ├── pages/            #    首页、文章页、登录页、404
+│   ├── scripts/ui.ts     #    全部前端交互
+│   └── styles/global.css #    全部样式
+├── functions/            # ⚙️ 后端接口（浏览量、账号、评论）
+├── migrations/           # 🗄️ 数据库表结构
+└── scripts/admin.mjs     # 👑 站长管理命令
 ```
-启动后访问终端输出的地址（通常是 `http://localhost:4321`）。
 
-### 类型检查、静态生产构建与测试
+## 📝 更新内容
+
+日常只需要改 `content/` 里的文件，推送后网站自动更新。
+
+| 想改什么 | 改哪个文件 |
+| :--- | :--- |
+| 昵称、标语、简介 | `content/site.json` |
+| 关于我 | `content/about.md` |
+| 发新文章 | 在 `content/articles/` 新建 `.md`，必填 `title`、`date`、`description`、`category` |
+| 时间线经历 | `content/timeline/*.md`，日期写成 `年.月`，决定它落在年历的哪个月 |
+| 服务卡片 | `content/services/*.md` |
+| 联系方式 | `content/social.json`，可以是跳转链接（`link`）或点击复制（`copy`） |
+| 图片 | 放进 `public/images/`，文件名全小写，Markdown 里用 `/images/...` 引用 |
+
+> 💡 发文规范、插图防 404、发布前检查清单都在 [MAINTENANCE.md](./MAINTENANCE.md)。
+
+## 🛠️ 本地运行
+
+需要 [Node.js](https://nodejs.org/) 22.12 或更高版本。
+
 ```bash
-# TypeScript 类型检查（.astro 与 .ts，需 0 errors）
-npm run check
-
-# 执行完整静态打包（验证所有页面路由）
-npm run build
-
-# 本地预览打包产物（只有静态页，没有浏览量、登录和评论）
-npm run preview
-
-# 完整预览：静态页 + /api 接口 + 本地模拟数据库，打开 http://localhost:8911
-# 第一次需要先建本地表：npx wrangler d1 migrations apply sutady-db --local
-npm run preview:full
+npm install        # 安装依赖
+npm run dev        # 开发预览 → http://localhost:4321（只有静态页）
 ```
 
----
+| 命令 | 作用 |
+| :--- | :--- |
+| `npm run check` | 类型检查，需要 0 errors |
+| `npm run build` | 打包到 `dist/`，上线前必须通过 |
+| `npm run preview` | 预览打包结果（只有静态页） |
+| `npm run preview:full` | 完整预览，含浏览量、登录、评论 → http://localhost:8911<br />第一次运行前先建本地表：`npx wrangler d1 migrations apply sutady-db --local` |
+| `npm run db:migrate` | 把新的数据库表结构应用到线上 |
+| `npm run admin -- users` | 站长管理：查看用户、重置密码、设站长，详见 [ADMIN_GUIDE.md](./ADMIN_GUIDE.md) |
 
-## 📝 内容快速维护指南
+## 🚀 部署
 
-> 💡 **详细发文规范与避坑技巧，请务必参阅 [MAINTENANCE.md](./MAINTENANCE.md)**。
+项目已接入 Cloudflare Pages，**推送到 `main` 就是上线**：
 
-所有站内数据与正文均采用 Markdown 或 JSON 托管于 `content/` 目录中，修改对应文件即可自动更新全站：
+1. Cloudflare 自动运行 `npm run build`，一两分钟后 [sutady.top](https://sutady.top) 更新；
+2. `functions/` 自动部署为 `/api/...` 接口，数据库绑定写在 `wrangler.toml`（D1 数据库 `sutady-db`，绑定名 `DB`）；
+3. 数据库结构有变化时，另外运行 `npm run db:migrate`。
 
-| 想修改的内容 | 对应文件路径 | 说明 |
+<details>
+<summary>Cloudflare Pages 构建设置</summary>
+
+| 设置项 | 值 |
+| :--- | :--- |
+| Framework preset | `Astro` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Production branch | `main` |
+
+</details>
+
+## 📚 文档
+
+| 文档 | 写给谁 | 内容 |
 | :--- | :--- | :--- |
-| **站点昵称 / 标语 / 简介** | `content/site.json` | 修改网站标题、个人签名等全局信息 |
-| **关于我正文** | `content/about.md` | 支持富文本 Markdown 讲述个人故事 |
-| **撰写 / 发布新文章** | `content/articles/*.md` | 必填 `title, date, description, category` |
-| **个人历程时间线** | `content/timeline/*.md` | 标题、`年.月` 日期（决定落在年历哪个月）、标签、是否里程碑与跳转链接 |
-| **服务与协助卡片** | `content/services/*.md` | 标题、简介与展开后的详细服务说明 |
-| **社交账号与联系方式** | `content/social.json` | 支持跳转链接（`link`）或一键复制（`copy`） |
-| **头像 / 插画 / 背景素材** | `public/images/` | 静态图片存放目录，在 Markdown 中用 `/images/...` 引用 |
+| [MAINTENANCE.md](./MAINTENANCE.md) | 站长 | 发文流程、插图规范、时间线和服务卡片维护、发布前检查、待办事项 |
+| [ADMIN_GUIDE.md](./ADMIN_GUIDE.md) | 站长 | 零基础手册：查看用户、重置密码、设站长、删评论、在 Cloudflare 后台看数据 |
+| [CHANGELOG.md](./CHANGELOG.md) | 所有人 | 每个正式版本更新了什么 |
+| [AGENTS.md](./AGENTS.md) | AI 助手 | 所有 AI 共用的开发守则：设计变量、手机端红线、安全规则 |
+| [CLAUDE.md](./CLAUDE.md) | AI 助手 | 代码架构速览和常用命令 |
 
 ---
 
-## 🚀 部署上线 (Cloudflare Pages)
-
-本项目已接入 Cloudflare Pages CI/CD 自动部署流水线：
-
-1. **自动构建部署**：每次向 GitHub 仓库的 `main` 分支执行 `git push`，Cloudflare Pages 会自动监听并执行 `npm run build`，1~2 分钟内全球 CDN 同步生效；
-2. **动态接口与数据库**：`functions/` 目录由 Pages 自动部署为 `/api/...` 接口，数据库绑定写在 `wrangler.toml`（D1 数据库 `sutady-db`，绑定名 `DB`）。数据库结构变更用 `npm run db:migrate` 上线；
-3. **构建设置参考**：
-   - **Framework preset**：`Astro`
-   - **Build command**：`npm run build`
-   - **Build output directory**：`dist`
-   - **Production branch**：`main`
-
----
-
-## 📄 开源与版权
+<div align="center">
 
 Copyright © 2026 Sutady. All rights reserved.
+
+</div>
