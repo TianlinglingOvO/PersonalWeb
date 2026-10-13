@@ -6,7 +6,7 @@
 
 *Study makes perfect, what Sutady wants to be.*
 
-粉白治愈系的个人网站与技术博客
+个人网站与技术博客
 
 [![网站](https://img.shields.io/badge/在线访问-sutady.top-e25c7a?style=flat-square)](https://sutady.top)
 [![版本](https://img.shields.io/github/v/release/TianlinglingOvO/PersonalWeb?style=flat-square&color=f0a5b5&label=版本)](./CHANGELOG.md)
