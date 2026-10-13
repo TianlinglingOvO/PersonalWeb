@@ -1,0 +1,246 @@
+/* 顶栏与导航。手机端（≤860px）的固定定位和抽屉卡片是反复踩坑后定下的，改之前先看 AGENTS.md 第 2 节 */
+
+.site-header {
+	position: sticky;
+	top: 0;
+	z-index: 40;
+	height: var(--header-h);
+	display: flex;
+	align-items: center;
+	background: var(--bg);
+	border-bottom: 1px solid transparent;
+	transition:
+		background 0.2s ease,
+		border-color 0.2s ease,
+		box-shadow 0.2s ease;
+}
+
+.site-header.is-scrolled {
+	border-bottom-color: var(--line);
+	box-shadow: 0 8px 24px color-mix(in srgb, var(--shadow-tint) 6%, transparent);
+	background: var(--bg);
+}
+
+.header-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	width: min(var(--max), calc(100% - 2rem));
+	margin-inline: auto;
+}
+
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	color: var(--ink);
+	text-decoration: none;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}
+
+.brand:hover {
+	color: var(--accent-deep);
+}
+
+.brand-avatar {
+	width: 32px;
+	height: 32px;
+	flex: none;
+	border-radius: 50%;
+	object-fit: cover;
+	object-position: 50% 30%;
+	border: 1.5px solid var(--accent-soft);
+	box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 16%, transparent);
+	display: inline-block;
+}
+
+.nav-toggle {
+	display: none;
+	position: relative;
+	z-index: 46;
+	width: 44px;
+	height: 44px;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	border-radius: 12px;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+}
+
+.nav-toggle-bars {
+	width: 18px;
+	height: 12px;
+	position: relative;
+	display: block;
+}
+
+.nav-toggle-bars::before,
+.nav-toggle-bars::after,
+.nav-toggle-bars span {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: var(--ink);
+	border-radius: 2px;
+	transition: transform 0.2s ease, opacity 0.2s ease, top 0.2s ease;
+}
+
+.nav-toggle-bars span {
+	top: 5px;
+}
+
+.nav-toggle-bars::before {
+	top: 0;
+}
+
+.nav-toggle-bars::after {
+	top: 10px;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars span {
+	opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars::before {
+	top: 5px;
+	transform: rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars::after {
+	top: 5px;
+	transform: rotate(-45deg);
+}
+
+.nav {
+	display: flex;
+	gap: 0.2rem;
+}
+
+.nav a {
+	color: var(--muted);
+	text-decoration: none;
+	padding: 0.45rem 0.8rem;
+	border-radius: 999px;
+	font-weight: 500;
+	font-size: 0.95rem;
+	transition:
+		color 0.18s ease,
+		background-color 0.18s ease,
+		box-shadow 0.18s ease,
+		transform 0.15s ease;
+}
+
+.nav a:hover {
+	color: var(--ink);
+	background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
+}
+
+.nav a.is-active {
+	color: var(--accent-deep);
+	background: var(--accent-soft);
+	font-weight: 600;
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.nav-backdrop {
+	display: none;
+}
+
+@media (max-width: 860px) {
+	/* 移动端页面顶部留出固定顶栏高度，防止正文被顶栏覆盖 */
+	body {
+		padding-top: var(--header-h);
+	}
+
+	/* 移动端顶栏彻底改为 fixed 绝对锁定，解决滚动后 sticky 坍缩导致的脱节与镂空 */
+	.site-header {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		width: 100% !important;
+		z-index: 100 !important;
+		height: var(--header-h);
+	}
+
+	.site-header.is-scrolled {
+		background: var(--bg);
+		border-bottom-color: var(--line);
+		box-shadow: 0 8px 24px color-mix(in srgb, var(--shadow-tint) 6%, transparent);
+	}
+
+	/* 菜单打开时：顶栏与菜单融合成一张无缝纯白卡片，消除底边线 */
+	body.nav-open .site-header {
+		background: var(--surface) !important;
+		border-bottom: none !important;
+		box-shadow: none !important;
+	}
+
+	.nav-toggle {
+		display: inline-flex;
+		z-index: 101;
+	}
+
+	/* 遮罩从顶栏下沿开始，不能盖住顶栏：顶栏要和下拉菜单连成一整张白色卡片（AGENTS.md 第 2 节） */
+	.nav-backdrop {
+		display: block;
+		position: fixed;
+		inset: var(--header-h) 0 0;
+		z-index: 90;
+		background: color-mix(in srgb, var(--ink) 42%, transparent);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.24s ease;
+	}
+
+	.nav-backdrop.is-open {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	/* 下拉抽屉：直接自 68px 处紧贴纯白顶栏，下底带有 24px 圆角与柔和微光 */
+	.nav {
+		position: fixed !important;
+		top: var(--header-h) !important;
+		right: 0 !important;
+		left: 0 !important;
+		z-index: 95 !important;
+		background: var(--surface) !important;
+		border-top: none !important;
+		border-bottom: 1px solid var(--line);
+		border-radius: 0 0 24px 24px;
+		box-shadow: 0 24px 50px color-mix(in srgb, var(--shadow-tint) 20%, transparent);
+		flex-direction: column;
+		padding: 0.2rem 1.2rem 1.4rem;
+		max-height: calc(100dvh - var(--header-h) - 1.5rem);
+		overflow-y: auto;
+		transform: translateY(-8px);
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transition:
+			transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+			opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+			visibility 0.24s ease;
+	}
+
+	.nav.is-open {
+		transform: translateY(0);
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+	}
+
+	.nav a {
+		padding: 0.85rem 1rem;
+		font-size: 1.05rem;
+		border-radius: 12px;
+	}
+}

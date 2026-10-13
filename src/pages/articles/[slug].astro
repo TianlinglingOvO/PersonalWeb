@@ -4,13 +4,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import ArticleSidebarNav from '../../components/ArticleSidebarNav.astro';
-import { formatDate, readingMinutes, site } from '../../lib/site';
 import Comments from '../../components/Comments.astro';
+import { getSortedArticles } from '../../lib/articles';
+import { formatDate, readingMinutes, site } from '../../lib/site';
 
 export async function getStaticPaths() {
-	const posts = (await getCollection('articles')).sort(
-		(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-	);
+	const posts = await getSortedArticles();
+	const timeline = await getCollection('timeline');
 	return posts.map((post, index) => ({
 		params: { slug: post.id },
 		props: {
@@ -18,6 +18,8 @@ export async function getStaticPaths() {
 			allPosts: posts,
 			prevPost: index < posts.length - 1 ? posts[index + 1] : null,
 			nextPost: index > 0 ? posts[index - 1] : null,
+			// 时间线上关联了这篇文章的节点（节点 frontmatter 的 article 字段）
+			timelineRefs: timeline.filter((item) => item.data.article === post.id),
 		},
 	}));
 }
@@ -27,14 +29,15 @@ interface Props {
 	allPosts: CollectionEntry<'articles'>[];
 	prevPost?: CollectionEntry<'articles'> | null;
 	nextPost?: CollectionEntry<'articles'> | null;
+	timelineRefs: CollectionEntry<'timeline'>[];
 }
 
-const { post, allPosts, prevPost, nextPost } = Astro.props;
+const { post, allPosts, prevPost, nextPost, timelineRefs } = Astro.props;
 const { Content, headings } = await render(post);
 const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
-<BaseLayout title={`${post.data.title} · ${site.name}`} description={post.data.description}>
+<BaseLayout title={`${post.data.title} · ${site.name}`} description={post.data.description} type="article" publishedTime={post.data.date}>
 	<div class="reading-progress" data-reading-progress aria-hidden="true"><span></span></div>
 	<div class="article-layout-container wrap-wide" data-article-layout>
 		<!-- 左侧：文章快速切换侧栏 (桌面宽屏) -->
@@ -53,15 +56,16 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 		</button>
 
 		<!-- 中间：文章主体内容 -->
-		<main class="article-main-column">
+		<div class="article-main-column">
 			<article class="article-page">
 				<a class="back-link" href="/#articles"><Icon name="arrow" /> 返回首页</a>
 				<p class="meta">
 					<span class="badge">{post.data.category}</span>
 					{formatDate(post.data.date)} · 约 {readingMinutes(post.body)} 分钟
-					<span class="view-count" data-views={post.id} data-views-count hidden>{' · '}<Icon name="eye" class="icon view-count-icon" /><span data-views-num /></span>
+					<span class="view-count" data-views={post.id} data-views-count hidden>{' · '}<Icon name="eye" class="view-count-icon" /><span data-views-num /></span>
 				</p>
 				<h1>{post.data.title}</h1>
+				<p class="article-lead">{post.data.description}</p>
 
 				<!-- 移动端 / 中屏折叠目录 -->
 				{
@@ -70,7 +74,7 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 							<summary class="mobile-toc-summary">
 								<span class="mobile-toc-summary-left">
 									<Icon name="list" />
-									<span>本文目录导航 (点击展开)</span>
+									<span>本文目录</span>
 								</span>
 								<Icon name="chevron-down" class="mobile-toc-chevron" />
 							</summary>
@@ -82,6 +86,20 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 				<div class="prose">
 					<Content />
 				</div>
+
+				{
+					timelineRefs.length > 0 && (
+						<p class="article-timeline-ref">
+							<Icon name="history" class="article-timeline-ref-icon" />
+							<span>这篇文章收录在我的成长历程里：</span>
+							{timelineRefs.map((item) => (
+								<a href={`/#tl-${item.id}`}>
+									{item.data.date} · {item.data.title} →
+								</a>
+							))}
+						</p>
+					)
+				}
 
 				<nav class="article-nav" aria-label="文章上下篇导航">
 					{
@@ -108,7 +126,7 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 			</article>
 
 			<Comments slug={post.id} />
-		</main>
+		</div>
 
 		<!-- 右侧：目录大纲树 (桌面宽屏) -->
 		<aside class="article-toc-column desktop-toc" aria-label="文章目录侧栏">
@@ -116,4 +134,3 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 		</aside>
 	</div>
 </BaseLayout>
-

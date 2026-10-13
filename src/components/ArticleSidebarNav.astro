@@ -14,14 +14,9 @@ const categories = Array.from(new Set(posts.map((p) => p.data.category).filter(B
 ---
 
 <aside class:list={['article-sidebar-widget', className]} aria-label="文章快速切换导航" data-article-sidebar>
+	<!-- 回首页用顶栏（宽屏时一直固定在上方）或正文顶部的“返回首页”，这里只放全部文章入口 -->
 	<div class="sidebar-nav-top">
-		<a href="/#articles" class="sidebar-nav-back">
-			<Icon name="arrow" />
-			<span>返回首页</span>
-		</a>
-		<a href="/articles/" class="sidebar-nav-all">
-			全部 ({posts.length})
-		</a>
+		<a href="/articles/" class="sidebar-nav-all">全部文章 ({posts.length}) →</a>
 	</div>
 
 	<div class="sidebar-heading-row">

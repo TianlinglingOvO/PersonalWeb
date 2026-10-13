@@ -1,0 +1,140 @@
+/* 全站动效：滚动进入时浮现、卡片错落出场、换页翻页过场、通用关键帧；
+   最后是“减少动态效果”的统一关闭（必须放在所有样式之后，所以这个文件最后导入） */
+
+.reveal {
+	opacity: 1;
+	transform: none;
+}
+
+html.js .reveal:not(.is-visible) {
+	opacity: 0;
+	transform: translateY(14px);
+}
+
+html.js .reveal.is-visible {
+	opacity: 1;
+	transform: none;
+	transition:
+		opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+		transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 区块内卡片错落出场：只用 backwards 填充，动画结束后不覆盖卡片 hover 位移 */
+html.js .reveal.is-visible [data-stagger] > * {
+	animation: staggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+	animation-delay: calc(var(--stagger-i, 0) * 70ms + 80ms);
+}
+
+@keyframes staggerIn {
+	from {
+		opacity: 0;
+		transform: translateY(14px) scale(0.98);
+	}
+}
+
+/* View Transition: 类似书本翻页的轻柔滑入淡出效果 */
+@keyframes pageTurnOut {
+	from {
+		opacity: 1;
+		transform: translateX(0) scale(1);
+	}
+	to {
+		opacity: 0;
+		transform: translateX(-24px) scale(0.97);
+	}
+}
+
+@keyframes pageTurnIn {
+	from {
+		opacity: 0;
+		transform: translateX(24px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0) scale(1);
+	}
+}
+
+::view-transition-old(root) {
+	animation: 0.28s cubic-bezier(0.16, 1, 0.3, 1) both pageTurnOut;
+}
+
+::view-transition-new(root) {
+	animation: 0.28s cubic-bezier(0.16, 1, 0.3, 1) both pageTurnIn;
+}
+
+/* 浏览器后退时反向翻页 */
+@keyframes pageTurnOutBack {
+	to {
+		opacity: 0;
+		transform: translateX(24px) scale(0.97);
+	}
+}
+
+@keyframes pageTurnInBack {
+	from {
+		opacity: 0;
+		transform: translateX(-24px) scale(0.97);
+	}
+}
+
+html[data-astro-transition="back"]::view-transition-old(root) {
+	animation-name: pageTurnOutBack;
+}
+
+html[data-astro-transition="back"]::view-transition-new(root) {
+	animation-name: pageTurnInBack;
+}
+
+/* 文章卡片展开成文章页（名字由 scripts/features/transitions.ts 临时挂上） */
+::view-transition-group(article-morph) {
+	animation-duration: 0.42s;
+	animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+	border-radius: var(--radius);
+	overflow: clip;
+}
+
+::view-transition-old(article-morph),
+::view-transition-new(article-morph) {
+	height: 100%;
+	object-fit: cover;
+	object-position: 50% 0;
+	animation-duration: 0.3s;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes fadeOut {
+	to {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation: none !important;
+		transition: none !important;
+	}
+
+	html.js .reveal:not(.is-visible),
+	.reveal {
+		opacity: 1;
+		transform: none;
+	}
+}

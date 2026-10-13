@@ -1,0 +1,80 @@
+/* 首页“联系我”区块：按分组排列的联系方式卡片（跳转或点击复制） */
+
+.contact-groups {
+	display: grid;
+	gap: 1.35rem;
+}
+
+.contact-group-title {
+	margin: 0 0 0.55rem;
+	font-size: 0.82rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	color: var(--muted);
+}
+
+.contact-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.75rem;
+	align-items: start;
+}
+
+.contact-card {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.3rem;
+	text-align: left;
+	width: 100%;
+	min-width: 0;
+	min-height: 7.25rem;
+	box-sizing: border-box;
+	color: inherit;
+	text-decoration: none;
+	font: inherit;
+	background: var(--surface);
+	cursor: pointer;
+	appearance: none;
+}
+
+.contact-card:hover {
+	color: inherit;
+}
+
+.contact-main {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	min-height: 24px;
+}
+
+.contact-id {
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.contact-value {
+	color: var(--muted);
+	font-size: 0.9rem;
+	word-break: break-all;
+}
+
+.contact-action {
+	margin-top: auto;
+	padding-top: 0.2rem;
+	color: var(--accent-2);
+	font-size: 0.86rem;
+	font-weight: 600;
+}
+
+.contact-main .icon {
+	width: 24px;
+	height: 24px;
+}
+
+@media (max-width: 860px) {
+	.contact-grid {
+		grid-template-columns: 1fr;
+	}
+}

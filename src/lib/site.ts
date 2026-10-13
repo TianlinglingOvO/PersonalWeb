@@ -27,14 +27,19 @@ export const nav = [
 	{ href: '/#connect', label: '联系', section: 'connect' },
 ] as const;
 
-export const articleCategories = ['教程', '科普'] as const;
-
+// 日期统一按北京时间显示：构建机（Cloudflare）用的是 UTC，不指定时区的话北京时间凌晨 0–8 点构建会显示成前一天
 export function formatDate(date: Date) {
 	return date.toLocaleDateString('zh-CN', {
 		year: 'numeric',
 		month: 'long',
 		day: 'numeric',
+		timeZone: 'Asia/Shanghai',
 	});
+}
+
+/** 写进 RSS、sitemap 这类 XML 文件前转义特殊字符 */
+export function escapeXml(text: string) {
+	return text.replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c]!);
 }
 
 // 预计阅读时长：中文按每分钟 400 字、英文按每分钟 200 词估算，代码块与链接地址不计入

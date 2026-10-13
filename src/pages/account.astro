@@ -1,0 +1,93 @@
+---
+// 账号页：回复我的、修改密码、退出 / 注销。内容由 scripts/features/account-page.ts 根据登录状态填充
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { getSortedArticles } from '../lib/articles';
+import { site } from '../lib/site';
+
+// “回复我的”列表里显示文章标题（接口只返回文章 slug）
+const titles = Object.fromEntries((await getSortedArticles()).map((a) => [a.id, a.data.title]));
+---
+
+<BaseLayout title={`我的账号 · ${site.name}`} description="查看别人给我的回复、修改密码。" noindex>
+	<section class="account-page wrap" data-account-page data-article-titles={JSON.stringify(titles)}>
+		<!-- 未登录时显示 -->
+		<div class="auth-card account-guest" data-account-guest hidden>
+			<p class="kicker">Hi~</p>
+			<h1>还没有登录</h1>
+			<p class="auth-hint">登录后可以在这里看到别人给你的回复，也可以修改密码。</p>
+			<div class="auth-actions">
+				<a class="btn btn-primary" href="/login/?next=/account/">登录 / 注册</a>
+				<a class="btn btn-ghost" href="/">回到首页</a>
+			</div>
+		</div>
+
+		<!-- 已登录时显示 -->
+		<div class="account-panel" data-account-panel hidden>
+			<div class="account-profile">
+				<span class="comment-avatar account-avatar" data-account-page-initial aria-hidden="true"></span>
+				<div>
+					<h1 class="account-name">
+						<span data-account-page-name></span>
+						<span class="role-badge" data-account-page-admin hidden>站长</span>
+					</h1>
+					<p class="account-sub">在文章下面发的评论都会显示这个名字</p>
+				</div>
+			</div>
+
+			<section class="account-card" id="replies" aria-labelledby="replies-title">
+				<h2 class="account-card-title" id="replies-title"><Icon name="chat" class="account-card-icon" />回复我的</h2>
+				<p class="account-empty" data-replies-status>加载中…</p>
+				<ol class="reply-list" data-reply-list></ol>
+				<!-- 单条回复的模板，account-page.ts 克隆后用 textContent 填内容 -->
+				<template data-reply-template>
+					<li>
+						<a class="reply-item" data-r-link>
+							<span class="comment-avatar" data-r-avatar aria-hidden="true"></span>
+							<span class="reply-main">
+								<span class="reply-head">
+									<span class="reply-name" data-r-name></span>
+									<span class="role-badge" data-r-admin hidden>站长</span>
+									<span class="reply-verb">回复了你</span>
+									<span class="reply-new" data-r-new hidden>新</span>
+								</span>
+								<span class="reply-content" data-r-content></span>
+								<span class="reply-meta">《<span data-r-article></span>》 · <time data-r-time></time></span>
+							</span>
+						</a>
+					</li>
+				</template>
+			</section>
+
+			<section class="account-card" aria-labelledby="password-title">
+				<h2 class="account-card-title" id="password-title">修改密码</h2>
+				<form class="account-password" data-password-form novalidate>
+					<!-- 给浏览器的密码管理器看的用户名，屏幕上不显示 -->
+					<input class="sr-only" type="text" name="username" autocomplete="username" tabindex="-1" aria-hidden="true" data-password-username />
+					<label class="auth-field">
+						<span>当前密码</span>
+						<input name="current" type="password" autocomplete="current-password" maxlength="64" required />
+					</label>
+					<label class="auth-field">
+						<span>新密码</span>
+						<input name="password" type="password" autocomplete="new-password" maxlength="64" required />
+					</label>
+					<label class="auth-field">
+						<span>确认新密码</span>
+						<input name="confirm" type="password" autocomplete="new-password" maxlength="64" required />
+					</label>
+					<p class="auth-field-hint">至少 6 位。改好之后，这个账号在其他设备上的登录会全部退出。</p>
+					<p class="auth-error" data-password-error role="alert" hidden></p>
+					<button type="submit" class="btn btn-primary" data-password-submit>保存新密码</button>
+				</form>
+			</section>
+
+			<section class="account-card account-actions">
+				<button type="button" class="btn btn-ghost" data-logout>退出登录</button>
+				<p class="auth-switch auth-close" data-account-close>
+					不想用了？<button type="button" data-close-account>注销账号</button>
+				</p>
+			</section>
+		</div>
+	</section>
+</BaseLayout>

@@ -13,11 +13,11 @@ import { site } from '../lib/site';
 				<h1>你已经登录啦</h1>
 				<p class="auth-hint">当前账号：<strong data-auth-current></strong></p>
 				<div class="auth-actions">
-					<a class="btn btn-primary" href="/">回到首页</a>
-					<button type="button" class="btn btn-ghost" data-logout>退出登录</button>
+					<a class="btn btn-primary" href="/account/">我的账号</a>
+					<a class="btn btn-ghost" href="/">回到首页</a>
 				</div>
-				<p class="auth-switch auth-close" data-account-close>
-					不想用了？<button type="button" data-close-account>注销账号</button>
+				<p class="auth-switch">
+					想换个账号？<button type="button" data-logout>退出登录</button>
 				</p>
 			</div>
 
@@ -49,8 +49,8 @@ import { site } from '../lib/site';
 						<input name="password" type="password" autocomplete="current-password" maxlength="64" required />
 						<button type="button" class="auth-eye" data-auth-reveal aria-label="显示密码" aria-pressed="false">
 							<!-- 密码隐藏时闭眼，显示时睁眼 -->
-							<Icon name="eye-closed" class="icon auth-eye-closed" />
-							<Icon name="eye" class="icon auth-eye-open" />
+							<Icon name="eye-closed" class="auth-eye-closed" />
+							<Icon name="eye" class="auth-eye-open" />
 						</button>
 					</span>
 				</label>

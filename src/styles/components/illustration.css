@@ -1,0 +1,79 @@
+/* 插画框：首屏、关于我（.about-art）、联系我（.side-art）三处插画共用的圆角、阴影和光晕 */
+
+.hero-art,
+.about-art {
+	position: relative;
+}
+
+.hero-art img,
+.side-art img,
+.about-art img {
+	width: 100%;
+	border-radius: calc(var(--radius) + 4px);
+	box-shadow: var(--shadow);
+	object-fit: cover;
+	background: var(--bg-soft);
+}
+
+.hero-art img {
+	aspect-ratio: 3 / 4;
+	max-height: 560px;
+	object-position: 50% 12%;
+}
+
+.hero-art::after,
+.about-art::after {
+	content: "";
+	position: absolute;
+	inset: auto 8% -12% auto;
+	width: 42%;
+	height: 28%;
+	background: radial-gradient(circle, var(--accent-soft), transparent 70%);
+	z-index: -1;
+	pointer-events: none;
+}
+
+.about-art img,
+.side-art img {
+	aspect-ratio: 3 / 4;
+	max-height: 460px;
+	object-position: 50% 18%;
+}
+
+@media (max-width: 860px) {
+	.hero-art img {
+		max-height: 220px;
+	}
+
+	.about-art img,
+	.side-art img {
+		max-height: 200px;
+	}
+
+	.hero-art,
+	.about-art,
+	.side-art {
+		opacity: 0.95;
+	}
+
+	.hero-art::after,
+	.about-art::after {
+		display: none;
+	}
+}
+
+/* 平板宽度（561–860px）：插画如果铺满整行只会被裁成一条细长的横条（只剩眼睛），
+   所以限制宽度、稍微加高，保留人物的脸 */
+@media (min-width: 561px) and (max-width: 860px) {
+	.hero-art,
+	.about-art,
+	.side-art {
+		width: min(100%, 480px);
+	}
+
+	.hero-art img,
+	.about-art img,
+	.side-art img {
+		max-height: 300px;
+	}
+}

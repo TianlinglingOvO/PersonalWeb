@@ -27,3 +27,7 @@
 
 /login/
   Cache-Control: public, max-age=300
+
+# RSS 订阅用正确的类型，阅读器识别更稳
+/rss.xml
+  Content-Type: application/rss+xml; charset=utf-8

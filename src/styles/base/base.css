@@ -1,0 +1,158 @@
+/* 基础：盒模型、页面底色与花纹、链接、焦点、版心宽度、通用图标 */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+.filter-chip,
+.card-link,
+.nav-toggle,
+.sidebar-dropdown-trigger,
+.badge {
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+/* 正文、时间线说明里的链接是内容的一部分，要能和前后文字一起选中复制（否则复制整段时链接文字会丢） */
+.prose a,
+.timeline-card-desc a {
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.filter-chip:active,
+.btn:active,
+.nav-toggle:active,
+.sidebar-dropdown-trigger:active {
+	transform: scale(0.95);
+	transition: transform 0.08s ease;
+}
+
+[hidden] {
+	display: none !important;
+}
+
+/* 跳到锚点时留出顶栏高度。只在这里设一次，不要再给元素加 scroll-margin-top（两者会叠加）；
+   滚动高亮的判断线也从这个值算（scripts/core/scroll.ts 的 anchorOffset） */
+html {
+	scroll-behavior: smooth;
+	scroll-padding-top: calc(var(--header-h) + 20px);
+	overflow-x: clip;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: var(--font);
+	color: var(--ink);
+	background: var(--bg);
+	line-height: 1.7;
+	min-height: 100%;
+	text-rendering: optimizeLegibility;
+	overflow-x: clip;
+}
+
+.page-bg {
+	background-color: var(--bg);
+	background-image:
+		radial-gradient(1200px 700px at 12% 5%, rgba(251, 232, 238, 0.65), transparent 70%),
+		radial-gradient(1000px 700px at 88% 18%, rgba(237, 240, 252, 0.7), transparent 65%),
+		radial-gradient(1100px 800px at 15% 70%, rgba(254, 237, 243, 0.6), transparent 70%),
+		radial-gradient(1300px 750px at 85% 88%, rgba(243, 235, 250, 0.65), transparent 65%),
+		url("/images/bg-pattern-pastel.svg?v=4");
+	background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+	background-attachment: fixed, fixed, fixed, fixed, scroll;
+	background-size: auto, auto, auto, auto, 240px 240px;
+}
+
+html.nav-open,
+body.nav-open {
+	overflow: hidden !important;
+	touch-action: none;
+	overscroll-behavior: contain;
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+a {
+	color: var(--accent-2);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.18em;
+}
+
+a:hover {
+	color: var(--accent-deep);
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
+}
+
+/* 只给读屏软件读的文字，屏幕上不显示 */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.skip-link {
+	position: absolute;
+	left: 12px;
+	top: -48px;
+	z-index: 80;
+	background: var(--ink);
+	color: var(--surface);
+	padding: 0.5rem 0.8rem;
+	border-radius: 8px;
+}
+
+.skip-link:focus {
+	top: 12px;
+}
+
+.wrap {
+	width: min(var(--max), calc(100% - 2rem));
+	margin-inline: auto;
+}
+
+.wrap-wide {
+	width: min(1360px, calc(100% - 2rem));
+	margin-inline: auto;
+}
+
+.icon {
+	width: 24px;
+	height: 24px;
+	flex: none;
+	fill: currentColor;
+	stroke: none;
+	overflow: visible;
+}
+
+@media (max-width: 860px) {
+	.page-bg {
+		background-size: auto, auto, auto, auto, 180px 180px;
+		background-attachment: scroll !important;
+	}
+}

@@ -1,16 +1,14 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ArticleList from '../../components/ArticleList.astro';
 import Icon from '../../components/Icon.astro';
+import { getSortedArticles } from '../../lib/articles';
 import { site } from '../../lib/site';
 
-const articles = (await getCollection('articles')).sort(
-	(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-);
+const articles = await getSortedArticles();
 ---
 
-<BaseLayout title={`文章 · ${site.name}`} description="教程与科普文章列表。">
+<BaseLayout title={`文章 · ${site.name}`} description={`${site.name} 的全部文章，可以按分类筛选。`}>
 	<section class="section wrap">
 		<a class="back-link" href="/#articles"><Icon name="arrow" /> 返回首页</a>
 		<div class="section-head">
@@ -19,6 +17,6 @@ const articles = (await getCollection('articles')).sort(
 				<h1 class="page-title">全部文章</h1>
 			</div>
 		</div>
-		<ArticleList articles={articles} />
+		<ArticleList articles={articles} filterable />
 	</section>
 </BaseLayout>

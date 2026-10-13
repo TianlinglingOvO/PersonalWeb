@@ -1,0 +1,72 @@
+/* 按钮：.btn-primary 主按钮、.btn-ghost 描边按钮，以及提交中的转圈状态 */
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	min-height: 44px;
+	padding: 0.55rem 1.05rem;
+	border-radius: 999px;
+	border: 1px solid transparent;
+	font: inherit;
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+	transition:
+		transform 0.15s ease,
+		box-shadow 0.15s ease,
+		background 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.btn:active {
+	transform: translateY(1px) scale(0.98);
+}
+
+.btn-primary {
+	background: var(--accent);
+	color: var(--surface);
+	box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.btn-primary:hover {
+	background: var(--accent-deep);
+	color: var(--surface);
+	box-shadow: var(--shadow-hover);
+}
+
+.btn-ghost {
+	background: var(--surface);
+	color: var(--ink);
+	border-color: var(--line);
+}
+
+.btn-ghost:hover {
+	border-color: var(--accent);
+	color: var(--accent-deep);
+	background: var(--surface);
+}
+
+.btn.is-loading {
+	position: relative;
+	color: transparent !important;
+	pointer-events: none;
+}
+
+.btn.is-loading::after {
+	content: "";
+	position: absolute;
+	width: 1.1em;
+	height: 1.1em;
+	border: 2px solid var(--surface);
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: spin 0.7s linear infinite;
+}
+
+.btn-ghost.is-loading::after {
+	border-color: var(--accent);
+	border-right-color: transparent;
+}

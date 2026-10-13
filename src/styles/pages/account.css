@@ -1,0 +1,205 @@
+/* 账号页（/account/）：头像和用户名、回复我的、修改密码、退出 / 注销。未登录时的提示卡片沿用登录页的 .auth-card */
+
+.account-page {
+	display: grid;
+	justify-items: center;
+	min-height: calc(100dvh - var(--header-h) - 12rem);
+	padding-block: 2.5rem 4rem;
+}
+
+.account-panel {
+	display: grid;
+	gap: 1.2rem;
+	width: min(100%, 640px);
+	animation: authIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.account-profile {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding-inline: 0.3rem;
+}
+
+.account-avatar {
+	width: 64px;
+	height: 64px;
+	font-size: 1.6rem;
+}
+
+.account-name {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0;
+	font-size: 1.6rem;
+	line-height: 1.3;
+	overflow-wrap: anywhere;
+}
+
+.account-sub {
+	margin: 0.2rem 0 0;
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+
+.account-card {
+	padding: 1.4rem 1.4rem 1.5rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--surface);
+	box-shadow: var(--shadow);
+}
+
+.account-card-title {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	margin: 0 0 1rem;
+	font-size: 1.15rem;
+}
+
+.account-card-icon {
+	width: 20px;
+	height: 20px;
+	color: var(--accent);
+}
+
+.account-empty {
+	margin: 0.3rem 0;
+	color: var(--muted);
+	font-size: 0.92rem;
+}
+
+/* --- 回复我的 --- */
+.reply-list {
+	display: grid;
+	gap: 0.3rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.reply-item {
+	display: flex;
+	gap: 0.75rem;
+	padding: 0.75rem 0.8rem;
+	border-radius: var(--radius-sm);
+	color: inherit;
+	text-decoration: none;
+	transition:
+		background-color 0.18s ease,
+		transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reply-item:hover {
+	background: var(--bg-soft);
+	color: inherit;
+	transform: translateX(2px);
+}
+
+.reply-item.is-unread {
+	background: color-mix(in srgb, var(--accent-soft) 35%, var(--surface));
+}
+
+.reply-item .comment-avatar {
+	width: 34px;
+	height: 34px;
+	font-size: 0.9rem;
+}
+
+.reply-main {
+	display: grid;
+	gap: 0.15rem;
+	min-width: 0;
+}
+
+.reply-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.9rem;
+}
+
+.reply-name {
+	font-weight: 700;
+}
+
+.reply-verb {
+	color: var(--muted);
+}
+
+.reply-new {
+	padding: 0 0.42rem;
+	border-radius: 999px;
+	background: var(--accent);
+	color: var(--surface);
+	font-size: 0.7rem;
+	font-weight: 700;
+	line-height: 1.6;
+}
+
+/* 内容最多显示两行 */
+.reply-content {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	color: var(--ink);
+	line-height: 1.6;
+	overflow-wrap: anywhere;
+}
+
+.reply-meta {
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+/* --- 修改密码 --- */
+.account-password {
+	display: grid;
+	gap: 0.85rem;
+}
+
+.account-password .btn {
+	justify-self: start;
+}
+
+/* --- 退出 / 注销 --- */
+.account-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.8rem;
+}
+
+.account-actions .auth-close {
+	margin: 0;
+}
+
+@media (max-width: 860px) {
+	.account-page {
+		padding-block: 1.6rem 3rem;
+	}
+
+	.account-card {
+		padding: 1.2rem 1.1rem 1.3rem;
+	}
+
+	.account-avatar {
+		width: 54px;
+		height: 54px;
+		font-size: 1.35rem;
+	}
+
+	.account-name {
+		font-size: 1.35rem;
+	}
+
+	.reply-item {
+		padding-inline: 0.5rem;
+	}
+}

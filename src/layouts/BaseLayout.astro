@@ -9,13 +9,20 @@ import '../styles/global.css';
 interface Props {
 	title?: string;
 	description?: string;
-	/** 登录页这类不需要被搜索引擎收录的页面 */
+	/** 登录页、账号页这类不需要被搜索引擎收录的页面 */
 	noindex?: boolean;
+	/** 分享卡片类型：文章页传 article */
+	type?: 'website' | 'article';
+	/** 文章发布时间，写进分享信息 */
+	publishedTime?: Date;
 }
 
+const { noindex = false, type = 'website', publishedTime } = Astro.props;
 const title = Astro.props.title ?? site.title;
 const description = Astro.props.description ?? site.description;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+// 分享到 Telegram、X 等处时显示的预览图（方形头像，配 summary 小卡片）
+const shareImage = new URL(site.avatar, Astro.site ?? Astro.url);
 ---
 
 <!doctype html>
@@ -27,9 +34,18 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 		<title>{title}</title>
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical} />
-		{Astro.props.noindex && <meta name="robots" content="noindex" />}
+		{noindex && <meta name="robots" content="noindex" />}
+		<meta property="og:type" content={type} />
+		<meta property="og:site_name" content={site.title} />
+		<meta property="og:locale" content="zh_CN" />
+		<meta property="og:url" content={canonical} />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
+		<meta property="og:image" content={shareImage} />
+		<meta property="og:image:alt" content={`${site.name} 的头像`} />
+		{publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+		<meta name="twitter:card" content="summary" />
+		<link rel="alternate" type="application/rss+xml" title={`${site.title} · 文章订阅`} href="/rss.xml" />
 		<link rel="icon" href="/favicon.png?v=8" type="image/png" />
 		<link rel="icon" href="/favicon.svg?v=8" type="image/svg+xml" />
 		<link rel="icon" href="/favicon.ico?v=8" sizes="any" />

@@ -1,0 +1,104 @@
+/* 浮在页面上的小部件：换页进度条、文章阅读进度条、提示（toast）、回到顶部 */
+
+.page-progress {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 3px;
+	width: 0%;
+	background: linear-gradient(90deg, var(--accent), #ff8fa3, var(--accent-deep));
+	z-index: 99999;
+	pointer-events: none;
+	opacity: 0;
+	border-radius: 0 999px 999px 0;
+	box-shadow: 0 1px 8px color-mix(in srgb, var(--accent) 60%, transparent);
+	transition: width 0.25s ease, opacity 0.2s ease;
+}
+
+/* 宽度由 scripts/features/transitions.ts 逐步写入（缓慢前进，不会停住） */
+.page-progress.is-loading {
+	opacity: 1;
+	transition: width 0.3s cubic-bezier(0.1, 0.6, 0.2, 1), opacity 0.15s ease;
+}
+
+.page-progress.is-loaded {
+	opacity: 0;
+	transition: width 0.18s ease, opacity 0.25s ease 0.15s;
+}
+
+/* 文章阅读进度条：贴在顶栏下沿，由 scripts/features/toc.ts 写入 scaleX */
+.reading-progress {
+	position: fixed;
+	top: var(--header-h);
+	left: 0;
+	right: 0;
+	z-index: 39;
+	height: 3px;
+	pointer-events: none;
+}
+
+.reading-progress > span {
+	display: block;
+	height: 100%;
+	border-radius: 0 999px 999px 0;
+	background: linear-gradient(90deg, var(--accent), var(--accent-deep));
+	transform: scaleX(0);
+	transform-origin: left center;
+}
+
+.toast-host {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	z-index: 60;
+	display: grid;
+	gap: 8px;
+}
+
+.toast {
+	background: var(--ink);
+	color: var(--surface);
+	padding: 0.7rem 1rem;
+	border-radius: 12px;
+	box-shadow: var(--shadow-hover);
+	opacity: 0;
+	transform: translateY(8px);
+	transition:
+		opacity 0.2s ease,
+		transform 0.2s ease;
+}
+
+.toast.is-in {
+	opacity: 1;
+	transform: none;
+}
+
+.back-to-top {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	z-index: 50;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	box-shadow: var(--shadow);
+	cursor: pointer;
+	opacity: 0;
+	pointer-events: none;
+	transform: translateY(8px);
+	transition:
+		opacity 0.2s ease,
+		transform 0.2s ease;
+}
+
+.back-to-top.is-visible {
+	opacity: 1;
+	pointer-events: auto;
+	transform: none;
+}
+
+.toast-host:not(:empty) + .back-to-top {
+	bottom: 72px;
+}

@@ -1,0 +1,106 @@
+/* 文章图片点击放大（scripts/features/lightbox.ts）：深色半透明背景上居中显示大图，点任意处关闭 */
+
+.article-page .prose img:not(a img) {
+	cursor: zoom-in;
+}
+
+.lightbox {
+	width: 100vw;
+	max-width: none;
+	height: 100dvh;
+	max-height: none;
+	margin: 0;
+	padding: 1.2rem;
+	border: 0;
+	background: none;
+	overflow: hidden;
+	cursor: zoom-out;
+}
+
+.lightbox[open] {
+	display: grid;
+	place-items: center;
+}
+
+.lightbox::backdrop {
+	background: color-mix(in srgb, var(--ink) 78%, transparent);
+	backdrop-filter: blur(4px);
+	animation: fadeIn 0.2s ease both;
+}
+
+.lightbox.is-closing::backdrop {
+	animation: fadeOut 0.18s ease forwards;
+}
+
+.lightbox-figure {
+	display: grid;
+	justify-items: center;
+	gap: 0.7rem;
+	margin: 0;
+	animation: lightboxIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lightbox.is-closing .lightbox-figure {
+	animation: lightboxOut 0.18s ease forwards;
+}
+
+.lightbox-img {
+	width: auto;
+	max-width: min(100%, 1600px);
+	height: auto;
+	max-height: calc(100dvh - 6rem);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	box-shadow: 0 24px 60px color-mix(in srgb, var(--ink) 40%, transparent);
+}
+
+.lightbox-caption {
+	color: color-mix(in srgb, var(--surface) 88%, transparent);
+	font-size: 0.9rem;
+	text-align: center;
+}
+
+/* 右上角的关闭按钮（叉号用两条线画出来） */
+.lightbox-close {
+	position: fixed;
+	top: 14px;
+	right: 14px;
+	width: 44px;
+	height: 44px;
+	border: 0;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--surface) 92%, transparent);
+	box-shadow: var(--shadow);
+	cursor: pointer;
+}
+
+.lightbox-close::before,
+.lightbox-close::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 18px;
+	height: 2px;
+	border-radius: 2px;
+	background: var(--ink);
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.lightbox-close::after {
+	transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+@keyframes lightboxIn {
+	from {
+		opacity: 0;
+		transform: scale(0.96);
+	}
+}
+
+@keyframes lightboxOut {
+	to {
+		opacity: 0;
+		transform: scale(0.97);
+	}
+}

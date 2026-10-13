@@ -35,11 +35,13 @@
 | 功能 | 说明 |
 | :--- | :--- |
 | 🌸 **粉白插画风** | 马卡龙配色、手绘插画和浮动小图案背景，所有颜色都来自统一的设计变量 |
-| ⏳ **年历式时间线** | 电脑端按年份翻页，每年一张 12 个月的格子，点月份看当月经历；手机端按年份折叠 |
-| 📖 **舒服的阅读体验** | 阅读时长、阅读进度条、目录跟随、文章切换侧栏、上一篇 / 下一篇 |
+| ⏳ **年历式时间线** | 电脑端按年份翻页，每年一张 12 个月的格子，点月份看当月经历；手机端按年份折叠，只显示最近几条；节点可以关联文章，两边互相跳转 |
+| 📖 **舒服的阅读体验** | 导语、阅读时长、阅读进度条、目录跟随、文章切换侧栏、图片点击放大、上一篇 / 下一篇 |
 | 🎬 **细腻的动效** | 首屏依次浮现、卡片错落出场、换页翻书、从卡片展开成文章；所有展开 / 收起都有过渡；尊重系统的“减少动态效果”设置 |
 | 👀 **浏览量** | 文章卡片和文章页显示阅读次数，同一访客一天只算一次 |
 | 💬 **账号与评论** | 用户名 + 密码注册（支持中文用户名），评论支持楼中楼、编辑、删除；站长评论带“站长”标签 |
+| 🔔 **回复提醒** | 有人回复你时，头像上出现小红点；“我的账号”里查看回复、修改密码、注销账号 |
+| 📡 **订阅与分享** | RSS 订阅、站点地图；链接发到 Telegram / X 时带预览卡片 |
 | 📱 **手机端适配** | 固定顶栏 + 一体化下拉菜单、折叠目录、回到顶部 |
 | 🔒 **安全** | 密码加盐哈希、HttpOnly 会话、按 IP 限流、同源校验、CSP 等安全响应头 |
 
@@ -65,12 +67,13 @@ PersonalWeb/
 ├── public/images/        # 🖼️ 图片素材
 ├── src/
 │   ├── components/       #    页面各区块（Hero、Timeline、Comments…）
-│   ├── pages/            #    首页、文章页、登录页、404
-│   ├── scripts/ui.ts     #    全部前端交互
-│   └── styles/global.css #    全部样式
-├── functions/            # ⚙️ 后端接口（浏览量、账号、评论）
+│   ├── pages/            #    首页、文章页、登录页、账号页、404、RSS、sitemap
+│   ├── scripts/          #    前端交互：ui.ts 是入口，core/ 是通用工具，features/ 每个文件一块功能
+│   ├── styles/           #    样式：global.css 按顺序导入 base/、components/、sections/、pages/
+│   └── lib/              #    站点信息、文章列表，以及构建时的图片检查与图片属性插件
+├── functions/            # ⚙️ 后端接口（浏览量、账号、评论、回复提醒）
 ├── migrations/           # 🗄️ 数据库表结构
-└── scripts/admin.mjs     # 👑 站长管理命令
+└── scripts/              # 👑 admin.mjs 站长管理命令、smoke.mjs 接口冒烟测试
 ```
 
 ## 📝 更新内容
@@ -82,7 +85,7 @@ PersonalWeb/
 | 昵称、标语、简介 | `content/site.json` |
 | 关于我 | `content/about.md` |
 | 发新文章 | 在 `content/articles/` 新建 `.md`，必填 `title`、`date`、`description`、`category` |
-| 时间线经历 | `content/timeline/*.md`，日期写成 `年.月`，决定它落在年历的哪个月 |
+| 时间线经历 | `content/timeline/*.md`，日期写成 `年.月`，决定它落在年历的哪个月；写 `article: 文章文件名` 可以关联文章 |
 | 服务卡片 | `content/services/*.md` |
 | 联系方式 | `content/social.json`，可以是跳转链接（`link`）或点击复制（`copy`） |
 | 图片 | 放进 `public/images/`，文件名全小写，Markdown 里用 `/images/...` 引用 |
@@ -101,7 +104,8 @@ npm run dev        # 开发预览 → http://localhost:4321（只有静态页）
 | 命令 | 作用 |
 | :--- | :--- |
 | `npm run check` | 类型检查，需要 0 errors |
-| `npm run build` | 打包到 `dist/`，上线前必须通过 |
+| `npm run build` | 打包到 `dist/`，上线前必须通过（会自动检查图片路径） |
+| `npm run smoke` | 接口冒烟测试：在临时数据库上自动走一遍注册、评论、回复提醒、改密码、注销等流程 |
 | `npm run preview` | 预览打包结果（只有静态页） |
 | `npm run preview:full` | 完整预览，含浏览量、登录、评论 → http://localhost:8911<br />第一次运行前先建本地表：`npx wrangler d1 migrations apply sutady-db --local` |
 | `npm run db:migrate` | 把新的数据库表结构应用到线上 |

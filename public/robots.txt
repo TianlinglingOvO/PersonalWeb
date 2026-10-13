@@ -1,0 +1,6 @@
+# 搜索引擎爬虫规则。接口（/api/）不需要收录；
+# 登录页、账号页在页面里用 noindex 标记了，不在这里屏蔽（屏蔽了爬虫反而看不到 noindex）
+User-agent: *
+Disallow: /api/
+
+Sitemap: https://sutady.top/sitemap.xml

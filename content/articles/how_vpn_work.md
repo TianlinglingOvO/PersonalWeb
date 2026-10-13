@@ -48,7 +48,7 @@ category: 科普
 
 > VPS: Virtual Private Server —— 虚拟专用服务器
 
-有人可能就要问了：啊，Sutady、Sutady，我知道访问 www.xxx.com 网址要走代理啦。但是我要怎么走代理呢？
+有人可能就要问了：啊，Sutady、Sutady，我知道访问 `www.xxx.com` 网址要走代理啦。但是我要怎么走代理呢？
 
 这就需要一个中间人——`VPS`。
 

@@ -1,5 +1,5 @@
 ---
-// 文章底部评论区。内容全部由 ui.ts 的 initComments 通过 /api/comments 加载和渲染（用 textContent，不插入 HTML）
+// 文章底部评论区。内容全部由 scripts/features/comments.ts 通过 /api/comments 加载和渲染（用 textContent，不插入 HTML）
 interface Props {
 	slug: string;
 }
@@ -32,7 +32,7 @@ const { slug } = Astro.props;
 	<p class="comment-status" data-comment-status>评论加载中…</p>
 	<ol class="comment-list" data-comment-list></ol>
 
-	<!-- 单条评论的模板，ui.ts 克隆后填内容 -->
+	<!-- 单条评论的模板，comments.ts 克隆后填内容 -->
 	<template data-comment-template>
 		<li class="comment">
 			<span class="comment-avatar" data-c-avatar aria-hidden="true"></span>

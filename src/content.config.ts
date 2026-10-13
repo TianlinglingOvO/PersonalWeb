@@ -9,7 +9,6 @@ const about = defineCollection({
 	}),
 });
 
-
 const articles = defineCollection({
 	loader: glob({ pattern: '*.md', base: './content/articles' }),
 	schema: z.object({
@@ -39,6 +38,8 @@ const timeline = defineCollection({
 		tag: z.string().default('历程'),
 		isHighlight: z.boolean().default(false),
 		isFuture: z.boolean().default(false),
+		/** 关联的文章（content/articles 里的文件名，不带 .md）：卡片上自动生成“阅读文章”按钮，文章页也会反过来链接到这一条 */
+		article: z.string().optional(),
 		links: z
 			.array(
 				z.object({

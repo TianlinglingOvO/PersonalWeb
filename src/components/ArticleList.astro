@@ -1,73 +1,52 @@
 ---
+// 文章卡片网格。filterable 时顶部带分类筛选胶囊（文章列表页用），交互在 scripts/features/article-list.ts
 import type { CollectionEntry } from 'astro:content';
 import Icon from './Icon.astro';
-import { articleCategories, formatDate, readingMinutes } from '../lib/site';
+import { formatDate, readingMinutes } from '../lib/site';
 
 interface Props {
 	articles: CollectionEntry<'articles'>[];
-	limit?: number;
-	showExpand?: boolean;
+	/** 显示分类筛选（分类从文章的 category 自动收集） */
+	filterable?: boolean;
 }
 
-const { articles, limit = 0, showExpand = false } = Astro.props;
-const dynamicCategories = Array.from(
-	new Set(articles.map((a) => a.data.category).filter(Boolean)),
-);
-const filters = ['全部', ...(dynamicCategories.length ? dynamicCategories : articleCategories)];
-const hasOverflow = Boolean(showExpand && limit > 0 && articles.length > limit);
+const { articles, filterable = false } = Astro.props;
+const categories = [...new Set(articles.map((a) => a.data.category))];
 ---
 
-<div class="article-list-controller" data-article-controller data-limit={limit}>
-	<div class="filter-chips" data-article-filter role="group" aria-label="按分类筛选文章">
-		{
-			filters.map((label, index) => (
-				<button
-					class:list={['filter-chip', { 'is-active': index === 0 }]}
-					type="button"
-					data-filter={label === '全部' ? 'all' : label}
-					aria-pressed={index === 0 ? 'true' : 'false'}
-				>
-					{label}
-				</button>
-			))
-		}
-	</div>
-
-	<div class="card-grid" data-article-list data-stagger>
-		{
-			articles.map((article, index) => {
-				const isInitialOverflow = hasOverflow && index >= limit;
-				return (
-					<a class="card card-link" href={`/articles/${article.id}/`} data-category={article.data.category} hidden={isInitialOverflow}>
-						<p class="meta">
-							<span class="badge">{article.data.category}</span>
-							{formatDate(article.data.date)} · 约 {readingMinutes(article.body)} 分钟
-							<span class="view-count" data-views={article.id} hidden>{' · '}<Icon name="eye" class="icon view-count-icon" /><span data-views-num /></span>
-						</p>
-						<h3>{article.data.title}</h3>
-						<p>{article.data.description}</p>
-					</a>
-				);
-			})
-		}
-	</div>
-
+<div class="article-list-controller" data-article-controller={filterable ? '' : undefined}>
 	{
-		hasOverflow && (
-			<div class="articles-expand-row" data-articles-expand-row>
-				<button
-					class="btn-expand-articles"
-					type="button"
-					data-articles-toggle
-					aria-expanded="false"
-				>
-					<span class="expand-btn-text">展开更多文章 (还有 {articles.length - limit} 篇) ↓</span>
-					<Icon name="chevron-down" class="expand-btn-icon" />
-				</button>
+		filterable && (
+			<div class="filter-chips" data-article-filter role="group" aria-label="按分类筛选文章">
+				{['全部', ...categories].map((label, index) => (
+					<button
+						class:list={['filter-chip', { 'is-active': index === 0 }]}
+						type="button"
+						data-filter={index === 0 ? 'all' : label}
+						aria-pressed={index === 0 ? 'true' : 'false'}
+					>
+						{label}
+					</button>
+				))}
 			</div>
 		)
 	}
 
-	<p class="filter-empty" data-article-empty hidden>这一类暂时没有文章。</p>
-</div>
+	<div class="card-grid" data-article-list data-stagger>
+		{
+			articles.map((article) => (
+				<a class="card card-link" href={`/articles/${article.id}/`} data-category={article.data.category}>
+					<p class="meta">
+						<span class="badge">{article.data.category}</span>
+						{formatDate(article.data.date)} · 约 {readingMinutes(article.body)} 分钟
+						<span class="view-count" data-views={article.id} hidden>{' · '}<Icon name="eye" class="view-count-icon" /><span data-views-num /></span>
+					</p>
+					<h3>{article.data.title}</h3>
+					<p>{article.data.description}</p>
+				</a>
+			))
+		}
+	</div>
 
+	{filterable && <p class="filter-empty" data-article-empty hidden>这一类暂时没有文章。</p>}
+</div>

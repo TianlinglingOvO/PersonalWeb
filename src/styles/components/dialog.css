@@ -1,0 +1,96 @@
+/* --- 确认弹窗（代替浏览器自带的 confirm） --- */
+.confirm-dialog {
+	width: min(calc(100% - 2rem), 360px);
+	max-width: none;
+	padding: 0;
+	border: 0;
+	background: none;
+	overflow: visible;
+}
+
+.confirm-dialog::backdrop {
+	background: color-mix(in srgb, var(--ink) 32%, transparent);
+	backdrop-filter: blur(3px);
+	animation: fadeIn 0.2s ease both;
+}
+
+.confirm-dialog.is-closing::backdrop {
+	animation: fadeOut 0.18s ease forwards;
+}
+
+.confirm-card {
+	padding: 1.5rem 1.4rem 1.25rem;
+	border: 1px solid var(--line);
+	border-radius: calc(var(--radius) + 4px);
+	background: var(--surface);
+	box-shadow: 0 24px 60px color-mix(in srgb, var(--ink) 22%, transparent);
+	animation: dialogIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.confirm-dialog.is-closing .confirm-card {
+	animation: dialogOut 0.18s ease forwards;
+}
+
+.confirm-title {
+	margin: 0 0 0.4rem;
+	font-size: 1.1rem;
+	font-weight: 800;
+	color: var(--ink);
+}
+
+.confirm-message {
+	margin: 0 0 1.3rem;
+	color: var(--muted);
+	font-size: 0.92rem;
+	line-height: 1.7;
+}
+
+.confirm-input {
+	width: 100%;
+	margin: -0.4rem 0 0.9rem;
+	padding: 0.65rem 0.85rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: var(--ink);
+	font: inherit;
+}
+
+.confirm-input:focus {
+	outline: none;
+	border-color: var(--accent);
+	background: var(--surface);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.confirm-error {
+	margin: -0.4rem 0 0.9rem;
+	color: var(--accent-deep);
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.confirm-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.6rem;
+}
+
+.confirm-actions .btn {
+	min-height: 40px;
+	min-width: 5.5rem;
+}
+
+@keyframes dialogIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px) scale(0.96);
+	}
+}
+
+@keyframes dialogOut {
+	to {
+		opacity: 0;
+		transform: translateY(6px) scale(0.97);
+	}
+}

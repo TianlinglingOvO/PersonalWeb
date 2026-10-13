@@ -89,16 +89,38 @@ export async function createSession(env: Env, userId: number) {
 
 export const clearCookie = `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 
-export async function getUser(request: Request, env: Env): Promise<User | null> {
+export interface Session {
+	user: User;
+	tokenHash: string;
+	expiresAt: number;
+}
+
+/** 当前请求的登录状态（用户 + 会话），未登录或已过期时为 null */
+export async function getSession(request: Request, env: Env): Promise<Session | null> {
 	const token = cookieOf(request);
 	if (!token) return null;
+	const tokenHash = await sha256(token);
 	const row = await env.DB.prepare(
-		`SELECT u.id, u.username, u.is_admin FROM sessions s JOIN users u ON u.id = s.user_id
+		`SELECT u.id, u.username, u.is_admin, s.expires_at FROM sessions s JOIN users u ON u.id = s.user_id
 		 WHERE s.token_hash = ? AND s.expires_at > ?`,
 	)
-		.bind(await sha256(token), Math.floor(Date.now() / 1000))
-		.first<{ id: number; username: string; is_admin: number }>();
-	return row ? { id: row.id, username: row.username, isAdmin: row.is_admin === 1 } : null;
+		.bind(tokenHash, Math.floor(Date.now() / 1000))
+		.first<{ id: number; username: string; is_admin: number; expires_at: number }>();
+	if (!row) return null;
+	return { user: { id: row.id, username: row.username, isAdmin: row.is_admin === 1 }, tokenHash, expiresAt: row.expires_at };
+}
+
+export async function getUser(request: Request, env: Env): Promise<User | null> {
+	return (await getSession(request, env))?.user ?? null;
+}
+
+/**
+ * 会话是不是刚刚建立的。会话有效期固定为 SESSION_DAYS 天，所以能从过期时间倒推出创建时间，不用改表。
+ * 改密码这类敏感操作只接受刚登录（默认 2 分钟内）的会话，相当于“再输一次当前密码”
+ */
+export function isFreshSession(session: Session, withinSeconds = 120) {
+	const createdAt = session.expiresAt - SESSION_DAYS * 86400;
+	return Math.floor(Date.now() / 1000) - createdAt <= withinSeconds;
 }
 
 export async function deleteSession(request: Request, env: Env) {

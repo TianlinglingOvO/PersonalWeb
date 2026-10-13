@@ -1,0 +1,52 @@
+/* 页脚 */
+
+.site-footer {
+	padding: 2.4rem 0 2.8rem;
+	color: var(--muted);
+	border-top: 1px solid var(--line);
+	font-size: 0.92rem;
+}
+
+.footer-inner {
+	display: grid;
+	gap: 0.9rem;
+	min-width: 0;
+}
+
+.footer-inner span {
+	min-width: 0;
+}
+
+.footer-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1.3rem;
+}
+
+.footer-nav a {
+	color: var(--ink);
+	font-weight: 600;
+	text-decoration: none;
+	transition: color 0.18s ease;
+}
+
+.footer-nav a:hover {
+	color: var(--accent-deep);
+}
+
+.footer-meta {
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.4rem 1rem;
+	font-size: 0.86rem;
+}
+
+.footer-meta a {
+	color: inherit;
+	text-decoration-color: color-mix(in srgb, var(--muted) 40%, transparent);
+}
+
+.footer-meta a:hover {
+	color: var(--accent-deep);
+}

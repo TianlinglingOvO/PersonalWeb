@@ -1,0 +1,77 @@
+/* 首页“服务”区块 */
+
+.services-grid {
+	align-items: start;
+}
+
+.service-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	height: auto;
+	align-self: start;
+}
+
+/* 服务卡片正面只保留标题与简介，行动链接收进“展开说明”底部 */
+.service-card .prose .service-cta {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	margin-top: 0.4rem;
+	padding: 0.3rem 0.85rem;
+	border-radius: 999px;
+	background: var(--accent-soft);
+	color: var(--accent-deep);
+	font-size: 0.86rem;
+	font-weight: 700;
+	text-decoration: none;
+	transition:
+		background-color 0.18s ease,
+		color 0.18s ease,
+		transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-card .prose .service-cta:hover {
+	background: var(--accent);
+	color: var(--surface);
+	transform: translateY(-1px);
+}
+
+.service-card details {
+	border-top: 1px dashed var(--line);
+	padding-top: 0.75rem;
+}
+
+.service-card summary {
+	cursor: pointer;
+	color: var(--accent-2);
+	font-weight: 600;
+	list-style: none;
+	user-select: none;
+	transition: color 0.18s ease;
+}
+
+.service-card summary:hover {
+	color: var(--accent-deep);
+}
+
+.service-card summary::-webkit-details-marker {
+	display: none;
+}
+
+.service-card summary::after {
+	content: "＋";
+	float: right;
+	color: var(--muted);
+	display: inline-block;
+	transition: transform 0.22s ease, color 0.18s ease;
+}
+
+.service-card details[open]:not(.is-closing) summary::after {
+	content: "－";
+}
+
+.service-card details .prose {
+	overflow: hidden;
+	will-change: height, opacity;
+}

@@ -1,0 +1,18 @@
+/* 404 页 */
+
+.not-found {
+	text-align: center;
+	padding: 3rem 0 4rem;
+}
+
+.not-found img {
+	width: min(280px, 70%);
+	margin: 0 auto 1.2rem;
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+}
+
+/* .tagline 自带最大宽度，在居中的 404 页里要让它整体居中 */
+.not-found .tagline {
+	margin-inline: auto;
+}

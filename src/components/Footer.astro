@@ -2,7 +2,7 @@
 import { formatDate, nav, site } from '../lib/site';
 
 const year = new Date().getFullYear();
-// 构建时间即最近一次部署时间
+// 构建时间即最近一次部署时间（formatDate 固定按北京时间显示）
 const updatedAt = formatDate(new Date());
 ---
 
@@ -12,7 +12,7 @@ const updatedAt = formatDate(new Date());
 			{nav.map((item) => <a href={item.href}>{item.label}</a>)}
 		</nav>
 		<div class="footer-meta">
-			<span>© {year} {site.name} · 最后更新 {updatedAt}</span>
+			<span>© {year} {site.name} · 最后更新 {updatedAt} · <a href="/rss.xml">RSS 订阅</a></span>
 			<span>{site.footerNote}</span>
 		</div>
 	</div>

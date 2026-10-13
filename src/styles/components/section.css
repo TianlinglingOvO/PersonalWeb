@@ -1,0 +1,89 @@
+/* 区块骨架：首页各区块的标题（大号序号 + 标题）、“查看全部”胶囊、meta 信息行、左右分栏 */
+
+.section {
+	padding: 3.2rem 0;
+}
+
+.section-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1.4rem;
+}
+
+.kicker {
+	margin: 0 0 0.45rem;
+	color: var(--accent);
+	font-size: clamp(2.2rem, 5vw, 2.75rem);
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	line-height: 0.95;
+	font-variant-numeric: tabular-nums;
+}
+
+.section h2,
+.page-title {
+	margin: 0;
+	font-size: 1.7rem;
+	letter-spacing: 0.03em;
+}
+
+.page-title {
+	font-size: clamp(1.7rem, 3vw, 2.1rem);
+}
+
+.section-more {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.32rem;
+	min-height: 36px;
+	padding: 0.3rem 0.95rem;
+	border-radius: 999px;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	color: var(--accent-2);
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 0.88rem;
+	white-space: nowrap;
+	align-self: flex-end;
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-tint) 4%, transparent);
+	transition:
+		color 0.2s ease,
+		border-color 0.2s ease,
+		background 0.2s ease,
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
+}
+
+.section-more:hover {
+	border-color: var(--accent);
+	color: var(--accent-deep);
+	background: var(--accent-soft);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.section-more:active {
+	transform: translateY(0);
+}
+
+.meta {
+	color: var(--muted);
+	font-size: 0.86rem;
+	margin-bottom: 0.45rem;
+}
+
+.split {
+	display: grid;
+	grid-template-columns: 1.2fr 0.8fr;
+	gap: 2rem;
+	align-items: center;
+}
+
+@media (max-width: 860px) {
+	.split {
+		grid-template-columns: 1fr;
+	}
+}

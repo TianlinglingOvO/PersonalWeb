@@ -5,20 +5,31 @@ import TimelineEntry from './TimelineEntry.astro';
 interface Props {
 	/** 已按时间正序排好（index.astro），Future 在最后 */
 	timeline: CollectionEntry<'timeline'>[];
+	/** 全部文章，用来解析时间线节点的 article 字段 */
+	articles: CollectionEntry<'articles'>[];
 }
 
-const { timeline } = Astro.props;
+const { timeline, articles } = Astro.props;
 
 const MAX_CHIPS = 3; // 日历格里最多直接列出的经历条数，超出显示“+N”
+const MOBILE_RECENT = 3; // 手机端展开的年份默认只显示最近几条，更早的收在“展开这一年更早的 N 条”里
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+
+const articleById = new Map(articles.map((a) => [a.id, a]));
 
 const entries = await Promise.all(
 	timeline.map(async (item) => {
 		const { Content } = await render(item);
 		const month = Number(item.data.date.split('.')[1]);
+		const slug = item.data.article;
+		const article = slug ? articleById.get(slug) : undefined;
+		if (slug && !article) {
+			throw new Error(`时间线「${item.data.title}」（content/timeline/${item.id}.md）写的 article: ${slug} 找不到对应的文章 content/articles/${slug}.md`);
+		}
 		return {
 			item,
 			Content,
+			article,
 			year: item.data.isFuture ? 'Future' : item.data.date.slice(0, 4),
 			// 0 表示没写月份（如 "2025"），归入“全年”
 			month: month >= 1 && month <= 12 ? month : 0,
@@ -43,7 +54,10 @@ const groups = [...new Set(entries.map((e) => e.year))].map((year) => {
 	]
 		.filter(Boolean)
 		.join(' · ');
-	return { year, isFuture: year === 'Future', list, byMonth, months, summary };
+	const isFuture = year === 'Future';
+	// 手机端：这一年里除了最近 MOBILE_RECENT 条以外的都算“更早的经历”（时间正序，最近的在最后）
+	const early = new Set(isFuture ? [] : list.slice(0, -MOBILE_RECENT).map((e) => e.item.id));
+	return { year, isFuture, list, byMonth, months, summary, early };
 });
 
 // 电脑端默认打开最近的一个真实年份，并选中这一年最后一个有经历的月份
@@ -110,8 +124,8 @@ const monthLabel = (m: number) => (m === 0 ? '全年' : `${m} 月`);
 						{g.isFuture ? (
 							<div class="timeline-year-body timeline-future">
 								<div class="timeline-detail">
-									{g.list.map(({ item, Content }) => (
-										<TimelineEntry item={item} Content={Content} />
+									{g.list.map(({ item, Content, article }) => (
+										<TimelineEntry item={item} Content={Content} article={article} />
 									))}
 								</div>
 								<p class="timeline-future-note">未完待续……</p>
@@ -158,21 +172,37 @@ const monthLabel = (m: number) => (m === 0 ? '全年' : `${m} 月`);
 								</div>
 
 								<div class="timeline-detail">
-									{g.months.map((m) => (
-										<div
-											class:list={['timeline-month-detail', { 'is-active': m === lastMonth }]}
-											data-timeline-month-detail={m}
+									{g.early.size > 0 && (
+										<button
+											type="button"
+											class="timeline-early-toggle"
+											data-timeline-early={g.early.size}
+											aria-expanded="false"
 										>
-											<p class="timeline-detail-title">
-												<span class="timeline-detail-year">{g.year} 年 </span>
-												{monthLabel(m)}
-												<span class="timeline-detail-count"> · {g.byMonth.get(m)?.length} 段经历</span>
-											</p>
-											{g.byMonth.get(m)?.map(({ item, Content }) => (
-												<TimelineEntry item={item} Content={Content} />
-											))}
-										</div>
-									))}
+											展开这一年更早的 {g.early.size} 条
+										</button>
+									)}
+									{g.months.map((m) => {
+										const list = g.byMonth.get(m) ?? [];
+										return (
+											<div
+												class:list={[
+													'timeline-month-detail',
+													{ 'is-active': m === lastMonth, 'is-early': list.every((e) => g.early.has(e.item.id)) },
+												]}
+												data-timeline-month-detail={m}
+											>
+												<p class="timeline-detail-title">
+													<span class="timeline-detail-year">{g.year} 年 </span>
+													{monthLabel(m)}
+													<span class="timeline-detail-count"> · {list.length} 段经历</span>
+												</p>
+												{list.map(({ item, Content, article }) => (
+													<TimelineEntry item={item} Content={Content} article={article} early={g.early.has(item.id)} />
+												))}
+											</div>
+										);
+									})}
 								</div>
 							</div>
 						)}

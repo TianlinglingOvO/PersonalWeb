@@ -1,0 +1,25 @@
+/* 输入框：登录页和评论区共用的文本框样式 */
+
+.auth-field input,
+.comment-form textarea {
+	width: 100%;
+	padding: 0.7rem 0.9rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: var(--ink);
+	font: inherit;
+	font-weight: 400;
+	transition:
+		border-color 0.18s ease,
+		box-shadow 0.18s ease,
+		background-color 0.18s ease;
+}
+
+.auth-field input:focus,
+.comment-form textarea:focus {
+	outline: none;
+	border-color: var(--accent);
+	background: var(--surface);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+}

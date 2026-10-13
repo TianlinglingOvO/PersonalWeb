@@ -1,0 +1,342 @@
+/* --- 文章评论区 --- */
+.comments {
+	margin-block: 1.4rem 3rem;
+	padding: 1.8rem 1.5rem 2rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--surface);
+	box-shadow: var(--shadow);
+}
+
+.comments-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0 0 1.2rem;
+	font-size: 1.3rem;
+}
+
+.comments-count {
+	padding: 0 0.55rem;
+	border-radius: 999px;
+	background: var(--accent-soft);
+	color: var(--accent-deep);
+	font-size: 0.85rem;
+	line-height: 1.6;
+}
+
+.comments-count:empty {
+	display: none;
+}
+
+.comment-form {
+	display: flex;
+	gap: 0.8rem;
+	margin-bottom: 1.4rem;
+}
+
+.comment-form-main {
+	flex: 1;
+	min-width: 0;
+}
+
+.comment-form textarea {
+	display: block;
+	min-height: 5.2rem;
+	resize: vertical;
+	line-height: 1.7;
+}
+
+.comment-form-foot {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.8rem;
+	margin-top: 0.6rem;
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+.comment-form-tip {
+	margin-right: auto;
+}
+
+.comment-form .btn {
+	min-height: 38px;
+	padding-block: 0.4rem;
+}
+
+.comment-form.is-reply {
+	display: block;
+	margin: 0.8rem 0 0.2rem;
+}
+
+.comment-form.is-reply textarea {
+	min-height: 3.6rem;
+}
+
+.comment-login {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.8rem;
+	margin-bottom: 1.4rem;
+	padding: 0.9rem 1rem;
+	border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--line));
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--accent-soft) 25%, var(--surface));
+	color: var(--muted);
+}
+
+.comment-login .btn {
+	min-height: 38px;
+}
+
+.comment-status {
+	margin: 1.6rem 0 0.4rem;
+	color: var(--muted);
+	text-align: center;
+}
+
+.comment-list,
+.comment-replies {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.comment {
+	display: flex;
+	gap: 0.8rem;
+	padding: 1.1rem 0;
+	border-top: 1px solid var(--line);
+}
+
+.comment-list > .comment:first-child {
+	border-top: 0;
+}
+
+.comment-body {
+	flex: 1;
+	min-width: 0;
+}
+
+.comment-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem 0.45rem;
+	margin: 0.1rem 0 0.3rem;
+	font-size: 0.9rem;
+}
+
+.comment-name {
+	font-weight: 700;
+	color: var(--ink);
+}
+
+.comment-reply-to {
+	color: var(--accent-2);
+	font-size: 0.85rem;
+}
+
+.comment-content {
+	margin: 0;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	line-height: 1.75;
+}
+
+.comment-meta {
+	display: flex;
+	align-items: center;
+	gap: 0.9rem;
+	margin: 0.35rem 0 0;
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+.comment-edited {
+	font-size: 0.78rem;
+	opacity: 0.8;
+}
+
+.comment-form.is-edit {
+	display: block;
+	margin: 0.3rem 0 0.2rem;
+}
+
+.comment-action {
+	padding: 0.15rem 0;
+	border: 0;
+	background: none;
+	color: var(--muted);
+	font: inherit;
+	cursor: pointer;
+	transition: color 0.15s ease;
+}
+
+.comment-action:hover {
+	color: var(--accent-deep);
+}
+
+.comment-action.is-danger:hover {
+	color: var(--accent);
+}
+
+/* 楼中楼：收在一块浅色底里，头像缩小 */
+.comment-replies {
+	margin-top: 0.8rem;
+	padding: 0.2rem 0.9rem;
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--bg-soft) 55%, var(--surface));
+}
+
+.comment-replies .comment {
+	padding: 0.8rem 0;
+	gap: 0.6rem;
+}
+
+.comment-replies .comment:first-child {
+	border-top: 0;
+}
+
+.comment-replies .comment-avatar {
+	width: 28px;
+	height: 28px;
+	font-size: 0.8rem;
+}
+
+/* 只作用于被删的这一条，不影响它下面的回复 */
+.comment.is-deleted > .comment-body > .comment-content {
+	color: var(--muted);
+	font-style: italic;
+}
+
+/* 楼中楼折叠：超过两条时其余回复收在“展开剩余 N 条回复”里 */
+.comment-replies-rest,
+.comment-replies-toggle-row {
+	list-style: none;
+}
+
+.comment-replies-inner {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.comment-replies .comment-replies-inner > .comment:first-child {
+	border-top: 1px solid var(--line);
+}
+
+.comment-replies-toggle-row {
+	padding: 0.35rem 0 0.75rem;
+	border-top: 1px dashed var(--line);
+}
+
+.comment-replies-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.2rem 0;
+	border: 0;
+	background: none;
+	color: var(--accent-2);
+	font: inherit;
+	font-size: 0.84rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.comment-replies-toggle::after {
+	content: "";
+	width: 0.4rem;
+	height: 0.4rem;
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: translateY(-2px) rotate(45deg);
+	transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.comment-replies-toggle[aria-expanded="true"]::after {
+	transform: translateY(2px) rotate(-135deg);
+}
+
+.comment-replies-toggle:hover {
+	color: var(--accent-deep);
+}
+
+.comment.is-deleted > .comment-avatar {
+	background: var(--bg-soft);
+}
+
+.comment.is-pending,
+.comment.is-removing {
+	opacity: 0.55;
+	transition: opacity 0.2s ease;
+}
+
+.comment.is-pending > .comment-avatar {
+	animation: pendingPulse 1s ease-in-out infinite alternate;
+}
+
+.comment.is-pending [data-c-delete] {
+	display: none;
+}
+
+@keyframes pendingPulse {
+	to {
+		opacity: 0.5;
+	}
+}
+
+/* 新发出的评论闪一下：用伪元素铺一块圆角底色，左右各多出一点，不会被切成一条 */
+.comment {
+	position: relative;
+	isolation: isolate;
+}
+
+.comment.is-new::before {
+	content: "";
+	position: absolute;
+	inset: 0.35rem -0.6rem;
+	z-index: -1;
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--accent-soft) 75%, transparent);
+	opacity: 0;
+	animation: commentNew 1.8s ease-out;
+	pointer-events: none;
+}
+
+.comment-replies .comment.is-new::before {
+	inset: 0.2rem -0.5rem;
+}
+
+@keyframes commentNew {
+	0%,
+	35% {
+		opacity: 1;
+	}
+}
+
+@media (max-width: 860px) {
+	.comments {
+		padding: 1.4rem 1.1rem 1.6rem;
+	}
+
+	.comment-form > .comment-avatar,
+	.comment-form-tip {
+		display: none;
+	}
+
+	.comment-avatar {
+		width: 34px;
+		height: 34px;
+		font-size: 0.95rem;
+	}
+
+	.comment-replies {
+		padding-inline: 0.7rem;
+	}
+}

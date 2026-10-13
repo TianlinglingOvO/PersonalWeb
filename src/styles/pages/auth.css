@@ -1,0 +1,219 @@
+/* --- 登录 / 注册页 --- */
+.auth-page {
+	display: grid;
+	place-items: center;
+	min-height: calc(100dvh - var(--header-h) - 12rem);
+	padding-block: 2.5rem 4rem;
+}
+
+.auth-card {
+	width: min(100%, 420px);
+	padding: 1.8rem 1.6rem 1.9rem;
+	border: 1px solid var(--line);
+	border-radius: calc(var(--radius) + 4px);
+	background: var(--surface);
+	box-shadow: var(--shadow-hover);
+	animation: authIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes authIn {
+	from {
+		opacity: 0;
+		transform: translateY(14px) scale(0.98);
+	}
+}
+
+.auth-form,
+.auth-signed-in {
+	display: grid;
+	gap: 0.85rem;
+}
+
+.auth-tabs {
+	position: relative;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	padding: 0.25rem;
+	border-radius: 999px;
+	background: var(--bg-soft);
+}
+
+.auth-tab {
+	position: relative;
+	z-index: 1;
+	padding: 0.5rem;
+	border: 0;
+	background: none;
+	color: var(--muted);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	transition: color 0.2s ease;
+}
+
+.auth-tab.is-active {
+	color: var(--accent-deep);
+}
+
+.auth-tab-indicator {
+	position: absolute;
+	inset: 0.25rem auto 0.25rem 0.25rem;
+	width: calc(50% - 0.25rem);
+	border-radius: 999px;
+	background: var(--surface);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 18%, transparent);
+	transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-form[data-mode="register"] .auth-tab-indicator {
+	transform: translateX(100%);
+}
+
+.auth-title,
+.auth-signed-in h1 {
+	margin: 0.6rem 0 0;
+	font-size: 1.55rem;
+}
+
+.auth-sub,
+.auth-hint {
+	margin: -0.4rem 0 0.3rem;
+	color: var(--muted);
+	font-size: 0.92rem;
+}
+
+.auth-signed-in .kicker {
+	margin: 0;
+	font-size: 1.6rem;
+}
+
+.auth-field {
+	display: grid;
+	gap: 0.35rem;
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+.auth-password {
+	position: relative;
+	display: block;
+}
+
+.auth-password input {
+	padding-right: 3rem;
+}
+
+.auth-eye {
+	position: absolute;
+	top: 50%;
+	right: 0.4rem;
+	display: inline-flex;
+	padding: 0.4rem;
+	border: 0;
+	border-radius: 8px;
+	background: none;
+	color: var(--muted);
+	cursor: pointer;
+	transform: translateY(-50%);
+}
+
+.auth-eye {
+	display: grid;
+	place-items: center;
+}
+
+/* 两个图标叠在同一格：隐藏密码时闭眼，显示密码时睁眼，切换时像眨眼一样纵向张合 */
+.auth-eye .icon {
+	grid-area: 1 / 1;
+	width: 20px;
+	height: 20px;
+	transition:
+		opacity 0.18s ease,
+		transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-eye .auth-eye-open,
+.auth-eye[aria-pressed="true"] .auth-eye-closed {
+	opacity: 0;
+	transform: scaleY(0.2);
+}
+
+.auth-eye[aria-pressed="true"] .auth-eye-open {
+	opacity: 1;
+	transform: none;
+}
+
+.auth-eye:hover,
+.auth-eye[aria-pressed="true"] {
+	color: var(--accent);
+}
+
+.auth-field-hint {
+	margin: -0.45rem 0 0;
+	color: var(--muted);
+	font-size: 0.8rem;
+	line-height: 1.6;
+}
+
+.auth-field-hint strong {
+	color: var(--accent-deep);
+}
+
+.auth-error {
+	margin: 0;
+	padding: 0.6rem 0.8rem;
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface));
+	color: var(--accent-deep);
+	font-size: 0.88rem;
+	font-weight: 600;
+}
+
+.auth-submit {
+	width: 100%;
+	margin-top: 0.3rem;
+}
+
+/* 登录页底部“还没有账号？去创建一个吧～” */
+.auth-switch {
+	margin: 0.2rem 0 0;
+	color: var(--muted);
+	font-size: 0.88rem;
+	text-align: center;
+}
+
+.auth-switch button {
+	padding: 0 0.1rem;
+	border: 0;
+	background: none;
+	color: var(--accent-deep);
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent);
+	text-underline-offset: 3px;
+	transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.auth-switch button:hover {
+	color: var(--accent);
+	text-decoration-color: currentColor;
+}
+
+.auth-close {
+	margin-top: 0.8rem;
+	font-size: 0.82rem;
+}
+
+.auth-close button {
+	color: var(--muted);
+	font-weight: 600;
+}
+
+.auth-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+	margin-top: 0.4rem;
+}

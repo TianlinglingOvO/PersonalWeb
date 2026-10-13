@@ -7,6 +7,7 @@ import Timeline from '../components/Timeline.astro';
 import Articles from '../components/Articles.astro';
 import Services from '../components/Services.astro';
 import Connect from '../components/Connect.astro';
+import { getSortedArticles } from '../lib/articles';
 
 const aboutEntry = (await getCollection('about'))[0];
 if (!aboutEntry) throw new Error('缺少 content/about.md');
@@ -17,9 +18,7 @@ const timeline = (await getCollection('timeline')).sort((a, b) => {
 	if (a.data.order !== b.data.order) return a.data.order - b.data.order;
 	return a.data.date.localeCompare(b.data.date);
 });
-const articles = (await getCollection('articles')).sort(
-	(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-);
+const articles = await getSortedArticles();
 const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
 ---
 
@@ -28,7 +27,7 @@ const services = (await getCollection('services')).sort((a, b) => a.data.order -
 		<Hero latest={articles[0]} />
 		<About entry={aboutEntry} />
 	</div>
-	<Timeline timeline={timeline} />
+	<Timeline timeline={timeline} articles={articles} />
 	<Articles articles={articles} />
 	<Services services={services} />
 	<Connect />
