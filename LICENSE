@@ -1,0 +1,38 @@
+本仓库的「代码」和「内容」使用不同的授权：
+The code and the content in this repository are licensed differently:
+
+- 代码（网站架构、组件、样式、脚本、接口等）使用下方的 MIT 协议，可以自由使用、修改，拿去做自己的网站。
+  Code (site structure, components, styles, scripts, API functions, etc.) is licensed under the MIT License below.
+
+- 内容不在 MIT 协议范围内，版权归 Sutady 所有，保留所有权利，未经许可不得使用。包括：
+  content/ 下的全部文件（文章、时间线、关于我、服务介绍、站点信息、联系方式）、
+  public/images/ 下的全部图片、public/ 下的网站图标（favicon、apple-touch-icon），
+  以及 docs/screenshots/ 下的截图。
+  Content is NOT covered by the MIT License. Copyright (c) 2026 Sutady. All rights reserved.
+  This includes everything under content/ (articles, timeline, about, services, site info, contacts),
+  all images under public/images/, the site icons under public/ (favicon, apple-touch-icon),
+  and the screenshots under docs/screenshots/.
+
+--------------------------------------------------------------------------------
+
+MIT License
+
+Copyright (c) 2026 Sutady
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

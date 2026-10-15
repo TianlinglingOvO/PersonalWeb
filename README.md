@@ -10,6 +10,7 @@
 
 [![网站](https://img.shields.io/badge/在线访问-sutady.top-e25c7a?style=flat-square)](https://sutady.top)
 [![版本](https://img.shields.io/github/v/release/TianlinglingOvO/PersonalWeb?style=flat-square&color=f0a5b5&label=版本)](./CHANGELOG.md)
+[![代码协议](https://img.shields.io/badge/代码-MIT-8bc4a8?style=flat-square)](./LICENSE)
 [![Astro](https://img.shields.io/badge/Astro-7-ff5d01?style=flat-square&logo=astro&logoColor=white)](https://astro.build)
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages%20%2B%20D1-f38020?style=flat-square&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com)
 
@@ -39,21 +40,22 @@
 | 📖 **舒服的阅读体验** | 导语、阅读时长、阅读进度条、目录跟随、文章切换侧栏、图片点击放大、上一篇 / 下一篇 |
 | 🎬 **细腻的动效** | 首屏依次浮现、卡片错落出场、换页翻书、从卡片展开成文章；所有展开 / 收起都有过渡；尊重系统的“减少动态效果”设置 |
 | 👀 **浏览量** | 文章卡片和文章页显示阅读次数，同一访客一天只算一次 |
-| 💬 **账号与评论** | 用户名 + 密码注册（支持中文用户名），评论支持楼中楼、编辑、删除；站长评论带“站长”标签 |
+| 💬 **账号与评论** | 用户名 + 密码注册，评论支持楼中楼、编辑、删除；站长评论带“站长”标签 |
 | 🔔 **回复提醒** | 有人回复你时，头像上出现小红点；“我的账号”里查看回复、修改密码、注销账号 |
 | 📡 **订阅与分享** | RSS 订阅、站点地图；链接发到 Telegram / X 时带预览卡片 |
 | 📱 **手机端适配** | 固定顶栏 + 一体化下拉菜单、折叠目录、回到顶部 |
-| 🔒 **安全** | 密码加盐哈希、HttpOnly 会话、按 IP 限流、同源校验、CSP 等安全响应头 |
 
 ## 🧱 技术栈
 
-- **页面**：[Astro 7](https://astro.build) 纯静态生成，不用 React / Vue 等前端框架；交互全部由一个原生 TypeScript 脚本完成
+- **页面**：[Astro 7](https://astro.build) 纯静态生成，不用 React / Vue 等前端框架；交互全部由原生 TypeScript 完成
 - **样式**：原生 CSS + CSS 变量，没有 UI 库
 - **接口**：[Cloudflare Pages Functions](https://developers.cloudflare.com/pages/functions/)，部署在同域 `/api/...`
 - **数据库**：[Cloudflare D1](https://developers.cloudflare.com/d1/)（SQLite），存浏览量、账号和评论
+- **安全**：密码加盐哈希、HttpOnly 会话、按 IP 限流、同源校验、CSP 等安全响应头
 - **部署**：推送到 `main` 后 Cloudflare Pages 自动构建上线，不需要服务器
 
-## 🗂️ 项目结构
+<details>
+<summary><b>🗂️ 项目结构</b></summary>
 
 ```text
 PersonalWeb/
@@ -76,7 +78,10 @@ PersonalWeb/
 └── scripts/              # 👑 admin.mjs 站长管理命令、smoke.mjs 接口冒烟测试
 ```
 
-## 📝 更新内容
+</details>
+
+<details>
+<summary><b>📝 更新内容</b></summary>
 
 日常只需要改 `content/` 里的文件，推送后网站自动更新。
 
@@ -92,7 +97,10 @@ PersonalWeb/
 
 > 💡 发文规范、插图防 404、发布前检查清单都在 [MAINTENANCE.md](./MAINTENANCE.md)。
 
-## 🛠️ 本地运行
+</details>
+
+<details>
+<summary><b>🛠️ 本地运行</b></summary>
 
 需要 [Node.js](https://nodejs.org/) 22.12 或更高版本。
 
@@ -111,7 +119,10 @@ npm run dev        # 开发预览 → http://localhost:4321（只有静态页）
 | `npm run db:migrate` | 把新的数据库表结构应用到线上 |
 | `npm run admin -- users` | 站长管理：查看用户、重置密码、设站长，详见 [ADMIN_GUIDE.md](./ADMIN_GUIDE.md) |
 
-## 🚀 部署
+</details>
+
+<details>
+<summary><b>🚀 部署</b></summary>
 
 项目已接入 Cloudflare Pages，**推送到 `main` 就是上线**：
 
@@ -119,8 +130,7 @@ npm run dev        # 开发预览 → http://localhost:4321（只有静态页）
 2. `functions/` 自动部署为 `/api/...` 接口，数据库绑定写在 `wrangler.toml`（D1 数据库 `sutady-db`，绑定名 `DB`）；
 3. 数据库结构有变化时，另外运行 `npm run db:migrate`。
 
-<details>
-<summary>Cloudflare Pages 构建设置</summary>
+Cloudflare Pages 构建设置：
 
 | 设置项 | 值 |
 | :--- | :--- |
@@ -145,6 +155,6 @@ npm run dev        # 开发预览 → http://localhost:4321（只有静态页）
 
 <div align="center">
 
-Copyright © 2026 Sutady. All rights reserved.
+代码基于 [MIT 协议](./LICENSE) 开源 · 文章、图片等内容 © 2026 Sutady，保留所有权利
 
 </div>
