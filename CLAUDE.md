@@ -73,7 +73,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 - 接口必须走 `sutady.top/api/...` 同域调用：`*.pages.dev` 在中国大陆经常无法访问。
 - 表结构改动只能新增 `migrations/000N_xxx.sql`，再本地 `wrangler d1 migrations apply sutady-db --local` 测试、`npm run db:migrate` 上线；不要改已应用过的迁移文件。
 - 已有功能：
-  - 浏览量 `functions/api/views.ts`：文章页 POST 计数，同一访客同一天只算一次；文章卡片 GET 批量查询。
+  - 浏览量 `functions/api/views.ts`：文章页 POST 计数，同一访客（IP + UA）同一天只算一次；文章卡片 GET 批量查询。前端用 localStorage（`sutady:viewed`）记下今天计过的文章，再打开只查询，换 IP 也不重复算；站长登录时同样只查询。服务端对预览部署（`<分支>.personalweb-5c2.pages.dev`，和正式站共用数据库）、爬虫 UA、跨站请求不计数。
   - 账号 `functions/api/auth/*`：用户名 + 密码注册登录，用户名不区分大小写、允许中文；PBKDF2 哈希；30 天的 HttpOnly Cookie；登录和注册按 IP 限流。
   - 改密码 `functions/api/auth/password.ts`：前端先用当前密码调一次登录接口（确认身份并换新会话），改密码接口只接受 2 分钟内新建的会话，改完让该账号其他设备上的登录全部失效。这样每个请求最多只做一次 PBKDF2，不会超出免费版 CPU 限制。
   - 评论 `functions/api/comments.ts` 与 `comments/[id].ts`：仅限文章页，登录后可发；两层结构（顶层 + 楼中楼，回复楼中楼时记“回复 @谁”；超过 2 条回复时前端折叠其余，`REPLY_PREVIEW`）；本人或站长可删，有回复的顶层评论只标记删除；`PATCH /api/comments/:id` 编辑只限本人（`edited_at` 记录，显示“已编辑”）。评论可以用 `#comment-<id>` 直接定位。

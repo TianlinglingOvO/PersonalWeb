@@ -150,6 +150,8 @@ SELECT id, slug, content FROM comments ORDER BY id DESC LIMIT 20;
 SELECT slug, count FROM views ORDER BY count DESC;
 ```
 
+阅读次数的规则：同一个人同一天看同一篇只算一次（换了网络也不重复算）；你自己登录着看文章不算；在预览地址（`xxx.personalweb-5c2.pages.dev`）上看不算；搜索引擎爬虫不算。
+
 > ⚠️ **控制台里只用 `SELECT` 开头的语句**，它们只读不改，怎么试都不会出问题。`DELETE`、`UPDATE`、`DROP` 开头的语句会直接改动或删除数据，而且**无法撤销**。真要修改，请交给 AI 或用上面的 `npm run admin` 命令。
 
 ---

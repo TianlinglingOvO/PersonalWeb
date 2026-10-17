@@ -175,6 +175,12 @@ async function runTests() {
 		const batch = await guest('GET', `/api/views?slugs=${slug},no_such_article`);
 		return expect(first.data.count === 1 && second.data.count === 1 && batch.data[slug] === 1, `${show(first)} ${show(second)} ${show(batch)}`);
 	});
+	await check('浏览量：跨站请求和爬虫不计数', async () => {
+		const csrf = await client('other')('POST', `/api/views?slug=${slug}`, undefined, { origin: 'https://evil.example' });
+		const bot = await client('Googlebot/2.1')('POST', `/api/views?slug=${slug}`);
+		const after = await guest('GET', `/api/views?slugs=${slug}`);
+		return expect(csrf.status === 403 && bot.data.count === 1 && after.data[slug] === 1, `${csrf.status} ${show(bot)} ${show(after)}`);
+	});
 	await check('浏览量：不存在的文章不计数', async () => {
 		const bad = await guest('POST', '/api/views?slug=../etc');
 		const missing = await guest('POST', '/api/views?slug=no_such_article');
