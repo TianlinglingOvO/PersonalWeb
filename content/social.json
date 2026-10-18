@@ -8,10 +8,11 @@
       "group": "im"
     },
     {
-      "id": "wechat",
-      "label": "微信",
-      "value": "Sutadyyyyy",
-      "action": "copy",
+      "id": "douyin",
+      "label": "抖音",
+      "value": "Sutady",
+      "href": "https://www.douyin.com/user/MS4wLjABAAAANqABfrx1AOavcGXsMiZibZtW1xWMzjBy90PVZJTsnic",
+      "action": "link",
       "group": "im"
     },
     {
