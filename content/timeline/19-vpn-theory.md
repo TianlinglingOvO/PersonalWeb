@@ -1,5 +1,5 @@
 ---
-date: "2026.08"
+date: "2026.08.10"
 title: VPN原理科普
 tag: 知识分享
 order: 19

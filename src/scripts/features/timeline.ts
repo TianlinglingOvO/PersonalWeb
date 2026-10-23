@@ -1,5 +1,6 @@
 // 历程年历（Section 02）
-//   电脑端：年份标签切换年份（←/→ 键也行），点月份格查看当月经历，点格子里的小标签会闪一下对应卡片
+//   电脑端：年份标签切换年份（←/→ 键也行），点月份格查看当月经历，点格子里的小标签会闪一下对应卡片；
+//           同月经历较多时折叠，只展开一张，其余是一行“日期 + 标题”，点哪行展开哪张
 //   手机端（≤860px）：按年份折叠的竖向时间线；展开的年份只显示最近几条，更早的收在“展开这一年更早的 N 条”里
 //   链接 /#tl-<节点文件名>（如文章页的“收录于成长历程”）会打开对应年份和月份，定位并闪一下那张卡片
 import { $all } from '../core/dom';
@@ -68,6 +69,17 @@ export function init(signal: AbortSignal) {
 		return detail;
 	};
 
+	// 折叠的月份（电脑端）：展开这一张、收起同月其余的。animate 为 false 时直接切换（如月份还没显示出来时）
+	const openEntry = (entry: HTMLElement, animate = true) => {
+		const detail = entry.closest<HTMLElement>('.timeline-month-detail.is-foldable');
+		if (!detail || entry.classList.contains('is-open')) return;
+		const mutate = () => $all<HTMLElement>('[data-entry]', detail).forEach((e) => e.classList.toggle('is-open', e === entry));
+		if (!animate || mobileQuery.matches) return mutate();
+		animateHeight(detail, mutate);
+		const card = entry.querySelector('.timeline-micro-card');
+		if (card) staggerIn([card]);
+	};
+
 	// 手机端：显示 / 收起这一年里“更早的经历”
 	const setEarly = (panel: HTMLElement, show: boolean, animate = true) => {
 		const button = panel.querySelector<HTMLButtonElement>('[data-timeline-early]');
@@ -97,15 +109,19 @@ export function init(signal: AbortSignal) {
 	});
 
 	panels.forEach((panel) => {
-		// 点月份格；点的是某条小标签时，闪一下对应卡片
+		// 点月份格；点的是某条小标签时，展开（折叠的月份）并闪一下对应卡片
 		$all<HTMLButtonElement>('[data-timeline-month]', panel).forEach((cell) => {
 			cell.addEventListener(
 				'click',
 				(e) => {
-					const detail = selectMonth(panel, cell);
 					const ref = (e.target as HTMLElement).closest<HTMLElement>('[data-entry-ref]')?.dataset.entryRef;
-					const entry = detail && ref ? detail.querySelector<HTMLElement>(`[data-entry="${CSS.escape(ref)}"]`) : null;
+					const entry = ref ? panel.querySelector<HTMLElement>(`[data-entry="${CSS.escape(ref)}"]`) : null;
+					// 换到别的月份时先直接展开那张，随月份一起出现；已经在看这个月时带动画展开
+					const shown = entry?.closest('.timeline-month-detail')?.classList.contains('is-active');
+					if (entry && !shown) openEntry(entry, false);
+					selectMonth(panel, cell);
 					if (!entry) return;
+					if (shown) openEntry(entry);
 					flash(entry);
 					// 窄屏时详情在年历下方，滚过去让用户看到
 					if (entry.getBoundingClientRect().top > window.innerHeight) {
@@ -134,6 +150,18 @@ export function init(signal: AbortSignal) {
 
 		const early = panel.querySelector<HTMLButtonElement>('[data-timeline-early]');
 		early?.addEventListener('click', () => setEarly(panel, early.getAttribute('aria-expanded') !== 'true'), { signal });
+
+		// 折叠的月份里点收起的那一行
+		$all<HTMLButtonElement>('[data-timeline-row]', panel).forEach((row) => {
+			row.addEventListener(
+				'click',
+				() => {
+					const entry = row.closest<HTMLElement>('[data-entry]');
+					if (entry) openEntry(entry);
+				},
+				{ signal },
+			);
+		});
 	});
 
 	// 链接 /#tl-<节点文件名>：打开那一年（电脑端选中那个月，手机端展开年份和更早的经历），定位并闪一下
@@ -141,6 +169,7 @@ export function init(signal: AbortSignal) {
 	const entry = target?.matches('[data-entry]') ? target : null;
 	const panel = entry?.closest<HTMLElement>('[data-timeline-panel]');
 	if (!entry || !panel) return;
+	openEntry(entry, false);
 	if (mobileQuery.matches) {
 		panel.querySelector('[data-timeline-year-toggle]')?.setAttribute('aria-expanded', 'true');
 		panel.classList.remove('is-folded');

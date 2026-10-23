@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry, render } from 'astro:content';
+import Icon from './Icon.astro';
 
 interface Props {
 	item: CollectionEntry<'timeline'>;
@@ -8,9 +9,18 @@ interface Props {
 	article?: CollectionEntry<'articles'>;
 	/** 手机端默认收起的“更早的经历” */
 	early?: boolean;
+	/** 所在月份经历较多、电脑端要折叠（Timeline.astro 的 FOLD_FROM）：收起时只显示一行“日期 + 标题” */
+	foldable?: boolean;
+	/** 折叠的月份里默认展开的那一条 */
+	open?: boolean;
 }
 
-const { item, Content, article, early = false } = Astro.props;
+const { item, Content, article, early = false, foldable = false, open = false } = Astro.props;
+// 年历和月份标题已经写了年月，卡片上只显示“10月18日”；记不清哪天（只写到月）的显示“10月”
+const [year, month, day] = item.data.date.split('.');
+const isDate = /^\d{4}$/.test(year);
+const dateLabel = !isDate ? item.data.date : month ? `${Number(month)}月${day ? `${Number(day)}日` : ''}` : '全年';
+const datetime = isDate ? item.data.date.replaceAll('.', '-') : undefined;
 const links = [
 	...(article
 		? [{ label: `阅读${article.data.category === '教程' ? '教程' : '文章'} →`, href: `/articles/${article.id}/`, isExternal: false, title: article.data.title }]
@@ -21,7 +31,7 @@ const links = [
 
 {/* id 用于从别处直接定位到这一条：/#tl-文件名（见 scripts/features/timeline.ts） */}
 <div
-	class:list={['timeline-entry', { 'is-highlight': item.data.isHighlight, 'is-future': item.data.isFuture, 'is-early': early }]}
+	class:list={['timeline-entry', { 'is-highlight': item.data.isHighlight, 'is-future': item.data.isFuture, 'is-early': early, 'is-open': open }]}
 	id={`tl-${item.id}`}
 	data-entry={item.id}
 >
@@ -34,9 +44,26 @@ const links = [
 			)
 		}
 	</span>
+	{
+		foldable && (
+			<button type="button" class="timeline-entry-row" data-timeline-row aria-expanded="false">
+				<span class="timeline-date-badge">{dateLabel}</span>
+				<span class="timeline-entry-row-title">{item.data.title}</span>
+				<Icon name="chevron-down" class="timeline-entry-row-icon" />
+			</button>
+		)
+	}
 	<article class="timeline-micro-card card">
 		<div class="timeline-card-header">
-			<span class="timeline-date-badge">{item.data.date}</span>
+			{
+				datetime ? (
+					<time class="timeline-date-badge" datetime={datetime} title={item.data.date}>
+						{dateLabel}
+					</time>
+				) : (
+					<span class="timeline-date-badge">{dateLabel}</span>
+				)
+			}
 			<span class="timeline-tag-badge">{item.data.tag}</span>
 		</div>
 		<h3 class="timeline-card-title">{item.data.title}</h3>

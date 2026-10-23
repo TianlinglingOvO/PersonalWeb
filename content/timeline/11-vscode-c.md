@@ -1,5 +1,5 @@
 ---
-date: "2025.10"
+date: "2025.10.24"
 title: VScode配置C/C++环境教程
 tag: 知识分享
 isHighlight: true

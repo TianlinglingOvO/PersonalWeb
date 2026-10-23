@@ -1,5 +1,5 @@
 ---
-date: "2026.10"
+date: "2026.10.17"
 title: Cloudflare托管域名
 tag: 教程
 order: 25

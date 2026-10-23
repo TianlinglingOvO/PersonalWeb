@@ -13,6 +13,7 @@ const { timeline, articles } = Astro.props;
 
 const MAX_CHIPS = 3; // 日历格里最多直接列出的经历条数，超出显示“+N”
 const MOBILE_RECENT = 3; // 手机端展开的年份默认只显示最近几条，更早的收在“展开这一年更早的 N 条”里
+const FOLD_FROM = 3; // 电脑端同一个月有这么多条时折叠：只展开第一张卡片，其余收成一行“日期 + 标题”，点哪行展开哪张
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 const articleById = new Map(articles.map((a) => [a.id, a]));
@@ -184,11 +185,16 @@ const monthLabel = (m: number) => (m === 0 ? '全年' : `${m} 月`);
 									)}
 									{g.months.map((m) => {
 										const list = g.byMonth.get(m) ?? [];
+										const fold = list.length >= FOLD_FROM;
 										return (
 											<div
 												class:list={[
 													'timeline-month-detail',
-													{ 'is-active': m === lastMonth, 'is-early': list.every((e) => g.early.has(e.item.id)) },
+													{
+														'is-active': m === lastMonth,
+														'is-early': list.every((e) => g.early.has(e.item.id)),
+														'is-foldable': fold,
+													},
 												]}
 												data-timeline-month-detail={m}
 											>
@@ -197,8 +203,15 @@ const monthLabel = (m: number) => (m === 0 ? '全年' : `${m} 月`);
 													{monthLabel(m)}
 													<span class="timeline-detail-count"> · {list.length} 段经历</span>
 												</p>
-												{list.map(({ item, Content, article }) => (
-													<TimelineEntry item={item} Content={Content} article={article} early={g.early.has(item.id)} />
+												{list.map(({ item, Content, article }, i) => (
+													<TimelineEntry
+														item={item}
+														Content={Content}
+														article={article}
+														early={g.early.has(item.id)}
+														foldable={fold}
+														open={fold && i === 0}
+													/>
 												))}
 											</div>
 										);

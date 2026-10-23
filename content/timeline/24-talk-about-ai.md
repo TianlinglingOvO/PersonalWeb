@@ -1,8 +1,8 @@
 ---
-date: "2026.10"
+date: "2026.09.27"
 title: AI使用杂谈
 tag: 杂谈
-order: 24
+order: 23
 article: talk_about_ai_used
 ---
 

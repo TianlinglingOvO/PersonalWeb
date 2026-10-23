@@ -340,7 +340,7 @@
 }
 
 .timeline-date-badge {
-	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-family: var(--font-mono);
 	font-size: 0.78rem;
 	font-weight: 700;
 	letter-spacing: 0.04em;
@@ -446,11 +446,70 @@
 	border-color: var(--accent-deep);
 }
 
+/* --- 同月经历较多时折叠（只在电脑端）：收起的经历是一行“日期 + 标题”，点哪行展开哪张 --- */
+.timeline-entry-row {
+	display: none;
+	align-items: center;
+	gap: 0.55rem;
+	width: 100%;
+	padding: 0.5rem 0.75rem 0.5rem 0.55rem;
+	font: inherit;
+	text-align: left;
+	color: var(--ink);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	cursor: pointer;
+	transition:
+		transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+		box-shadow 0.22s ease,
+		border-color 0.22s ease;
+}
+
+.timeline-entry-row:hover {
+	transform: translateY(-2px);
+	border-color: var(--accent);
+	box-shadow: var(--shadow-hover);
+}
+
+.timeline-entry.is-highlight .timeline-entry-row {
+	border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.timeline-entry-row .timeline-date-badge {
+	flex: none;
+}
+
+.timeline-entry-row-title {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 0.92rem;
+	font-weight: 700;
+}
+
+.timeline-entry-row-icon {
+	flex: none;
+	color: var(--muted);
+}
+
 /* --- 桌面端：一次只显示一个年份、一个月份 --- */
 @media (min-width: 861px) {
 	html.js .timeline-year-panel:not(.is-active),
 	html.js .timeline-month-detail:not(.is-active) {
 		display: none;
+	}
+
+	/* 折叠的月份：没展开的经历只显示那一行（无 JS 时全部完整显示） */
+	html.js .timeline-month-detail.is-foldable .timeline-entry:not(.is-open) .timeline-micro-card {
+		display: none;
+	}
+
+	html.js .timeline-month-detail.is-foldable .timeline-entry:not(.is-open) .timeline-entry-row {
+		display: flex;
 	}
 
 	/* 无 JS 时所有年份依次铺开 */

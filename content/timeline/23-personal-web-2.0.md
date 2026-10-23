@@ -1,9 +1,9 @@
 ---
-date: "2026.10"
+date: "2026.10.07"
 title: 个人网站 2.0 上线
 tag: 生活
 isHighlight: true
-order: 23
+order: 24
 links:
   - label: 访问 GitHub ↗
     href: https://github.com/TianlinglingOvO/PersonalWeb
