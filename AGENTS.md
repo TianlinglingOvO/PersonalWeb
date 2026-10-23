@@ -62,6 +62,7 @@
 }
 ```
 
+* **字体**：正文统一用 `var(--font)`，代码和等宽数字用 `var(--font-mono)`（已接上中文黑体，防止 Windows 把等宽文字里的中文显示成新宋体），不要在别处再写字体栈。
 * 实际数值以 `src/styles/base/tokens.css` 为准；需要半透明色时用 `color-mix(in srgb, var(--accent) 30%, transparent)`，不要写死 rgba。
 * **圆角层级**：胶囊标签和按钮 `999px`；普通卡片、下拉菜单 `18px ~ 20px`（`var(--radius)`）；大抽屉、宽面板 `24px`。
 * **动效**：

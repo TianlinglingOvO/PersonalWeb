@@ -22,5 +22,10 @@
 		-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
 		"Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", "WenQuanYi Micro Hei",
 		system-ui, sans-serif;
+	/* 等宽字体（代码、文章里的反引号高亮、时间线日期）。等宽字体里没有中文，要在 monospace 前面接上中文黑体，
+	   否则 Windows 上的 Chrome / Edge 会用“新宋体”显示其中的中文 */
+	--font-mono:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+		"PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", monospace;
 	--max: 1080px;
 }
