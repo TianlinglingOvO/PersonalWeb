@@ -25,7 +25,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 
 - 要测浏览量、登录、评论用 `npm run preview:full`；改了接口或账号 / 评论相关的前端，跑 `npm run smoke`。
 - 没有单元测试和 lint。`astro build` 不做类型检查，所以改完代码先跑 `npm run check`（需 0 errors），再跑 `npm run build`（输出 `Complete!`、0 错误、0 警告），涉及接口的再跑 `npm run smoke`，全部通过才能声明完成。
-- Node 版本以 `package.json` 的 `engines` 为准（`>=22.12.0`，`.nvmrc` 写的是 22）。
+- Node 版本以 `package.json` 的 `engines` 为准（`>=22.23.4`，跟随 Astro 的最低要求）。`.nvmrc` 只写 `22`，Cloudflare 构建时会自动装最新的 22.x，不要写死小版本。
 
 ## 架构要点
 

@@ -102,7 +102,7 @@ PersonalWeb/
 <details>
 <summary><b>🛠️ 本地运行</b></summary>
 
-需要 [Node.js](https://nodejs.org/) 22.12 或更高版本。
+需要 [Node.js](https://nodejs.org/) 22.23.4 或更高版本。
 
 ```bash
 npm install        # 安装依赖
