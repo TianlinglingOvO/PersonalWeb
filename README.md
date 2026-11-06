@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/images/avatar_square.jpg" width="120" alt="Sutady 的头像" />
+<img src="public/favicon.svg" width="120" alt="Sutady 的小屋网站图标" />
 
 # Sutady 的小屋
 
