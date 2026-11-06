@@ -1,0 +1,33 @@
+---
+// 按主题输出插画：每套主题各输出一张，只显示当前主题的（隐藏规则由 src/lib/themes.ts 的 themeCss 生成）。
+// 全部懒加载：被隐藏的懒加载图片浏览器不会下载，所以首次打开只下载当前主题的插画，切换主题后才加载另一套。
+// 插画是纯装饰，替代文字留空，读屏软件会跳过。
+import { themeIds, themes, type ImageSlot } from '../lib/themes';
+
+interface Props {
+	/** 插画位置。不能叫 slot：slot 是 Astro 的保留属性 */
+	place: ImageSlot;
+	/** 首屏插画：加载时优先请求 */
+	priority?: boolean;
+}
+
+const { place, priority = false } = Astro.props;
+---
+
+{
+	themeIds.map((id) => {
+		const image = themes[id].images[place];
+		return (
+			<img
+				src={image.src}
+				alt=""
+				width={image.width}
+				height={image.height}
+				loading="lazy"
+				decoding="async"
+				fetchpriority={priority ? 'high' : undefined}
+				data-theme-only={id}
+			/>
+		);
+	})
+}

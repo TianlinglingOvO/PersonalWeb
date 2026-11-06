@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../lib/site';
+import { themeIds, themes } from '../lib/themes';
 ---
 
 <BaseLayout title={`页面不存在 · ${site.name}`} description="这个地址没有对应的页面。">
@@ -14,7 +15,40 @@ import { site } from '../lib/site';
 		}
 	</script>
 	<div class="not-found wrap">
-		<img src={site.notFoundImage} alt={site.notFoundImageAlt} width="280" height="396" loading="lazy" decoding="async" />
+		{/* 每套主题一组插画；一组有多张时每次随机显示一张（下面的内联脚本），没开 JavaScript 时显示第一张 */}
+		<div class="not-found-art">
+			{
+				themeIds.map((id) =>
+					themes[id].images.notFound.map((image, i) => (
+						<img
+							src={image.src}
+							alt=""
+							width={image.width}
+							height={image.height}
+							loading="lazy"
+							decoding="async"
+							class:list={{ 'is-wide': image.width > image.height * 1.2 }}
+							data-theme-only={id}
+							data-not-found-image
+							hidden={i > 0}
+						/>
+					)),
+				)
+			}
+		</div>
+		{/* 紧跟在插画后面、页面绘制前选好，懒加载的插画就只会下载选中的那一张；换页进入时也要重新执行 */}
+		<script is:inline data-astro-rerun>
+			(() => {
+				const groups = {};
+				for (const img of document.querySelectorAll('[data-not-found-image]')) {
+					(groups[img.dataset.themeOnly] ??= []).push(img);
+				}
+				for (const images of Object.values(groups)) {
+					const pick = Math.floor(Math.random() * images.length);
+					images.forEach((img, i) => (img.hidden = i !== pick));
+				}
+			})();
+		</script>
 		<p class="eyebrow">404</p>
 		<h1>这一页还没有内容</h1>
 		<p class="tagline">可能是链接写错了，或这篇文章还没放上来。</p>

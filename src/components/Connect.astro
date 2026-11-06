@@ -1,6 +1,7 @@
 ---
-import { site, social, type SocialGroup, type SocialItem } from '../lib/site';
+import { social, type SocialGroup, type SocialItem } from '../lib/site';
 import Icon from './Icon.astro';
+import ThemeImage from './ThemeImage.astro';
 
 const groups: { id: SocialGroup; title: string }[] = [
 	{ id: 'im', title: '社交账号' },
@@ -69,7 +70,7 @@ function hint(item: SocialItem) {
 			}
 		</div>
 		<div class="side-art">
-			<img src={site.connectImage} alt={site.connectImageAlt} width="990" height="1400" loading="lazy" decoding="async" />
+			<ThemeImage place="connect" />
 		</div>
 	</div>
 </section>

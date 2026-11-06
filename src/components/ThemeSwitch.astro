@@ -1,0 +1,25 @@
+---
+// 顶栏的主题开关：椭圆滑块，轨道上依次是各主题的图标，圆形滑块停在当前主题上。
+// 滑块位置、滑块上显示哪个图标都由 <html data-theme> 决定（CSS），点击切换由 scripts/features/theme-switch.ts 处理。
+// 没开 JavaScript 时切换不了，整个开关隐藏。
+import Icon from './Icon.astro';
+import { themeIds, themes, type Theme } from '../lib/themes';
+
+// 给脚本用：主题顺序、名字和说明（提示文字、读屏）
+const meta = themeIds.map((id) => ({ id, name: themes[id].name, credit: (themes[id] as Theme).credit ?? '' }));
+---
+
+<button type="button" class="theme-switch" data-theme-switch data-themes={JSON.stringify(meta)} aria-label="切换主题">
+	<span class="theme-switch-track" aria-hidden="true">
+		{themeIds.map((id) => <Icon name={themes[id].icon} class="theme-switch-mark" />)}
+		<span class="theme-switch-knob">
+			{
+				themeIds.map((id) => (
+					<span class="theme-switch-knob-icon" data-theme-only={id}>
+						<Icon name={themes[id].icon} />
+					</span>
+				))
+			}
+		</span>
+	</span>
+</button>

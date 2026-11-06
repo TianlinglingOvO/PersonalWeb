@@ -1,5 +1,6 @@
 ---
 import { formatDate, nav, site } from '../lib/site';
+import { themeIds, themes, type Theme } from '../lib/themes';
 
 const year = new Date().getFullYear();
 // 构建时间即最近一次部署时间（formatDate 固定按北京时间显示）
@@ -14,6 +15,12 @@ const updatedAt = formatDate(new Date());
 		<div class="footer-meta">
 			<span>© {year} {site.name} · 最后更新 {updatedAt} · <a href="/rss.xml">RSS 订阅</a></span>
 			<span>{site.footerNote}</span>
+			{
+				themeIds.map((id) => {
+					const { credit } = themes[id] as Theme;
+					return credit && <span class="footer-credit" data-theme-only={id}>{credit}</span>;
+				})
+			}
 		</div>
 	</div>
 </footer>

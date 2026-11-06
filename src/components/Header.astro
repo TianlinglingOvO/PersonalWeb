@@ -1,5 +1,6 @@
 ---
 import Icon from './Icon.astro';
+import ThemeSwitch from './ThemeSwitch.astro';
 import { nav, site } from '../lib/site';
 
 // 文章页没有首页的区块锚点，滚动高亮不会接管，这里直接在 SSR 时点亮“文章”
@@ -8,10 +9,13 @@ const isArticlePage = Astro.url.pathname.startsWith('/articles');
 
 <header class="site-header" transition:name="site-header">
 	<div class="header-inner">
-		<a class="brand" href="/#top" data-nav-link>
-			<img class="brand-avatar" src="/images/brand-avatar.jpg?v=8" alt="" width="32" height="32" decoding="async" />
-			{site.name}
-		</a>
+		<div class="header-start">
+			<a class="brand" href="/#top" data-nav-link>
+				<img class="brand-avatar" src="/images/brand-avatar.jpg?v=8" alt="" width="32" height="32" decoding="async" />
+				{site.name}
+			</a>
+			<ThemeSwitch />
+		</div>
 		<button
 			class="nav-toggle"
 			type="button"

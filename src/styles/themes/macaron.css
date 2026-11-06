@@ -1,0 +1,30 @@
+/*
+ * 主题：粉色马卡龙。每套主题一个文件，只写颜色、背景光晕和底纹，排版一律不在这里改。
+ * 新增主题：复制本文件改名、把选择器里的主题名换掉，在 global.css 里导入，
+ * 再到 src/lib/themes.ts 登记插画。变量含义见 AGENTS.md 第 3 节。
+ * “只显示当前主题的插画”和开关滑块的位置不用写在这里，由 themes.ts 按清单自动生成。
+ */
+
+:root[data-theme="macaron"] {
+	--bg: #fbf7f2;
+	--bg-soft: #f3ebe4;
+	--surface: #ffffff;
+	--ink: #2a262c;
+	--muted: #6d6570;
+	--accent: #e25c7a;
+	--accent-deep: #c44763;
+	--accent-soft: #f8d5dd;
+	--accent-2: #5c6bc0;
+	--accent-2-soft: #dde1f5;
+	--line: #e8dfd8;
+	--shadow-tint: rgb(90 50 70);
+	/* 换页进度条渐变的中间色 */
+	--progress-mid: #ff8fa3;
+	/* 页面背景上的四团柔光（左上、右上、左下、右下）和平铺底纹 */
+	--glow-1: rgb(251 232 238 / 0.65);
+	--glow-2: rgb(237 240 252 / 0.7);
+	--glow-3: rgb(254 237 243 / 0.6);
+	--glow-4: rgb(243 235 250 / 0.65);
+	--bg-pattern: url("/images/themes/macaron/pattern.svg");
+	--bg-pattern-size: 240px;
+}

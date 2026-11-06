@@ -1,0 +1,29 @@
+/*
+ * 主题：Claude（Claude 娘同人致敬）。结构和 macaron.css 相同，变量含义见 AGENTS.md 第 3 节。
+ * 第二版配色（2026-11-06）：为了和马卡龙拉开差距，改成 Claude 官方那种偏灰的纸张底色 + 近黑墨色 + 陶土橙，
+ * 背景几乎不加柔光（马卡龙是粉蓝柔光的梦幻感，这里是干净的纸面），细线更清楚。
+ * 主色用 Claude 品牌的陶土橙 #c15f3c，主按钮白字对比度约 4.2:1（第一版 #cc6a47 约 3.7:1）。
+ * 第一版暖米色配色存档在 update_plan/Themes-Plans/配色存档/claude-v1-暖米色.css，想换回去就把那份内容贴回来。
+ */
+
+:root[data-theme="claude"] {
+	--bg: #f0eee6;
+	--bg-soft: #e6e2d6;
+	--surface: #faf9f5;
+	--ink: #141413;
+	--muted: #67645c;
+	--accent: #c15f3c;
+	--accent-deep: #9e4a2d;
+	--accent-soft: #f1dacd;
+	--accent-2: #2b2a26;
+	--accent-2-soft: #dedad0;
+	--line: #dcd8cc;
+	--shadow-tint: rgb(40 36 30);
+	--progress-mid: #d97757;
+	--glow-1: rgb(255 254 250 / 0.55);
+	--glow-2: rgb(217 119 87 / 0.06);
+	--glow-3: rgb(255 254 250 / 0.3);
+	--glow-4: rgb(217 119 87 / 0.05);
+	--bg-pattern: url("/images/themes/claude/pattern.svg");
+	--bg-pattern-size: 300px;
+}

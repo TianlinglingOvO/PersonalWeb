@@ -6,7 +6,7 @@
 	left: 0;
 	height: 3px;
 	width: 0%;
-	background: linear-gradient(90deg, var(--accent), #ff8fa3, var(--accent-deep));
+	background: linear-gradient(90deg, var(--accent), var(--progress-mid), var(--accent-deep));
 	z-index: 99999;
 	pointer-events: none;
 	opacity: 0;

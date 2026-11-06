@@ -42,6 +42,13 @@
 	font-size: 0.86rem;
 }
 
+/* 只在某套主题下显示的说明（src/lib/themes.ts 的 credit），单独占一行 */
+.footer-credit {
+	flex-basis: 100%;
+	font-size: 0.8rem;
+	opacity: 0.85;
+}
+
 .footer-meta a {
 	color: inherit;
 	text-decoration-color: color-mix(in srgb, var(--muted) 40%, transparent);

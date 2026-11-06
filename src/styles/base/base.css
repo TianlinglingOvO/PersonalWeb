@@ -65,14 +65,14 @@ body {
 .page-bg {
 	background-color: var(--bg);
 	background-image:
-		radial-gradient(1200px 700px at 12% 5%, rgba(251, 232, 238, 0.65), transparent 70%),
-		radial-gradient(1000px 700px at 88% 18%, rgba(237, 240, 252, 0.7), transparent 65%),
-		radial-gradient(1100px 800px at 15% 70%, rgba(254, 237, 243, 0.6), transparent 70%),
-		radial-gradient(1300px 750px at 85% 88%, rgba(243, 235, 250, 0.65), transparent 65%),
-		url("/images/bg-pattern-pastel.svg?v=4");
+		radial-gradient(1200px 700px at 12% 5%, var(--glow-1), transparent 70%),
+		radial-gradient(1000px 700px at 88% 18%, var(--glow-2), transparent 65%),
+		radial-gradient(1100px 800px at 15% 70%, var(--glow-3), transparent 70%),
+		radial-gradient(1300px 750px at 85% 88%, var(--glow-4), transparent 65%),
+		var(--bg-pattern);
 	background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
 	background-attachment: fixed, fixed, fixed, fixed, scroll;
-	background-size: auto, auto, auto, auto, 240px 240px;
+	background-size: auto, auto, auto, auto, var(--bg-pattern-size);
 }
 
 html.nav-open,

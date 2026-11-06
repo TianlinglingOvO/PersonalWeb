@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <defs>
+    <!-- Claude 标志：12 道长短不一、外宽内窄的射线 -->
+    <g id="spark" fill="#d97757">
+      <path id="ray" d="M-0.35 0 L-0.95 -8.4 A0.95 0.95 0 0 1 0.95 -8.4 L0.35 0Z" />
+      <use href="#ray" transform="rotate(10) scale(0.92)" />
+      <use href="#ray" transform="rotate(43) scale(0.95)" />
+      <use href="#ray" transform="rotate(81) scale(0.95)" />
+      <use href="#ray" transform="rotate(105) scale(0.97)" />
+      <use href="#ray" transform="rotate(133)" />
+      <use href="#ray" transform="rotate(151) scale(0.96)" />
+      <use href="#ray" transform="rotate(185) scale(0.98)" />
+      <use href="#ray" transform="rotate(212)" />
+      <use href="#ray" transform="rotate(235) scale(0.96)" />
+      <use href="#ray" transform="rotate(269)" />
+      <use href="#ray" transform="rotate(303) scale(0.98)" />
+      <use href="#ray" transform="rotate(331) scale(1.06)" />
+    </g>
+
+    <!-- Clawd：12×8 的像素小怪，眼睛是镂空的两个像素 -->
+    <path id="clawd" fill="#d97757" fill-rule="evenodd" shape-rendering="crispEdges"
+      d="M2 0h8v2H2z M3 1h1v1H3z M8 1h1v1H8z M0 2h12v2H0z M2 4h8v2H2z M2 6h1v2H2z M4 6h1v2H4z M7 6h1v2H7z M9 6h1v2H9z" />
+
+    <!-- 雏菊：插画里 Claude 娘的发饰，14 片花瓣 + 金色花心 -->
+    <g id="daisy">
+      <g fill="#e08a62">
+        <ellipse id="petal" cx="0" cy="-5.6" rx="1.5" ry="4.2" />
+        <use href="#petal" transform="rotate(25.7)" />
+        <use href="#petal" transform="rotate(51.4)" />
+        <use href="#petal" transform="rotate(77.1)" />
+        <use href="#petal" transform="rotate(102.8)" />
+        <use href="#petal" transform="rotate(128.5)" />
+        <use href="#petal" transform="rotate(154.2)" />
+        <use href="#petal" transform="rotate(180)" />
+        <use href="#petal" transform="rotate(205.7)" />
+        <use href="#petal" transform="rotate(231.4)" />
+        <use href="#petal" transform="rotate(257.1)" />
+        <use href="#petal" transform="rotate(282.8)" />
+        <use href="#petal" transform="rotate(308.5)" />
+        <use href="#petal" transform="rotate(334.2)" />
+      </g>
+      <circle r="2.8" fill="#c9962e" />
+      <circle r="1.2" cx="-0.7" cy="-0.7" fill="#f3d58a" />
+    </g>
+
+
+    <!-- 金色流苏：挂绳、两颗珠子和穗子 -->
+    <g id="tassel">
+      <path d="M0 -14 V-4" stroke="#c9962e" stroke-width="1.2" />
+      <circle cy="-9" r="1.8" fill="#c9962e" />
+      <circle cy="-3" r="2.4" fill="#c9962e" />
+      <path d="M-2.6 -0.5 H2.6 L3.6 11 H-3.6Z" fill="#e3bd63" />
+      <path d="M-1.6 1 V10.5 M0 1 V11 M1.6 1 V10.5" stroke="#c9962e" stroke-width="0.6" />
+    </g>
+
+    <!-- 小书本：深棕封面、金色边框和雏菊徽记 -->
+    <g id="book">
+      <rect x="-8" y="-10" width="16" height="20" rx="1.5" fill="#5a3a2c" />
+      <rect x="-6" y="-8" width="12" height="16" rx="0.8" fill="none" stroke="#c9962e" stroke-width="0.7" />
+      <rect x="6.2" y="-9" width="2.4" height="18" fill="#f3ead8" />
+      <use href="#daisy" transform="scale(0.42)" />
+    </g>
+
+    <!-- 四芒星 -->
+    <path id="sparkle" d="M0 -8 Q0 -0.7 8 0 Q0 0.7 0 8 Q0 0.7 -8 0 Q0 -0.7 0 -8Z" fill="#c9962e" />
+  </defs>
+
+  <!-- 整体淡化，不抢正文 -->
+  <g opacity="0.3">
+    <!-- 雏菊：四角缝合 + 中间一朵 -->
+    <g transform="scale(1.25)"><use href="#daisy" x="0" y="0" /><use href="#daisy" x="240" y="0" /><use href="#daisy" x="0" y="240" /><use href="#daisy" x="240" y="240" /></g>
+    <g transform="translate(150 152) rotate(12) scale(1.25)"><use href="#daisy" /></g>
+
+    <!-- Claude 标志 -->
+    <g transform="translate(226 56) scale(1.6)"><use href="#spark" /></g>
+    <g transform="translate(58 148) rotate(20) scale(1.1)"><use href="#spark" /></g>
+
+    <!-- Clawd -->
+    <g transform="translate(28 204) rotate(-8) scale(2.4)"><use href="#clawd" /></g>
+    <g transform="translate(232 122) rotate(10) scale(1.8)"><use href="#clawd" /></g>
+
+    <!-- 流苏、书本 -->
+    <g transform="translate(266 222) rotate(14) scale(1.15)"><use href="#tassel" /></g>
+    <g transform="translate(182 248) rotate(-12) scale(1.15)"><use href="#book" /></g>
+
+    <!-- 星星和小圆点 -->
+    <g transform="translate(118 46) rotate(8)"><use href="#sparkle" /></g>
+    <g transform="translate(36 70) scale(0.8)"><use href="#sparkle" /></g>
+    <g transform="translate(206 186) scale(0.6)"><use href="#sparkle" /></g>
+    <g transform="translate(132 206) scale(0.5)"><use href="#sparkle" /></g>
+    <circle cx="262" cy="176" r="2" fill="#d97757" />
+    <circle cx="96" cy="112" r="1.8" fill="#c9962e" />
+    <circle cx="276" cy="80" r="1.6" fill="#3d3934" />
+    <circle cx="24" cy="262" r="1.8" fill="#d97757" />
+
+    <!-- meme 文字：Claude 账号被冻结 / 封禁时通知里的 “on hold” 和 “suspended”，斜着写，再淡一层 -->
+    <g fill="#3d3934" opacity="0.75" font-family="Georgia, 'Times New Roman', 'Noto Serif', serif" font-style="italic">
+      <text x="0" y="0" font-size="17" transform="translate(152 112) rotate(-24)" text-anchor="middle">On hold</text>
+      <text x="0" y="0" font-size="17" transform="translate(112 268) rotate(-24)" text-anchor="middle" letter-spacing="0.5">Suspended</text>
+    </g>
+  </g>
+</svg>

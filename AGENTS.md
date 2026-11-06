@@ -38,32 +38,44 @@
   * `.site-header` 与 `.nav` 的背景都是 `var(--surface)`；顶栏去掉下边框，菜单去掉上边框，菜单从 `top: var(--header-h)` 往下接；
   * 菜单底部 `border-radius: 0 0 24px 24px`，带柔和阴影；
   * 半透明遮罩 `.nav-backdrop` 从顶栏下沿（`top: var(--header-h)`）开始，**不能盖住顶栏**，否则顶栏会被压成灰色，和白色菜单断开。
+* **顶栏左侧是 `.header-start`**：品牌头像加主题开关（站长要求电脑端和手机端都放在品牌头像右边，不要挪进抽屉菜单），样式在 `components/theme-switch.css`。
 
 ---
 
 ## 3. 视觉设计系统
 
-整体是**粉白马卡龙、温润治愈的二次元日系**风格。颜色一律用 CSS 变量，不要写死十六进制颜色。
+网站支持**多套主题**，访客在顶栏左上角的开关切换：现在有 **Claude**（默认，Claude 娘同人致敬，陶土橙 + 墨黑 + 偏灰的纸张底色）和**粉色马卡龙**（粉白、温润治愈的二次元日系）。所有主题共用同一套排版，只有颜色、插画和背景底纹不同。
+
+**颜色一律用 CSS 变量，不要写死十六进制颜色**，否则换主题时那一处不会跟着变。每套主题在 `src/styles/themes/<主题名>.css` 里定义同一组变量：
 
 ```css
-:root {
-  --bg: #fbf7f2;            /* 全局米白微温底色 */
-  --bg-soft: #f3ebe4;       /* 次级米色底（图片占位、标签底） */
-  --surface: #ffffff;       /* 卡片、面板、纯白表面 */
-  --ink: #2a262c;           /* 正文深灰黑 */
-  --muted: #6d6570;         /* 次要文案柔和灰 */
-  --line: #e8dfd8;          /* 暖色细边线 */
-  --accent: #e25c7a;        /* 主题马卡龙粉 */
-  --accent-soft: #f8d5dd;   /* 淡粉高亮底色 */
-  --accent-deep: #c44763;   /* 交互强调深洋红 */
-  --accent-2: #5c6bc0;      /* 辅助靛蓝（次要链接、时间线 Future） */
-  --accent-2-soft: #dde1f5; /* 淡靛蓝底 */
-  --shadow-tint: rgb(90 50 70); /* 暖色阴影底色，用 color-mix 调透明度 */
+:root[data-theme="macaron"] {
+  --bg: #fbf7f2;            /* 页面底色 */
+  --bg-soft: #f3ebe4;       /* 次级底色（图片占位、标签底） */
+  --surface: #ffffff;       /* 卡片、面板；也兼做主色按钮上的白字 */
+  --ink: #2a262c;           /* 正文 */
+  --muted: #6d6570;         /* 次要文字 */
+  --line: #e8dfd8;          /* 细边线 */
+  --accent: #e25c7a;        /* 主色 */
+  --accent-soft: #f8d5dd;   /* 淡主色底 */
+  --accent-deep: #c44763;   /* 交互强调、文字链接 */
+  --accent-2: #5c6bc0;      /* 辅助色（次要链接、时间线 Future） */
+  --accent-2-soft: #dde1f5; /* 淡辅助色底 */
+  --shadow-tint: rgb(90 50 70); /* 阴影底色，--shadow / --shadow-hover 由它算出 */
+  --progress-mid: #ff8fa3;  /* 换页进度条渐变的中间色 */
+  --glow-1: …; --glow-2: …; --glow-3: …; --glow-4: …; /* 页面背景四团柔光 */
+  --bg-pattern: url(…);  --bg-pattern-size: 240px;    /* 平铺底纹 */
 }
 ```
 
+* **新加颜色变量时，每套主题的文件都要加**；改完样式要在**每套主题下**都看一遍（顶栏开关切换即可）。
+* 主色要保证主按钮白字的对比度不低于约 3.5:1，正文和次要文字不低于 4.5:1。
+* 两套主题都是浅色，所以 `--surface` 还兼做“主色按钮上的白字”；以后做深色模式时要先拆出一个 `--on-accent`。
+* **插画按主题输出**：首页三处插画用 `src/components/ThemeImage.astro`，每套主题各输出一张，只显示当前主题的那张；不要在组件里直接写某套主题的图片路径。只在某套主题下才显示的元素加 `data-theme-only="主题名"`。
+* 主题清单、各主题的插画和默认主题见第 7 节“主题”。
+
 * **字体**：正文统一用 `var(--font)`，代码和等宽数字用 `var(--font-mono)`（已接上中文黑体，防止 Windows 把等宽文字里的中文显示成新宋体），不要在别处再写字体栈。
-* 实际数值以 `src/styles/base/tokens.css` 为准；需要半透明色时用 `color-mix(in srgb, var(--accent) 30%, transparent)`，不要写死 rgba。
+* 和主题无关的变量（阴影公式、圆角、顶栏高度、字体、版心宽度）在 `src/styles/base/tokens.css`；需要半透明色时用 `color-mix(in srgb, var(--accent) 30%, transparent)`，不要写死 rgba。
 * **圆角层级**：胶囊标签和按钮 `999px`；普通卡片、下拉菜单 `18px ~ 20px`（`var(--radius)`）；大抽屉、宽面板 `24px`。
 * **动效**：
   * 缓动优先用 `cubic-bezier(0.16, 1, 0.3, 1)`，时长 `0.18s ~ 0.28s`；
@@ -74,7 +86,7 @@
 
 ## 4. 图片与内容
 
-* **图片目录**：公共图片放在 `public/images/`，文章配图按文章建子目录（如 `public/images/how_vpn_work/`）。
+* **图片目录**：公共图片放在 `public/images/`，文章配图按文章建子目录（如 `public/images/how_vpn_work/`）；各主题的插画和底纹放在 `public/images/themes/<主题名>/`，新图片优先转成 WebP（单张 200KB 以内）。
 * **Markdown 引用**：必须用根路径 `![描述](/images/目录/文件名.png)`；不要写相对路径（`./pic.png`），也不要写 `/public/...` 或本机绝对路径。
 * **一律小写**：目录名和文件名全部用小写字母 + 下划线 / 中横线，Linux 上大小写不同就是不同文件。
 * **构建时自动检查**：`src/lib/content-check.mjs` 在构建开始时扫描 `content/` 和 `src/` 里所有 `/images/...` 引用，文件不存在或大小写不一致就直接让构建失败，并列出是哪个文件里的哪张图（`npm run dev` 时只在终端提示）。
@@ -137,15 +149,32 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论相关前端
 
 ### 构建期工具 `src/lib/`
 
-* `site.ts`：站点信息、导航、日期格式（固定按北京时间）、阅读时长、XML 转义；`articles.ts`：按日期排好序的文章列表（首页、文章页、RSS、sitemap 共用）。
+* `site.ts`：站点信息、导航、日期格式（固定按北京时间）、阅读时长、XML 转义；`articles.ts`：按日期排好序的文章列表（首页、文章页、RSS、sitemap 共用）；`themes.ts`：主题清单（见下面“主题”）。
 * `content-check.mjs`、`markdown-images.mjs`：见第 4 节，在 `astro.config.mjs` 里注册。Astro 会缓存渲染好的内容（`.astro/`），改了 `markdown-images.mjs` 后先删掉 `.astro/` 再构建才能看到效果。
 
 ### 样式 `src/styles/`
 
 * `global.css` 只有 `@import`，**导入顺序就是层叠顺序**，不要随意调换。
-* `base/`：设计变量、基础排版、动效与减少动态效果；`components/`：跨页面复用的部件（顶栏、按钮、卡片、弹窗……）；`sections/`：首页各区块；`pages/`：文章页、登录 / 账号页、评论区等。
+* `base/`：和主题无关的设计变量、基础排版、动效与减少动态效果；`themes/`：每套主题一个文件，只放颜色、柔光和底纹；`components/`：跨页面复用的部件（顶栏、按钮、卡片、弹窗……）；`sections/`：首页各区块；`pages/`：文章页、登录 / 账号页、评论区等。
 * 每个文件只写一块功能的样式，这块功能在手机端的覆盖样式写在**同一文件末尾**的 `@media (max-width: 860px)` 里。
 * 断点：`860px` 手机 / 电脑分界（脚本里用 `core/breakpoints.ts` 的 `MOBILE_QUERY`）；`1100px` 时间线详情改到年历右侧；`1180px` 文章页显示左侧栏。
+
+### 主题
+
+* **清单**：`src/lib/themes.ts` 登记每套主题的名字、开关图标（`Icon.astro` 里的名字）、只在该主题下显示的页脚说明（`credit`）和各位置插画（首页三处 + 404 图片池，404 有多张时每次随机显示一张）。
+* **默认主题**：`content/site.json` 的 `defaultTheme`；写了清单里没有的名字，构建直接失败。
+* **新增主题**：清单里加一项 → 复制一份 `src/styles/themes/*.css` 改名并改颜色 → 在 `global.css` 里导入 → 插画放进 `public/images/themes/<主题名>/`。“只显示当前主题的插画”和开关滑块位置的样式由 `themes.ts` 的 `themeCss` 按清单生成，不用手写。超过两套时开关会自动变长，但最好改成三段式或下拉菜单。
+* **主题标记**：`<html data-theme>`。BaseLayout 先按默认主题输出，`<head>` 里的内联脚本在绘制前换成访客上次选的（localStorage 的 `sutady:theme`，和 `scripts/core/theme.ts` 共用键名）；换页时 `features/theme-switch.ts` 在 `astro:before-swap` 里把当前主题写到新文档上，否则会闪回默认主题。
+* **插画只下载当前主题的**：插画全部 `loading="lazy"`，不是当前主题的那张被 `display: none` 隐藏，浏览器不会下载。所以首屏插画也是懒加载，不要改回 `eager`，否则每套主题的首屏图都会被下载。404 页的随机选图写在页面里的内联脚本中，在绘制前选好，也是这个原因。
+* **换色动画**：`features/theme-switch.ts` 用 `document.startViewTransition()`，切换期间 `<html>` 带 `theme-switching` 类和 `data-theme-sweep`（`forward` / `back`）。站长要求：
+  * **方向跟滑块一致**：换到清单里靠后的主题（滑块往右，如马卡龙 → Claude）时新主题从左上角推到右下角，往回换时从右下角推回左上角。
+  * **用斜向推进，不用像素侵蚀**：试过用 CSS Paint API 做“像素崩坏侵蚀”，站长觉得拖沓、和网站风格不贴，已停用；代码存档在 `update_plan/Themes-Plans/像素侵蚀备份/`（本地，不进仓库），不要再主动提。
+  * **推进过程要看得见**：新旧两张画面各带一张同步移动的斜向遮罩，中间留一道窄缝，透出 `::view-transition` 背景的主题色柔光。两套主题底色很接近，只靠柔和边缘的话几乎看不出在推进。遮罩大小（215%）和渐变的过渡段（46.5%～53.5% 之内）是配套算好的：开始时刚好全藏、结束时刚好全露，整段都在推进，改一个要连带改另一个。
+  * **滑块要滑过去**：滑块单独有 `view-transition-name: theme-knob`，从旧位置滑到新位置、图标淡入淡出，不等幕布推到。滑块本身的 CSS 过渡只在不支持该 API 时用。
+  * **动画中途可以再点**：再点一下开关，所有过场动画原路倒放，倒放到头再把主题改回去。动画期间浏览器把点击都算在 `<html>` 上（`::view-transition` 设 `pointer-events: none` 也没用），所以脚本按坐标判断是否点在开关上。
+  * 顶栏、回到顶部按钮的固定 `view-transition-name` 临时去掉（否则它们会单独淡入淡出）；全站 CSS 过渡临时关闭（否则按钮会在新画面里再慢慢变一次色）。
+  * 鼠标移到开关上就预加载另一套主题的插画；点下去之后最多等 300ms，让屏幕内的插画加载出来再开始（准备期间浏览器暂停绘制，懒加载图片不会自己开始加载，所以脚本把屏幕内那几张改成立即加载）。
+  * 不支持该 API 或开启“减少动态效果”时直接切换。
 
 ### 锚点与滚动偏移
 

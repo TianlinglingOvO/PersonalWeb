@@ -15,6 +15,7 @@ import * as header from './features/header';
 import * as lightbox from './features/lightbox';
 import * as links from './features/links';
 import * as reveal from './features/reveal';
+import * as themeSwitch from './features/theme-switch';
 import * as timeline from './features/timeline';
 import * as toc from './features/toc';
 import * as transitions from './features/transitions';
@@ -28,6 +29,7 @@ interface Feature {
 // 每次换页按这个顺序初始化
 const features: Feature[] = [
 	transitions,
+	themeSwitch,
 	header,
 	toc,
 	reveal,

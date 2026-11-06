@@ -1,5 +1,6 @@
 ---
 import { site } from '../lib/site';
+import { defaultTheme, themeCss, themeIds } from '../lib/themes';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Icon from '../components/Icon.astro';
@@ -26,7 +27,7 @@ const shareImage = new URL(site.avatar, Astro.site ?? Astro.url);
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme={defaultTheme}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -51,7 +52,13 @@ const shareImage = new URL(site.avatar, Astro.site ?? Astro.url);
 		<link rel="icon" href="/favicon.ico?v=8" sizes="any" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<ClientRouter />
-		<script is:inline>
+		<style is:inline set:html={themeCss}></style>
+		{/* 页面绘制前确定主题：换成访客上次选的主题（scripts/core/theme.ts 写入，键名两处要一致），不在清单里的忽略 */}
+		<script is:inline define:vars={{ themeIds }}>
+			try {
+				var saved = localStorage.getItem('sutady:theme');
+				if (saved && themeIds.indexOf(saved) !== -1) document.documentElement.dataset.theme = saved;
+			} catch (e) {}
 			document.documentElement.classList.add('js');
 		</script>
 	</head>

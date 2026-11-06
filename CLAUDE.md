@@ -24,6 +24,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 ```
 
 - 要测浏览量、登录、评论用 `npm run preview:full`；改了接口或账号 / 评论相关的前端，跑 `npm run smoke`。
+- `npm run dev` 开久了以后改 CSS，有的页面服务端渲染时会内联旧样式：直接打开正常，从别的页面站内跳过去却套用旧样式（例如换色动画变回旧版）。遇到“只在站内换页后才出现”的样式问题，先重启开发服务器再排查。
 - 没有单元测试和 lint。`astro build` 不做类型检查，所以改完代码先跑 `npm run check`（需 0 errors），再跑 `npm run build`（输出 `Complete!`、0 错误、0 警告），涉及接口的再跑 `npm run smoke`，全部通过才能声明完成。
 - Node 版本以 `package.json` 的 `engines` 为准（`>=22.23.4`，跟随 Astro 的最低要求）。`.nvmrc` 只写 `22`，Cloudflare 构建时会自动装最新的 22.x，不要写死小版本。
 
@@ -31,7 +32,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 
 **内容层**
 - 内容放在仓库根目录的 `content/`，不在 `src/content/`。集合定义和 zod schema 在 `src/content.config.ts`，使用 `glob` loader，共四个集合：`about`、`articles`、`services`、`timeline`。
-- `content/site.json` 和 `content/social.json` 不是集合，由 `src/lib/site.ts` 直接 `import` 并加上类型；导航项 `nav`、日期格式化（固定北京时间）、阅读时长估算也在这个文件里。
+- `content/site.json` 和 `content/social.json` 不是集合，由 `src/lib/site.ts` 直接 `import` 并加上类型；导航项 `nav`、日期格式化（固定北京时间）、阅读时长估算也在这个文件里。`site.json` 的 `defaultTheme` 是默认主题（见下面“主题”）。
 - 文章的 URL slug 就是文件名（`post.id`）。`src/lib/articles.ts` 提供按日期排好序的文章列表，首页、文章页、RSS、sitemap 共用。
 - 时间线节点可以写 `article: 文章slug` 关联一篇文章：卡片上自动生成“阅读文章 / 阅读教程”按钮，文章页底部反过来显示“收录于成长历程”，点了跳到时间线上对应的那一条。slug 写错时构建直接报错。
 - 图片：`src/lib/content-check.mjs`（Astro 集成）在构建开始时检查 `content/`、`src/` 里所有 `/images/...` 引用是否存在（大小写敏感），有问题直接让构建失败；`src/lib/markdown-images.mjs`（Sätteri 的 hast 插件）给 Markdown 图片补上 `width` / `height` / `loading="lazy"` / `decoding="async"`。两者都在 `astro.config.mjs` 里注册。Astro 7 默认用 Sätteri 处理 Markdown，`markdown.rehypePlugins` 这类 unified 插件不能直接用。
@@ -39,19 +40,25 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 **页面**
 - 首页 `src/pages/index.astro` 是单页，由 Hero、About、Timeline、Articles（最新 3 篇）、Services、Connect 拼成；各集合的排序写在页面或 `src/lib/` 里，不在组件中。
 - `/articles/` 是文章列表（带分类筛选），`/articles/[slug]/` 是文章页（左侧切换文章、右侧目录、底部上一篇 / 下一篇和评论区），`/login/` 登录 / 注册，`/account/` 账号页（回复我的、改密码、退出、注销），`/rss.xml` 和 `/sitemap.xml` 是构建时生成的静态文件。
-- 所有页面套用 `src/layouts/BaseLayout.astro`：启用 `<ClientRouter />`（View Transitions），带 Open Graph / Twitter 分享信息，并在 body 底部加载唯一的客户端脚本 `src/scripts/ui.ts`。
+- 所有页面套用 `src/layouts/BaseLayout.astro`：启用 `<ClientRouter />`（View Transitions），带 Open Graph / Twitter 分享信息，在 `<html data-theme>` 上标记主题（`<head>` 内联脚本在绘制前恢复访客的选择），并在 body 底部加载唯一的客户端脚本 `src/scripts/ui.ts`。
 
 **客户端脚本 `src/scripts/`**
 - `ui.ts` 是入口，只负责接线：每个功能模块导出 `setup()`（整个会话只执行一次）和 `init(signal)`（每次换页执行一次）。`astro:page-load` 时会 `abort` 上一页的 `AbortController`，再依次调用各模块的 `init`；同一个 `<body>` 只初始化一次（首次打开页面时脚本加载和 `astro:page-load` 都会触发）。**新加的监听器、Observer、rAF 都必须挂到这个 `signal` 上**。
-- `core/`：`dom.ts`（`$` / `$all`）、`motion.ts`（动效工具）、`scroll.ts`（rAF 节流的滚动总线 `subscribeScroll`、锚点偏移 `anchorOffset`）、`breakpoints.ts`、`toast.ts`、`dialog.ts`（`confirmDialog`）、`api.ts`（请求本站接口）、`account.ts`（登录状态缓存 `getAccount` / `setAccount`，变化时广播 `account-change`）、`replies.ts`（回复提醒：拉取、已读时间、未读数，变化时广播 `replies-change`）。
-- `features/`：`header.ts`（顶栏、手机菜单、滚动高亮、回到顶部）、`transitions.ts`（换页进度条、卡片展开过场、换页时的滚动修正）、`reveal.ts`（滚动浮现）、`timeline.ts`、`article-list.ts`（文章列表页分类筛选）、`toc.ts`（文章目录、阅读进度）、`article-sidebar.ts`（文章页左侧栏）、`lightbox.ts`（文章图片点击放大）、`views.ts`、`account-menu.ts`（顶栏账号入口、小红点，以及全站的退出 / 注销按钮）、`auth-form.ts`（`/login/`）、`account-page.ts`（`/account/`）、`comments.ts`、`disclosure.ts`（`<details>` 折叠动画）、`contact.ts`（点击复制联系方式）、`links.ts`（站外链接新标签打开）。
+- `core/`：`dom.ts`（`$` / `$all`）、`motion.ts`（动效工具）、`scroll.ts`（rAF 节流的滚动总线 `subscribeScroll`、锚点偏移 `anchorOffset`）、`breakpoints.ts`、`toast.ts`、`dialog.ts`（`confirmDialog`）、`api.ts`（请求本站接口）、`account.ts`（登录状态缓存 `getAccount` / `setAccount`，变化时广播 `account-change`）、`replies.ts`（回复提醒：拉取、已读时间、未读数，变化时广播 `replies-change`）、`theme.ts`（当前主题 `currentTheme` / `setTheme`，变化时广播 `theme-change`）。
+- `features/`：`header.ts`（顶栏、手机菜单、滚动高亮、回到顶部）、`theme-switch.ts`（顶栏主题开关、换色动画、换页时保持主题）、`transitions.ts`（换页进度条、卡片展开过场、换页时的滚动修正）、`reveal.ts`（滚动浮现）、`timeline.ts`、`article-list.ts`（文章列表页分类筛选）、`toc.ts`（文章目录、阅读进度）、`article-sidebar.ts`（文章页左侧栏）、`lightbox.ts`（文章图片点击放大）、`views.ts`、`account-menu.ts`（顶栏账号入口、小红点，以及全站的退出 / 注销按钮）、`auth-form.ts`（`/login/`）、`account-page.ts`（`/account/`）、`comments.ts`、`disclosure.ts`（`<details>` 折叠动画）、`contact.ts`（点击复制联系方式）、`links.ts`（站外链接新标签打开）。
 - 锚点由浏览器和 Astro 自己滚动（`html` 的 `scroll-padding-top` 留出顶栏高度），脚本里不要再手动滚到 `location.hash`，否则后退时会被拉回锚点；`#tl-…`、`#comment-…` 这类要先展开内容的锚点由 `timeline.ts`、`comments.ts` 自己处理。
 - **展开 / 收起一律要有动画**（站长明确要求）：用 `core/motion.ts` 的工具，不要直接切 `hidden` / `display`。`slide(el, open, onClosed)` 用于折叠块，中途反向会从当前高度折返；`animateHeight(container, mutate)` 用于内容替换导致高度变化的地方；`staggerIn(els)` 让新出现的元素依次浮现，`shake(el)` 输错时晃一下。缓动用 `EASE_OUT` / `EASE_HEIGHT`，减少动态效果用 `prefersReducedMotion()` 判断。显示隐藏统一用 `hidden` 属性，需要确认的操作用 `confirmDialog()`。
 - 点击和键盘事件尽量在文档级别用事件委托处理（写在模块的 `setup()` 里，只绑定一次），靠 `data-*` 属性分发。组件和脚本之间通过 `data-*` 钩子（如 `data-timeline-panel`、`data-article-filter`）对接，改 DOM 结构时要同步检查对应模块。
 
 **样式 `src/styles/`**
-- 只写原生 CSS 和 CSS 变量。`global.css` 只有按顺序排列的 `@import`（顺序就是层叠顺序）：`base/`（变量、基础、动效）、`components/`（顶栏、按钮、卡片、反馈部件、弹窗、图片放大）、`sections/`（首页各区块）、`pages/`（文章页、登录与账号页、评论区、404）。
+- 只写原生 CSS 和 CSS 变量。`global.css` 只有按顺序排列的 `@import`（顺序就是层叠顺序）：`base/`（和主题无关的变量、基础、动效）、`themes/`（每套主题的颜色、柔光、底纹）、`components/`（顶栏、主题开关、按钮、卡片、反馈部件、弹窗、图片放大）、`sections/`（首页各区块）、`pages/`（文章页、登录与账号页、评论区、404）。
 - 每块功能的手机端覆盖写在同一文件末尾的 `@media (max-width: 860px)` 里。设计变量、圆角层级、动效曲线以 AGENTS.md 第 3 节为准，禁止硬编码颜色。
+
+**主题**
+- 访客在顶栏左上角（品牌头像右边，手机端也是）的椭圆开关切换主题，选择记在浏览器里。现有 `claude`（默认，Claude 娘同人致敬，陶土橙）和 `macaron`（粉色马卡龙）。排版共用，只有颜色、插画、底纹不同。
+- 清单在 `src/lib/themes.ts`（名字、开关图标、页脚说明 `credit`、首页三处插画和 404 图片池）；默认主题是 `content/site.json` 的 `defaultTheme`，写错构建失败。配色在 `src/styles/themes/<主题名>.css`，插画在 `public/images/themes/<主题名>/`。
+- 首页插画用 `ThemeImage.astro` 按主题各输出一张、只显示当前主题的；只在某主题下显示的元素加 `data-theme-only`，隐藏规则由 `themes.ts` 的 `themeCss` 生成并内联进 `<head>`。插画全部懒加载，这样只下载当前主题的图，首屏插画不要改回 eager。
+- 换色动画用 `startViewTransition`：新主题像斜向幕布推过去，边缘有一道主题色柔光；方向跟开关滑块一致（往右滑从左上角推到右下角，往左滑反过来）；动画中途再点开关会原路退回。“像素侵蚀”效果试过、站长否决了，不要再加回来。细节、新增主题的步骤见 AGENTS.md 第 3、7 节。设计方案存档在 `update_plan/Themes-Plans/`。
 
 **时间线（Section 02）**
 - 排序在 `index.astro` 里完成，**时间正序**：order 越小越早（2006 出生在最前），`isFuture` 永远排在最后。
@@ -88,11 +95,11 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 
 ## 待办
 
-已讨论但暂缓的事项（Cloudflare 速率限制规则、评论图片、QQ 二维码 / 跳转、统一字号档位）记在 `MAINTENANCE.md` 第六章，站长说“做待办里的某条”时去那里看。
+已讨论但暂缓的事项（Cloudflare 速率限制规则、评论图片、QQ 二维码 / 跳转、统一字号档位、网站图标重设计、深色模式等）记在 `MAINTENANCE.md` 第六章，站长说“做待办里的某条”时去那里看。
 
 ## 仓库约定
 
-- 图片放在 `public/images/`，Markdown 里用 `/images/...` 根路径引用，目录和文件名一律全小写，详见 AGENTS.md 第 4 节。`public/_headers` 把 `/images/*` 缓存 7 天，所以替换同名图片时，需要在引用处把 `?v=N` 加一来刷新缓存。
+- 图片放在 `public/images/`（各主题的插画、底纹在 `public/images/themes/<主题名>/`），Markdown 里用 `/images/...` 根路径引用，目录和文件名一律全小写，详见 AGENTS.md 第 4 节。`public/_headers` 把 `/images/*` 缓存 7 天，所以替换同名图片时，需要在引用处把 `?v=N` 加一来刷新缓存。
 - `docs/screenshots/` 是 README 用的网站截图（webp，不会部署到网站）；界面大改后可以重新截图替换。
 - **移动端顶栏的固定定位和抽屉卡片样式是反复踩坑后确定的**，包括 `position: fixed` 不能改回 `sticky`、遮罩不能盖住顶栏，完整规则见 AGENTS.md 第 2 节。
 - 以下内容都被 gitignore，只存在于本地：`update_plan/`（历次需求和方案档案，`updata_plan`、`update` 是指向它的软链接）、`my_image/`（原图）、`Timeline事件簿.md`。

@@ -4,12 +4,15 @@
  * 新样式写进对应的分块文件，手机端（≤860px）的覆盖写在同一文件末尾。约定见 AGENTS.md 第 7 节。
  */
 
-/* 基础：设计变量、页面底色、链接、通用图标 */
+/* 基础：设计变量、主题配色、页面底色、链接、通用图标 */
 @import "./base/tokens.css";
+@import "./themes/macaron.css";
+@import "./themes/claude.css";
 @import "./base/base.css";
 
 /* 首屏与通用部件 */
 @import "./components/header.css";
+@import "./components/theme-switch.css";
 @import "./sections/hero.css";
 @import "./components/illustration.css";
 @import "./components/buttons.css";

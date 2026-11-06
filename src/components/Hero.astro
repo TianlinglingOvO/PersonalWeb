@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { site } from '../lib/site';
+import ThemeImage from './ThemeImage.astro';
 
 interface Props {
 	latest?: CollectionEntry<'articles'>;
@@ -31,6 +32,6 @@ const { latest } = Astro.props;
 		}
 	</div>
 	<div class="hero-art">
-		<img src={site.heroImage} alt={site.heroImageAlt} width="990" height="1400" fetchpriority="high" decoding="async" />
+		<ThemeImage place="hero" priority />
 	</div>
 </section>

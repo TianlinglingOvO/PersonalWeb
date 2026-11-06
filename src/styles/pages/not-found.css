@@ -12,6 +12,11 @@
 	box-shadow: var(--shadow);
 }
 
+/* 横版插画（如 Claude 主题的梗图）放宽一些，否则字太小 */
+.not-found img.is-wide {
+	width: min(520px, 92%);
+}
+
 /* .tagline 自带最大宽度，在居中的 404 页里要让它整体居中 */
 .not-found .tagline {
 	margin-inline: auto;
