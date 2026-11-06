@@ -1,4 +1,4 @@
-/* 账号页（/account/）：头像和用户名、回复我的、修改密码、退出 / 注销。未登录时的提示卡片沿用登录页的 .auth-card */
+/* 账号页（/account/）：头像和用户名、访问统计（仅站长）、回复我的、修改密码、退出 / 注销。未登录时的提示卡片沿用登录页的 .auth-card */
 
 .account-page {
 	display: grid;
@@ -70,6 +70,233 @@
 	margin: 0.3rem 0;
 	color: var(--muted);
 	font-size: 0.92rem;
+}
+
+/* --- 访问统计（仅站长）：汇总格子 + 最近 30 天柱状图，数据由 features/visit-stats.ts 填充 --- */
+[data-visit-stats] {
+	/* 浏览次数用主色的浅色一档，访客数用主色本身 */
+	--stats-pv: color-mix(in srgb, var(--accent) 34%, var(--surface));
+	--stats-uv: var(--accent);
+	/* 左侧留给纵轴数字的宽度：visit-stats.ts 按最宽的数字量出来再覆盖，这里只是量之前的默认值 */
+	--stats-gutter: 2rem;
+}
+
+.stats-badge {
+	margin-left: auto;
+	padding: 0.12rem 0.62rem;
+	border-radius: 999px;
+	background: var(--bg-soft);
+	color: var(--muted);
+	font-size: 0.74rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.stats-tiles {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0.6rem;
+	margin: 0 0 1.4rem;
+}
+
+.stats-tile {
+	display: grid;
+	align-content: start;
+	gap: 0.12rem;
+	padding: 0.75rem 0.85rem 0.8rem;
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--bg-soft) 55%, var(--surface));
+}
+
+.stats-tile dt {
+	color: var(--muted);
+	font-size: 0.82rem;
+}
+
+.stats-tile dd {
+	margin: 0;
+}
+
+.stats-value {
+	display: flex;
+	align-items: baseline;
+	gap: 0.3rem;
+	color: var(--ink);
+	font-size: 1.55rem;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.stats-value small {
+	color: var(--muted);
+	font-size: 0.76rem;
+	font-weight: 600;
+}
+
+.stats-sub {
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+.stats-chart {
+	margin: 0;
+}
+
+.stats-chart-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.4rem 1rem;
+	margin-bottom: 1rem;
+	font-size: 0.88rem;
+}
+
+.stats-readout {
+	color: var(--muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.stats-readout strong {
+	color: var(--ink);
+	font-weight: 700;
+}
+
+.stats-legend {
+	display: inline-flex;
+	gap: 0.9rem;
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+.stats-legend > span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.stats-key {
+	width: 10px;
+	height: 10px;
+	border-radius: 3px;
+	background: var(--stats-uv);
+}
+
+.stats-key.is-pv {
+	background: var(--stats-pv);
+}
+
+/* 绘图区：左侧留出纵轴数字的位置 */
+.stats-plot {
+	position: relative;
+	height: 150px;
+	border-radius: 8px;
+	outline-offset: 6px;
+}
+
+.stats-plot:focus-visible {
+	outline: 2px solid var(--accent);
+}
+
+.stats-grid > span {
+	position: absolute;
+	left: var(--stats-gutter);
+	right: 0;
+	bottom: var(--y);
+	border-top: 1px solid var(--line);
+}
+
+/* 纵轴数字：和参考线隔 0.5rem（visit-stats.ts 算左侧宽度时用的同一个间距） */
+.stats-grid > span > span {
+	position: absolute;
+	right: calc(100% + 0.5rem);
+	top: 0;
+	transform: translateY(-50%);
+	color: var(--muted);
+	font-size: 0.72rem;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.stats-bars {
+	position: absolute;
+	inset: 0 0 0 var(--stats-gutter);
+	display: grid;
+	grid-template-columns: repeat(var(--stats-days, 30), minmax(0, 1fr));
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* 每天一列，整列都是鼠标感应区；选中的那天整列淡淡地标出来 */
+.stats-bars li {
+	position: relative;
+	border-radius: 6px 6px 0 0;
+	transition: background-color 0.18s ease;
+}
+
+.stats-bars li.is-active {
+	background: color-mix(in srgb, var(--accent-soft) 50%, transparent);
+}
+
+.stats-bars li::before,
+.stats-bars li::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	translate: -50% 0;
+	transform-origin: bottom;
+	animation: statsGrow 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+	animation-delay: calc(var(--i, 0) * 14ms);
+}
+
+/* 浏览次数：浅色宽柱 */
+.stats-bars li::before {
+	width: min(70%, 16px);
+	height: var(--pv);
+	border-radius: 4px 4px 0 0;
+	background: var(--stats-pv);
+}
+
+/* 访客数：叠在里面的深色窄柱 */
+.stats-bars li::after {
+	width: min(32%, 6px);
+	height: var(--uv);
+	border-radius: 3px 3px 0 0;
+	background: var(--stats-uv);
+}
+
+@keyframes statsGrow {
+	from {
+		transform: scaleY(0);
+	}
+}
+
+.stats-axis {
+	display: grid;
+	grid-template-columns: repeat(var(--stats-days, 30), minmax(0, 1fr));
+	margin: 0.5rem 0 0 var(--stats-gutter);
+	color: var(--muted);
+	font-size: 0.72rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.stats-axis span {
+	grid-row: 1;
+	justify-self: center;
+	white-space: nowrap;
+}
+
+.stats-axis span:last-child {
+	justify-self: end;
+}
+
+.stats-foot {
+	margin: 1.1rem 0 0;
+	color: var(--muted);
+	font-size: 0.8rem;
+	line-height: 1.65;
 }
 
 /* --- 回复我的 --- */
@@ -201,5 +428,17 @@
 
 	.reply-item {
 		padding-inline: 0.5rem;
+	}
+
+	.stats-tiles {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.stats-value {
+		font-size: 1.35rem;
+	}
+
+	.stats-plot {
+		height: 130px;
 	}
 }

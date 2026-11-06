@@ -20,6 +20,8 @@ import * as timeline from './features/timeline';
 import * as toc from './features/toc';
 import * as transitions from './features/transitions';
 import * as views from './features/views';
+import * as visitStats from './features/visit-stats';
+import * as visits from './features/visits';
 
 interface Feature {
 	setup?: () => void;
@@ -35,9 +37,11 @@ const features: Feature[] = [
 	reveal,
 	timeline,
 	views,
+	visits,
 	accountMenu,
 	authForm,
 	accountPage,
+	visitStats,
 	comments,
 	articleList,
 	articleSidebar,

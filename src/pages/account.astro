@@ -1,5 +1,5 @@
 ---
-// 账号页：回复我的、修改密码、退出 / 注销。内容由 scripts/features/account-page.ts 根据登录状态填充
+// 账号页：访问统计（仅站长）、回复我的、修改密码、退出 / 注销。内容由 scripts/features/account-page.ts、visit-stats.ts 根据登录状态填充
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
 import { getSortedArticles } from '../lib/articles';
@@ -7,6 +7,14 @@ import { site } from '../lib/site';
 
 // “回复我的”列表里显示文章标题（接口只返回文章 slug）
 const titles = Object.fromEntries((await getSortedArticles()).map((a) => [a.id, a.data.title]));
+
+// 访问统计的四个汇总格子，键名和 scripts/features/visit-stats.ts 的 RANGES 对应
+const statRanges = [
+	['today', '今天'],
+	['yesterday', '昨天'],
+	['week', '近 7 天'],
+	['month', '近 30 天'],
+] as const;
 ---
 
 <BaseLayout title={`我的账号 · ${site.name}`} description="查看别人给我的回复、修改密码。" noindex>
@@ -34,6 +42,54 @@ const titles = Object.fromEntries((await getSortedArticles()).map((a) => [a.id, 
 					<p class="account-sub">在文章下面发的评论都会显示这个名字</p>
 				</div>
 			</div>
+
+			<!-- 访问统计：只有站长能看到，scripts/features/visit-stats.ts 填数字、画柱状图 -->
+			<section class="account-card" id="stats" data-visit-stats hidden aria-labelledby="stats-title">
+				<h2 class="account-card-title" id="stats-title">
+					<Icon name="chart" class="account-card-icon" />访问统计<span class="stats-badge">仅站长可见</span>
+				</h2>
+				<p class="account-empty" data-stats-status>加载中…</p>
+				<div class="stats-body" data-stats-body hidden>
+					<dl class="stats-tiles">
+						{
+							statRanges.map(([key, label]) => (
+								<div class="stats-tile">
+									<dt>{label}</dt>
+									<dd class="stats-value">
+										<span data-stat-uv={key}>0</span>
+										<small>访客</small>
+									</dd>
+									<dd class="stats-sub">
+										浏览 <span data-stat-pv={key}>0</span> 次
+									</dd>
+								</div>
+							))
+						}
+					</dl>
+					<figure class="stats-chart">
+						<figcaption class="stats-chart-head">
+							<!-- 选中那天的数字。只在用方向键切换时设成 aria-live="polite" 让读屏软件播报，鼠标扫过时不播报 -->
+							<span class="stats-readout" data-stats-readout aria-live="off"></span>
+							<span class="stats-legend" aria-hidden="true">
+								<span><i class="stats-key is-pv"></i>浏览</span>
+								<span><i class="stats-key is-uv"></i>访客</span>
+							</span>
+						</figcaption>
+						<div
+							class="stats-plot"
+							data-stats-plot
+							tabindex="0"
+							role="group"
+							aria-label="最近 30 天每天的访客和浏览次数，用左右方向键切换日期"
+						>
+							<div class="stats-grid" data-stats-grid aria-hidden="true"></div>
+							<ol class="stats-bars" data-stats-bars aria-hidden="true"></ol>
+						</div>
+						<div class="stats-axis" data-stats-axis aria-hidden="true"></div>
+					</figure>
+					<p class="stats-foot" data-stats-foot></p>
+				</div>
+			</section>
 
 			<section class="account-card" id="replies" aria-labelledby="replies-title">
 				<h2 class="account-card-title" id="replies-title"><Icon name="chat" class="account-card-icon" />回复我的</h2>

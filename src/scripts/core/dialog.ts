@@ -1,3 +1,4 @@
+import { el } from './dom';
 import { prefersReducedMotion, shake } from './motion';
 
 /**
@@ -22,12 +23,6 @@ export function confirmDialog(
 	} = {},
 ) {
 	return new Promise<boolean>((resolve) => {
-		const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = '') => {
-			const node = document.createElement(tag);
-			node.className = className;
-			node.textContent = text;
-			return node;
-		};
 		const dialog = el('dialog', 'confirm-dialog');
 		const card = el('form', 'confirm-card');
 		const field = input ? el('input', 'confirm-input') : null;

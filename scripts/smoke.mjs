@@ -1,7 +1,7 @@
 // 接口冒烟测试：npm run smoke（会先自动构建）
 //   1. 在系统临时目录新建一个全新的本地数据库，执行 migrations/ 里的全部迁移；
 //   2. 用 wrangler 在本地启动完整站点（静态页 + /api 接口，端口 8913）；
-//   3. 依次走一遍：静态页、浏览量、注册、登录、评论、楼中楼、编辑、删除、回复提醒、改密码、注销、防跨站请求；
+//   3. 依次走一遍：静态页、浏览量、访问统计、注册、登录、评论、楼中楼、编辑、删除、回复提醒、改密码、注销、站长看统计、防跨站请求；
 //   4. 关掉服务器，删掉临时数据库。
 // 不会碰线上数据，也不会碰 npm run preview:full 用的本地数据库（.wrangler/state）。
 // 改了 functions/、migrations/ 或账号、评论相关的前端后跑一下；任何一项失败都会以非 0 状态退出。
@@ -56,6 +56,19 @@ async function migrate() {
 	await Promise.race([exited, sleep(3000)]);
 	if (!files.every((f) => run.output().includes(f))) throw new Error(`执行迁移超时：\n${run.output()}`);
 	return files.length;
+}
+
+/** 在临时数据库上直接执行一条 SQL（比如把测试账号设为站长）。和 migrate 一样，wrangler 有时不会自己退出，超时就结束它 */
+async function sql(command) {
+	const run = wrangler(['d1', 'execute', 'sutady-db', '--local', '--persist-to', STATE, '--command', command]);
+	const exited = new Promise((resolve) => run.child.on('exit', resolve));
+	for (let i = 0; i < 300 && run.child.exitCode === null; i++) {
+		if (/executed successfully/i.test(run.output())) break;
+		await sleep(100);
+	}
+	run.kill();
+	await Promise.race([exited, sleep(3000)]);
+	if (!/executed successfully/i.test(run.output())) throw new Error(`执行 SQL 失败：\n${run.output()}`);
 }
 
 /** 端口能不能用（被别的程序占着时启动会失败，提前给出明白的提示） */
@@ -187,6 +200,20 @@ async function runTests() {
 		return expect(bad.status === 400 && missing.status === 404, `${bad.status}/${missing.status}`);
 	});
 
+	// ---- 访问统计：计数 ----
+	await check('访问统计：每次打开页面都算浏览，同一访客一天只算一位', async () => {
+		const first = await guest('POST', '/api/visits');
+		const second = await guest('POST', '/api/visits');
+		const other = await client('visitor-2')('POST', '/api/visits');
+		return expect(first.data.counted === true && second.data.counted === true && other.data.counted === true, `${show(first)} ${show(second)} ${show(other)}`);
+	});
+	await check('访问统计：跨站请求和爬虫不计数，未登录看不到统计', async () => {
+		const csrf = await client('other')('POST', '/api/visits', undefined, { origin: 'https://evil.example' });
+		const bot = await client('Baiduspider')('POST', '/api/visits');
+		const stats = await guest('GET', '/api/visits');
+		return expect(csrf.status === 403 && bot.data.counted === false && stats.status === 401, `${csrf.status} ${show(bot)} ${stats.status}`);
+	});
+
 	// ---- 注册 / 登录 ----
 	await check('注册：成功后直接登录', async () => {
 		const r = await A('POST', '/api/auth/register', { username: nameA, password: 'secret123' });
@@ -307,6 +334,33 @@ async function runTests() {
 		return expect(
 			wrong.status === 401 && ok.status === 200 && me.data.user === null && top?.replies.length === 1 && again.status === 201,
 			`${wrong.status} ${ok.status} ${show(me)} ${show(list)} ${again.status}`,
+		);
+	});
+
+	// ---- 访问统计：站长查看 ----
+	await check('访问统计：普通用户不能看；设为站长后能看到最近 30 天，本人的浏览不计数', async () => {
+		const C = client('C');
+		const nameC = `owner${Date.now().toString(36).slice(-5)}`;
+		await C('POST', '/api/auth/register', { username: nameC, password: 'secret789' });
+		const denied = await C('GET', '/api/visits');
+		await sql(`UPDATE users SET is_admin = 1 WHERE username_key = '${nameC.toLowerCase()}'`);
+		const self = await C('POST', '/api/visits');
+		const r = await C('GET', '/api/visits');
+		// 前面的 3 次浏览（guest 两次、visitor-2 一次）一般都记在今天；测试正好跨过北京时间零点时会分到相邻两天，
+		// 所以按“有数据的那几天”核对，而不是死盯最后一天
+		const counted = r.data.days?.filter((d) => d.pv > 0) ?? [];
+		const pv = counted.reduce((n, d) => n + d.pv, 0);
+		const sameDay = counted.length === 1;
+		return expect(
+			denied.status === 403 &&
+				self.data.counted === false &&
+				r.status === 200 &&
+				r.data.days.length === 30 &&
+				pv === 3 &&
+				(!sameDay || counted[0].uv === 2) &&
+				r.data.total === 3 &&
+				r.data.since === counted[0]?.day,
+			`${denied.status} ${show(self)} ${r.status} ${JSON.stringify(r.data).slice(-200)}`,
 		);
 	});
 }

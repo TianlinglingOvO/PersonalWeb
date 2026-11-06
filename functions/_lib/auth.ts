@@ -67,6 +67,9 @@ const cookieOf = (request: Request) =>
 			.filter((pair) => pair.length === 2),
 	)[COOKIE] as string | undefined;
 
+/** 请求里有没有登录 Cookie（不查数据库）：没有的话肯定没登录，可以直接拒绝，省一次查询 */
+export const hasSessionCookie = (request: Request) => Boolean(cookieOf(request));
+
 /** 生成一个新的登录 token：数据库只存它的哈希，浏览器拿到 Cookie */
 export async function newSession() {
 	const token = toB64(crypto.getRandomValues(new Uint8Array(32))).replace(/[+/=]/g, (c) => ({ '+': '-', '/': '_', '=': '' })[c]!);
