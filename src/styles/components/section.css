@@ -33,6 +33,14 @@
 	font-size: clamp(1.7rem, 3vw, 2.1rem);
 }
 
+/* 标题和紧跟其后的“查看全部”胶囊排成一行，放不下时胶囊换到下一行 */
+.section-title-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.6rem 1rem;
+}
+
 .section-more {
 	display: inline-flex;
 	align-items: center;
@@ -47,7 +55,6 @@
 	font-weight: 600;
 	font-size: 0.88rem;
 	white-space: nowrap;
-	align-self: flex-end;
 	box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-tint) 4%, transparent);
 	transition:
 		color 0.2s ease,

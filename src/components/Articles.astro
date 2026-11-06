@@ -16,9 +16,12 @@ const { articles } = Astro.props;
 	<div class="section-head">
 		<div>
 			<p class="kicker">03</p>
-			<h2>文章 / Articles</h2>
+			<!-- “全部文章”紧跟在标题右边，比放在区块最右侧更显眼（站长要求） -->
+			<div class="section-title-row">
+				<h2>文章 / Articles</h2>
+				<a class="section-more" href="/articles/">全部文章 ({articles.length}) <span aria-hidden="true">→</span></a>
+			</div>
 		</div>
-		<a class="section-more" href="/articles/">全部文章 ({articles.length}) <span aria-hidden="true">→</span></a>
 	</div>
 	<ArticleList articles={articles.slice(0, HOME_LIMIT)} />
 </section>
