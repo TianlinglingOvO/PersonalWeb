@@ -13,7 +13,7 @@
 ## 1. 技术底座与边界
 
 * **页面**：[Astro 7](https://astro.build/) 纯静态生成（SSG），所有页面在构建时生成。
-* **接口**：Cloudflare Pages Functions（`functions/`，部署为 `sutady.top/api/...`）+ D1 数据库，用于浏览量、账号、评论和回复提醒，详见第 6 节。
+* **接口**：Cloudflare Pages Functions（`functions/`，部署为 `sutady.top/api/...`）+ D1 数据库，用于浏览量、全站访问统计（仅站长可见）、账号、评论和回复提醒，详见第 6 节。
 * **脚本**：原生 TypeScript，不用任何前端框架。入口是 `src/scripts/ui.ts`，功能按模块拆在 `src/scripts/core/`（通用工具）和 `src/scripts/features/`（各项功能）里，打包后仍然只有一个脚本。约定见第 7 节。
 * **样式**：原生 CSS + CSS 变量。入口 `src/styles/global.css` 只负责按顺序 `@import` 各个分块文件，打包后仍是一个 CSS 文件。约定见第 7 节。
 * **内容**：Astro Content Collections，内容放在仓库根目录的 `content/`。
@@ -101,22 +101,24 @@
 ```bash
 npm run check   # TypeScript 类型检查（astro check + functions/），必须 0 errors
 npm run build   # 静态构建，必须 Complete!、0 错误、0 警告
-npm run smoke   # 改了 functions/、migrations/ 或账号、评论相关前端时必须跑
+npm run smoke   # 改了 functions/、migrations/ 或账号、评论、浏览量、访问统计相关前端时必须跑
 ```
 
 * `astro build` 本身不做类型检查，所以 `check` 和 `build` 都要跑；
-* `npm run smoke` 会自动构建，在**隔离的临时本地数据库**上启动完整站点（静态页 + 接口，端口 8913，调试端口 9913），走一遍注册、登录、浏览量、评论、回复提醒、改密码、注销等流程，不会动到线上数据，也不会动到 `preview:full` 用的本地数据；
+* `npm run smoke` 会自动构建，在**隔离的临时本地数据库**上启动完整站点（静态页 + 接口，端口 8913，调试端口 9913），走一遍注册、登录、浏览量、访问统计、评论、回复提醒、改密码、注销等流程，不会动到线上数据，也不会动到 `preview:full` 用的本地数据；
 * 没有通过这些检查的改动，不能向站长声明“已完成”。
 
 ---
 
 ## 6. 动态功能（Pages Functions + D1）
 
-浏览量、账号（用户名 + 密码）、文章评论（含楼中楼）和回复提醒由 `functions/` 下的接口提供，数据存在 D1 数据库 `sutady-db`。
+浏览量、全站访问统计（只有站长能在 `/account/` 看到）、账号（用户名 + 密码）、文章评论（含楼中楼）和回复提醒由 `functions/` 下的接口提供，数据存在 D1 数据库 `sutady-db`。
+
+* **计数类接口的共同规则**：浏览量和访问统计都只认同源请求，预览部署、爬虫和站长本人不计数，访客按 IP + UA 每天去重、只存哈希不存原始 IP，判断逻辑统一放在 `functions/_lib/visitors.ts`，不要在接口里各写一份。
 
 * **目录约定**：`functions/api/**` 每个文件对应一个接口；共用代码放 `functions/_lib/`（下划线目录不会变成路由）。`functions/` 有独立的 `tsconfig.json`，`npm run check` 会一并检查。
 * **绑定与配置**：`wrangler.toml` 是 Pages 配置的唯一来源（数据库绑定名 `DB`），不要在 Cloudflare 后台另改绑定。
-* **表结构只能“新增迁移”**：改表时新增 `migrations/000N_xxx.sql`，先 `npx wrangler d1 migrations apply sutady-db --local` 本地测试，再 `npm run db:migrate` 上线。**不要修改或删除已经应用过的迁移文件**，否则线上和本地会对不上。上线顺序：先迁移数据库，再推送代码。能不改表就不改表（例如回复提醒的“已读”时间存在浏览器里）。
+* **表结构只能“新增迁移”**：改表时新增 `migrations/000N_xxx.sql`，先 `npx wrangler d1 migrations apply sutady-db --local` 本地测试（`preview:full` 用的就是这份本地库，没补迁移时新功能会“加载不出来”），再 `npm run db:migrate` 上线。**不要修改或删除已经应用过的迁移文件**，否则线上和本地会对不上。上线顺序：先迁移数据库，再推送代码。能不改表就不改表（例如回复提醒的“已读”时间存在浏览器里）。
 * **同域调用**：前端一律请求相对路径 `/api/...`，不要换成 `*.pages.dev` 或第三方域名，`pages.dev` 在中国大陆经常打不开。
 * **CPU 限制**：免费版每次请求约 10ms CPU，PBKDF2 五万次约 4.5ms，所以**每个请求最多只做一次密码哈希或校验**。改密码因此分两步：前端先用当前密码调用登录接口确认身份（同时换一个新会话），再调用改密码接口；改密码接口只接受 2 分钟内新建的会话。
 * **安全红线**：
@@ -129,7 +131,7 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论相关前端
   7. 登录后的跳转地址必须用 `new URL()` 解析并确认仍是本站，防止开放重定向；
   8. `public/_headers` 里有内容安全策略（CSP），只允许本站脚本和接口。**接入任何外部脚本、字体、统计或接口前，先把对应域名加进 CSP**，否则会被浏览器静默拦截。Cloudflare Web Analytics 是线上自动注入的（本地看不到），CSP 已放行它的两个域名，不要删；
   9. `functions/api/_middleware.ts` 兜底捕获接口异常，返回统一的中文错误，不暴露内部细节。
-* **接口不可用时要优雅降级**：`npm run dev` 没有接口，浏览量、账号、评论、回复提醒这时应安静隐藏或提示“加载不出来”，不能让页面报错。
+* **接口不可用时要优雅降级**：`npm run dev` 没有接口，浏览量、访问统计、账号、评论、回复提醒这时应安静隐藏或提示“加载不出来”，不能让页面报错。
 * **本地完整测试**：`npm run preview:full`（构建后用 wrangler 同时跑静态页和接口，地址 http://localhost:8911 ）。
 
 ---
@@ -139,7 +141,7 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论相关前端
 ### 脚本 `src/scripts/`
 
 * `ui.ts` 是唯一入口，只做“接线”：调用各模块的 `setup()`（整个会话只执行一次，注册文档级的事件委托和换页钩子），并在每次换页（`astro:page-load`）时依次调用各模块的 `init(signal)`。
-* `core/` 放和具体页面无关的工具：DOM 查询、动效、滚动总线、提示、确认弹窗、接口请求、登录状态等。
+* `core/` 放和具体页面无关的工具：DOM 查询与新建元素（`dom.ts` 的 `$` / `$all` / `el`）、动效、滚动总线、提示、确认弹窗、接口请求、登录状态、相对时间等。
 * `features/` 每个文件负责一块功能（顶栏、时间线、评论……），对外只导出 `setup` / `init`。新功能就新建一个文件，再在 `ui.ts` 的列表里登记一行。
 * 启用了 ClientRouter，换页时脚本不会重新加载：`init(signal)` 里新加的监听器、Observer、定时器都必须挂到 `signal` 上（`{ signal }` 或 `signal.addEventListener('abort', …)`），否则来回换页后会重复绑定。
 * 首次打开页面时，`init` 会被脚本加载和 `astro:page-load` 各触发一次，`ui.ts` 用当前 `<body>` 去重（换页时 Astro 会替换整个 body）。不要删掉这个去重，否则每个接口都会被调用两次。
@@ -164,7 +166,7 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论相关前端
 * **清单**：`src/lib/themes.ts` 登记每套主题的名字、开关图标（`Icon.astro` 里的名字）、手机地址栏颜色（`themeColor`，一般等于该主题的 `--bg`；`<meta name="theme-color">` 在绘制前、切换主题时、换页时都会同步）、只在该主题下显示的页脚说明（`credit`）和各位置插画（首页三处 + 404 图片池，404 有多张时每次随机显示一张）。
 * **默认主题**：`content/site.json` 的 `defaultTheme`；写了清单里没有的名字，构建直接失败。
 * **新增主题**：清单里加一项 → 复制一份 `src/styles/themes/*.css` 改名并改颜色 → 在 `global.css` 里导入 → 插画放进 `public/images/themes/<主题名>/`。“只显示当前主题的插画”和开关滑块位置的样式由 `themes.ts` 的 `themeCss` 按清单生成，不用手写。超过两套时开关会自动变长，但最好改成三段式或下拉菜单。
-* **主题标记**：`<html data-theme>`。BaseLayout 先按默认主题输出，`<head>` 里的内联脚本在绘制前换成访客上次选的（localStorage 的 `sutady:theme`，键名是 `scripts/core/theme.ts` 的 `THEME_KEY`，构建时通过 `define:vars` 传给内联脚本）；换页时 `features/theme-switch.ts` 在 `astro:before-swap` 里把当前主题写到新文档上，否则会闪回默认主题。
+* **主题标记**：`<html data-theme>`。BaseLayout 先按默认主题输出，`<head>` 里的内联脚本在绘制前换成访客上次选的（localStorage 的 `sutady:theme`，键名是 `src/scripts/core/theme.ts` 的 `THEME_KEY`，构建时通过 `define:vars` 传给内联脚本）；换页时 `features/theme-switch.ts` 在 `astro:before-swap` 里把当前主题写到新文档上，否则会闪回默认主题。
 * **插画只下载当前主题的**：插画全部 `loading="lazy"`，不是当前主题的那张被 `display: none` 隐藏，浏览器不会下载。模板里不要把插画改成 `eager`，否则每套主题的图都会被下载。首屏插画想早点加载，是靠 `Hero.astro` 里紧跟插画的内联脚本：绘制前只把当前主题那张改成 `eager`。404 页的随机选图也写在页面里的内联脚本中、在绘制前选好，是同样的道理。
 * **换色动画**：`features/theme-switch.ts` 用 `document.startViewTransition()`，切换期间 `<html>` 带 `theme-switching` 类和 `data-theme-sweep`（`forward` / `back`）。站长要求：
   * **方向跟滑块一致**：换到清单里靠后的主题（滑块往右，如马卡龙 → Claude）时新主题从左上角推到右下角，往回换时从右下角推回左上角。
