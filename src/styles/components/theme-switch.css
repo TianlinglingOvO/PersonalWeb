@@ -81,8 +81,11 @@ html:not(.js) .theme-switch {
 		scale 0.15s ease;
 }
 
-.theme-switch:hover .theme-switch-knob {
-	scale: 1.06;
+/* 只在有鼠标的设备上放大：手机点过之后 :hover 会一直留着，滑块就一直是放大的 */
+@media (hover: hover) {
+	.theme-switch:hover .theme-switch-knob {
+		scale: 1.06;
+	}
 }
 
 .theme-switch:active .theme-switch-knob {

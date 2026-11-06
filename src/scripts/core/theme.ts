@@ -1,6 +1,7 @@
 // 当前主题，即 <html data-theme>。页面绘制前 BaseLayout 的内联脚本已经按访客上次的选择设好；
 // 切换时调用 setTheme：写到 <html> 上、记进 localStorage，并广播 theme-change
-export const THEME_KEY = 'sutady:theme'; // BaseLayout 的内联脚本里写了同一个键名，改名要两处一起改
+/** localStorage 键名；BaseLayout 的内联脚本也从这里取（构建时传进去） */
+export const THEME_KEY = 'sutady:theme';
 
 export const currentTheme = () => document.documentElement.dataset.theme ?? '';
 

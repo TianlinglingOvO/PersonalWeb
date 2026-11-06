@@ -61,21 +61,26 @@ const loaded = (img: HTMLImageElement) =>
 				img.addEventListener('error', () => resolve(), { once: true });
 			});
 
-// 提前把另一套主题的插画下载进缓存：电脑上鼠标移到开关上就开始，手机上手指碰到时才开始
-const preloaded = new Map<string, Promise<unknown>>();
+/**
+ * 图片是否在屏幕内（或离屏幕 margin 以内）。看的是它所在的插画框：另一套主题的图片此时是 display: none，
+ * 自身量不出位置，而各主题的插画都放在同一个框里
+ */
+function nearViewport(img: HTMLImageElement, margin = 0) {
+	const rect = (img.parentElement ?? img).getBoundingClientRect();
+	return rect.bottom > -margin && rect.top < window.innerHeight + margin && rect.width > 0;
+}
+
+// 提前把另一套主题、屏幕附近的插画下载进缓存：电脑上鼠标移到开关上就开始，手机上手指碰到时才开始。
+// 远处的插画不提前下载（访客不一定会切换），切换后滚到那里再按懒加载正常下载
+const preloaded = new Map<string, Promise<void>>();
 function preload(theme: string) {
-	let task = preloaded.get(theme);
-	if (!task) {
-		task = Promise.all(
-			imagesOf(theme).map(async (img) => {
-				const probe = new Image();
-				probe.src = img.currentSrc || img.src;
-				await probe.decode().catch(() => undefined);
-			}),
-		);
-		preloaded.set(theme, task);
+	for (const img of imagesOf(theme)) {
+		const src = img.currentSrc || img.src;
+		if (preloaded.has(src) || !nearViewport(img, window.innerHeight / 2)) continue;
+		const probe = new Image();
+		probe.src = src;
+		preloaded.set(src, probe.decode().catch(() => undefined));
 	}
-	return task;
 }
 
 /**
@@ -84,10 +89,7 @@ function preload(theme: string) {
  * （鼠标移到开关上时已经下载进缓存，通常瞬间完成）
  */
 function visibleImagesReady(theme: string) {
-	const inView = imagesOf(theme).filter((img) => {
-		const rect = img.getBoundingClientRect();
-		return rect.bottom > 0 && rect.top < window.innerHeight && rect.width > 0;
-	});
+	const inView = imagesOf(theme).filter((img) => nearViewport(img));
 	for (const img of inView) img.loading = 'eager';
 	return Promise.all(inView.map(loaded));
 }
@@ -99,11 +101,16 @@ const transitionAnimations = () =>
 		return effect?.target === document.documentElement && effect.pseudoElement?.startsWith('::view-transition');
 	});
 
-/** 动画进行中又点了开关：原路倒放（再点一次又正放），返回是否处理了 */
+/**
+ * 动画进行中又点了开关：原路倒放（再点一次又正放），返回是否处理了。
+ * 幕布已经放完（正放到底或倒放回原处）、只差收尾的那一两帧里点的，不算“中途”，照常开始新的切换
+ */
 function reverseActive() {
 	if (!active?.ready) return Boolean(active);
 	const animations = transitionAnimations();
-	if (!animations.some((a) => (a.effect as KeyframeEffect).pseudoElement === SWEEP)) return true;
+	const sweep = animations.find((a) => (a.effect as KeyframeEffect).pseudoElement === SWEEP);
+	if (!sweep) return true;
+	if (sweep.playState === 'finished') return false;
 	for (const a of animations) a.reverse();
 	return true;
 }
@@ -175,7 +182,7 @@ export function setup() {
 	const warmUp = (e: Event) => {
 		if (!(e.target as Element | null)?.closest?.('[data-theme-switch]')) return;
 		const next = nextTheme(themeList());
-		if (next) void preload(next.id);
+		if (next) preload(next.id);
 	};
 	document.addEventListener('pointerover', warmUp);
 	document.addEventListener('focusin', warmUp);
@@ -188,7 +195,7 @@ export function setup() {
 }
 
 export function init() {
-	// 新页面的插画不同，预加载记录作废
+	// 新页面的插画不同，预加载记录作废（下载过的图片仍在浏览器缓存里）
 	preloaded.clear();
 	updateLabel();
 }

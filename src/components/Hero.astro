@@ -33,5 +33,11 @@ const { latest } = Astro.props;
 	</div>
 	<div class="hero-art">
 		<ThemeImage place="hero" priority />
+		{/* 首屏插画：绘制前把当前主题那张改成立即加载，比懒加载早开始下载；另一套主题的仍是懒加载，不会被下载 */}
+		<script is:inline data-astro-rerun>
+			document
+				.querySelectorAll('.hero-art img[data-theme-only="' + document.documentElement.dataset.theme + '"]')
+				.forEach((img) => (img.loading = 'eager'));
+		</script>
 	</div>
 </section>
