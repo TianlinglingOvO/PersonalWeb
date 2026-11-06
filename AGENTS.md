@@ -164,8 +164,8 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论相关前端
 * **清单**：`src/lib/themes.ts` 登记每套主题的名字、开关图标（`Icon.astro` 里的名字）、只在该主题下显示的页脚说明（`credit`）和各位置插画（首页三处 + 404 图片池，404 有多张时每次随机显示一张）。
 * **默认主题**：`content/site.json` 的 `defaultTheme`；写了清单里没有的名字，构建直接失败。
 * **新增主题**：清单里加一项 → 复制一份 `src/styles/themes/*.css` 改名并改颜色 → 在 `global.css` 里导入 → 插画放进 `public/images/themes/<主题名>/`。“只显示当前主题的插画”和开关滑块位置的样式由 `themes.ts` 的 `themeCss` 按清单生成，不用手写。超过两套时开关会自动变长，但最好改成三段式或下拉菜单。
-* **主题标记**：`<html data-theme>`。BaseLayout 先按默认主题输出，`<head>` 里的内联脚本在绘制前换成访客上次选的（localStorage 的 `sutady:theme`，和 `scripts/core/theme.ts` 共用键名）；换页时 `features/theme-switch.ts` 在 `astro:before-swap` 里把当前主题写到新文档上，否则会闪回默认主题。
-* **插画只下载当前主题的**：插画全部 `loading="lazy"`，不是当前主题的那张被 `display: none` 隐藏，浏览器不会下载。所以首屏插画也是懒加载，不要改回 `eager`，否则每套主题的首屏图都会被下载。404 页的随机选图写在页面里的内联脚本中，在绘制前选好，也是这个原因。
+* **主题标记**：`<html data-theme>`。BaseLayout 先按默认主题输出，`<head>` 里的内联脚本在绘制前换成访客上次选的（localStorage 的 `sutady:theme`，键名是 `scripts/core/theme.ts` 的 `THEME_KEY`，构建时通过 `define:vars` 传给内联脚本）；换页时 `features/theme-switch.ts` 在 `astro:before-swap` 里把当前主题写到新文档上，否则会闪回默认主题。
+* **插画只下载当前主题的**：插画全部 `loading="lazy"`，不是当前主题的那张被 `display: none` 隐藏，浏览器不会下载。模板里不要把插画改成 `eager`，否则每套主题的图都会被下载。首屏插画想早点加载，是靠 `Hero.astro` 里紧跟插画的内联脚本：绘制前只把当前主题那张改成 `eager`。404 页的随机选图也写在页面里的内联脚本中、在绘制前选好，是同样的道理。
 * **换色动画**：`features/theme-switch.ts` 用 `document.startViewTransition()`，切换期间 `<html>` 带 `theme-switching` 类和 `data-theme-sweep`（`forward` / `back`）。站长要求：
   * **方向跟滑块一致**：换到清单里靠后的主题（滑块往右，如马卡龙 → Claude）时新主题从左上角推到右下角，往回换时从右下角推回左上角。
   * **用斜向推进，不用像素侵蚀**：试过用 CSS Paint API 做“像素崩坏侵蚀”，站长觉得拖沓、和网站风格不贴，已停用；代码存档在 `update_plan/Themes-Plans/像素侵蚀备份/`（本地，不进仓库），不要再主动提。
@@ -173,7 +173,7 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论相关前端
   * **滑块要滑过去**：滑块单独有 `view-transition-name: theme-knob`，从旧位置滑到新位置、图标淡入淡出，不等幕布推到。滑块本身的 CSS 过渡只在不支持该 API 时用。
   * **动画中途可以再点**：再点一下开关，所有过场动画原路倒放，倒放到头再把主题改回去。动画期间浏览器把点击都算在 `<html>` 上（`::view-transition` 设 `pointer-events: none` 也没用），所以脚本按坐标判断是否点在开关上。
   * 顶栏、回到顶部按钮的固定 `view-transition-name` 临时去掉（否则它们会单独淡入淡出）；全站 CSS 过渡临时关闭（否则按钮会在新画面里再慢慢变一次色）。
-  * 鼠标移到开关上就预加载另一套主题的插画；点下去之后最多等 300ms，让屏幕内的插画加载出来再开始（准备期间浏览器暂停绘制，懒加载图片不会自己开始加载，所以脚本把屏幕内那几张改成立即加载）。
+  * 鼠标移到开关上就预加载另一套主题里屏幕附近（上下半屏以内）的插画，远处的不提前下载；点下去之后最多等 300ms，让屏幕内的插画加载出来再开始（准备期间浏览器暂停绘制，懒加载图片不会自己开始加载，所以脚本把屏幕内那几张改成立即加载）。
   * 不支持该 API 或开启“减少动态效果”时直接切换。
 
 ### 锚点与滚动偏移

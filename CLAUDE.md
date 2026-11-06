@@ -57,7 +57,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 **主题**
 - 访客在顶栏左上角（品牌头像右边，手机端也是）的椭圆开关切换主题，选择记在浏览器里。现有 `claude`（默认，Claude 娘同人致敬，陶土橙）和 `macaron`（粉色马卡龙）。排版共用，只有颜色、插画、底纹不同。
 - 清单在 `src/lib/themes.ts`（名字、开关图标、页脚说明 `credit`、首页三处插画和 404 图片池）；默认主题是 `content/site.json` 的 `defaultTheme`，写错构建失败。配色在 `src/styles/themes/<主题名>.css`，插画在 `public/images/themes/<主题名>/`。
-- 首页插画用 `ThemeImage.astro` 按主题各输出一张、只显示当前主题的；只在某主题下显示的元素加 `data-theme-only`，隐藏规则由 `themes.ts` 的 `themeCss` 生成并内联进 `<head>`。插画全部懒加载，这样只下载当前主题的图，首屏插画不要改回 eager。
+- 首页插画用 `ThemeImage.astro` 按主题各输出一张、只显示当前主题的；只在某主题下显示的元素加 `data-theme-only`，隐藏规则由 `themes.ts` 的 `themeCss` 生成并内联进 `<head>`。插画全部懒加载，这样只下载当前主题的图；首屏插画由 `Hero.astro` 的内联脚本在绘制前只把当前主题那张改成立即加载，模板里不要直接写 eager。
 - 换色动画用 `startViewTransition`：新主题像斜向幕布推过去，边缘有一道主题色柔光；方向跟开关滑块一致（往右滑从左上角推到右下角，往左滑反过来）；动画中途再点开关会原路退回。“像素侵蚀”效果试过、站长否决了，不要再加回来。细节、新增主题的步骤见 AGENTS.md 第 3、7 节。设计方案存档在 `update_plan/Themes-Plans/`。
 
 **时间线（Section 02）**
