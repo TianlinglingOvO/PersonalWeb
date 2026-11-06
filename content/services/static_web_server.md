@@ -1,11 +1,8 @@
 ---
-title: 静态网页部署
-summary: 这边可以帮忙部署静态网页哦=w=
+title: 还没端上来呢o(≧口≦)o
+summary: 美味熬制ing...
 ctaLabel: 了解更多 / 联系我
 ctaHref: /#connect
 order: 3
 ---
 
-我这个网站目前就是静态网页=w=
-
-不过用了 Cloudflare 的数据库就可以实现评论了OwO
