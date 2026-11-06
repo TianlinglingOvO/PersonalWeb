@@ -5,8 +5,13 @@
 import Icon from './Icon.astro';
 import { themeIds, themes, type Theme } from '../lib/themes';
 
-// 给脚本用：主题顺序、名字和说明（提示文字、读屏）
-const meta = themeIds.map((id) => ({ id, name: themes[id].name, credit: (themes[id] as Theme).credit ?? '' }));
+// 给脚本用：主题顺序、名字、说明（提示文字、读屏）和地址栏颜色
+const meta = themeIds.map((id) => ({
+	id,
+	name: themes[id].name,
+	credit: (themes[id] as Theme).credit ?? '',
+	color: themes[id].themeColor,
+}));
 ---
 
 <button type="button" class="theme-switch" data-theme-switch data-themes={JSON.stringify(meta)} aria-label="切换主题">

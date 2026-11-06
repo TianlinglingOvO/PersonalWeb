@@ -14,6 +14,8 @@ export interface Theme {
 	name: string;
 	/** 切换开关上的图标：Icon.astro 里的图标名 */
 	icon: string;
+	/** 手机浏览器地址栏的颜色（theme-color），一般和配色文件里的 --bg 相同 */
+	themeColor: string;
 	/** 只在这套主题下显示在页脚的说明（例如同人致敬声明） */
 	credit?: string;
 	/** 首页三处插画（竖版，显示时裁成 3:4）和 404 页插画；404 有多张时每次随机显示一张 */
@@ -33,6 +35,7 @@ export const themes = {
 	macaron: {
 		name: '粉色马卡龙',
 		icon: 'bow',
+		themeColor: '#fbf7f2',
 		images: {
 			hero: img('/images/themes/macaron/hero.jpg', 990, 1400),
 			about: img('/images/themes/macaron/about.jpg', 990, 1400),
@@ -43,6 +46,7 @@ export const themes = {
 	claude: {
 		name: 'Claude',
 		icon: 'spark',
+		themeColor: '#f0eee6',
 		credit: 'Claude 主题为同人致敬，与 Anthropic 官方无关',
 		images: {
 			hero: img('/images/themes/claude/hero.webp', 990, 1485),
@@ -69,6 +73,12 @@ if (!isThemeId(site.defaultTheme)) {
 }
 
 export const defaultTheme: ThemeId = site.defaultTheme;
+
+/** 各主题的地址栏颜色，给 <head> 里的内联脚本用（绘制前按访客选的主题改好） */
+export const themeColors = Object.fromEntries(themeIds.map((id) => [id, themes[id].themeColor])) as Record<
+	ThemeId,
+	string
+>;
 
 /**
  * 由清单生成的样式，BaseLayout 内联进 <head>（所以新增主题时不用手写）：

@@ -8,6 +8,8 @@ interface ThemeMeta {
 	id: string;
 	name: string;
 	credit: string;
+	/** 手机浏览器地址栏颜色 */
+	color: string;
 }
 
 /** 换上新主题后，最多等屏幕内的插画加载多久再开始推过去（这段时间画面是静止的，所以要短） */
@@ -34,6 +36,12 @@ function themeList(): ThemeMeta[] {
 function nextTheme(list: ThemeMeta[]) {
 	const i = list.findIndex((t) => t.id === currentTheme());
 	return list[(i + 1) % list.length];
+}
+
+/** 地址栏颜色（<meta name="theme-color">）改成某套主题的；doc 默认是当前页面，换页时传入新页面 */
+function syncThemeColor(id: string, doc: Document = document) {
+	const color = themeList().find((t) => t.id === id)?.color;
+	if (color) doc.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
 }
 
 /** 开关的提示文字和读屏文字跟着当前主题变 */
@@ -123,6 +131,7 @@ async function switchTheme() {
 	const next = nextTheme(list);
 	const apply = (id: string) => {
 		setTheme(id);
+		syncThemeColor(id);
 		updateLabel();
 	};
 
@@ -187,10 +196,12 @@ export function setup() {
 	document.addEventListener('pointerover', warmUp);
 	document.addEventListener('focusin', warmUp);
 
-	// 换页时新页面 <html> 上的属性会整体覆盖到当前页面，而新页面写的是默认主题，
+	// 换页时新页面 <html> 上的属性和 <head> 里的 theme-color 会整体换成新页面的，而新页面写的是默认主题，
 	// 所以在替换前把当前主题写到新文档上，否则换页会闪回默认主题
 	document.addEventListener('astro:before-swap', (e) => {
-		if (e instanceof TransitionBeforeSwapEvent) e.newDocument.documentElement.dataset.theme = currentTheme();
+		if (!(e instanceof TransitionBeforeSwapEvent)) return;
+		e.newDocument.documentElement.dataset.theme = currentTheme();
+		syncThemeColor(currentTheme(), e.newDocument);
 	});
 }
 

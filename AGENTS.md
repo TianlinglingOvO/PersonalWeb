@@ -161,7 +161,7 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论相关前端
 
 ### 主题
 
-* **清单**：`src/lib/themes.ts` 登记每套主题的名字、开关图标（`Icon.astro` 里的名字）、只在该主题下显示的页脚说明（`credit`）和各位置插画（首页三处 + 404 图片池，404 有多张时每次随机显示一张）。
+* **清单**：`src/lib/themes.ts` 登记每套主题的名字、开关图标（`Icon.astro` 里的名字）、手机地址栏颜色（`themeColor`，一般等于该主题的 `--bg`；`<meta name="theme-color">` 在绘制前、切换主题时、换页时都会同步）、只在该主题下显示的页脚说明（`credit`）和各位置插画（首页三处 + 404 图片池，404 有多张时每次随机显示一张）。
 * **默认主题**：`content/site.json` 的 `defaultTheme`；写了清单里没有的名字，构建直接失败。
 * **新增主题**：清单里加一项 → 复制一份 `src/styles/themes/*.css` 改名并改颜色 → 在 `global.css` 里导入 → 插画放进 `public/images/themes/<主题名>/`。“只显示当前主题的插画”和开关滑块位置的样式由 `themes.ts` 的 `themeCss` 按清单生成，不用手写。超过两套时开关会自动变长，但最好改成三段式或下拉菜单。
 * **主题标记**：`<html data-theme>`。BaseLayout 先按默认主题输出，`<head>` 里的内联脚本在绘制前换成访客上次选的（localStorage 的 `sutady:theme`，键名是 `scripts/core/theme.ts` 的 `THEME_KEY`，构建时通过 `define:vars` 传给内联脚本）；换页时 `features/theme-switch.ts` 在 `astro:before-swap` 里把当前主题写到新文档上，否则会闪回默认主题。

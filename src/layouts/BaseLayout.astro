@@ -1,6 +1,6 @@
 ---
 import { site } from '../lib/site';
-import { defaultTheme, themeCss, themeIds } from '../lib/themes';
+import { defaultTheme, themeColors, themeCss } from '../lib/themes';
 import { THEME_KEY } from '../scripts/core/theme';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -48,17 +48,23 @@ const shareImage = new URL(site.avatar, Astro.site ?? Astro.url);
 		{publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
 		<meta name="twitter:card" content="summary" />
 		<link rel="alternate" type="application/rss+xml" title={`${site.title} · 文章订阅`} href="/rss.xml" />
-		<link rel="icon" href="/favicon.png?v=8" type="image/png" />
-		<link rel="icon" href="/favicon.svg?v=8" type="image/svg+xml" />
-		<link rel="icon" href="/favicon.ico?v=8" sizes="any" />
-		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		{/* 网站图标（墨黑 S + 雏菊）。换图标后把这几处的 v 一起加一，否则浏览器会一直显示缓存里的旧图标 */}
+		<link rel="icon" href="/favicon.png?v=9" type="image/png" />
+		<link rel="icon" href="/favicon.svg?v=9" type="image/svg+xml" />
+		<link rel="icon" href="/favicon.ico?v=9" sizes="any" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=9" />
 		<ClientRouter />
 		<style is:inline set:html={themeCss}></style>
+		{/* 手机浏览器地址栏颜色，跟着主题变（下面的内联脚本、切换主题和换页时都会改） */}
+		<meta name="theme-color" content={themeColors[defaultTheme]} />
 		{/* 页面绘制前确定主题：换成访客上次选的主题（scripts/core/theme.ts 写入，键名共用 THEME_KEY），不在清单里的忽略 */}
-		<script is:inline define:vars={{ themeIds, THEME_KEY }}>
+		<script is:inline define:vars={{ themeColors, THEME_KEY }}>
 			try {
 				var saved = localStorage.getItem(THEME_KEY);
-				if (saved && themeIds.indexOf(saved) !== -1) document.documentElement.dataset.theme = saved;
+				if (saved && Object.prototype.hasOwnProperty.call(themeColors, saved)) {
+					document.documentElement.dataset.theme = saved;
+					document.querySelector('meta[name="theme-color"]').setAttribute('content', themeColors[saved]);
+				}
 			} catch (e) {}
 			document.documentElement.classList.add('js');
 		</script>
