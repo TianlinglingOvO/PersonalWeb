@@ -53,6 +53,7 @@ const shareImage = new URL(site.avatar, Astro.site ?? Astro.url);
 		<link rel="icon" href="/favicon.svg?v=9" type="image/svg+xml" />
 		<link rel="icon" href="/favicon.ico?v=9" sizes="any" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=9" />
+		<link rel="manifest" href="/manifest.webmanifest" />
 		<ClientRouter />
 		<style is:inline set:html={themeCss}></style>
 		{/* 手机浏览器地址栏颜色，跟着主题变（下面的内联脚本、切换主题和换页时都会改） */}

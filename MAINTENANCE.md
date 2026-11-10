@@ -188,8 +188,12 @@ links:                        # （可选）其他跳转按钮，比如 GitHub�
 | `favicon.svg` | 新浏览器优先用这个矢量图标 |
 | `favicon.ico`（含 16 / 32 / 48 三个尺寸）、`favicon.png`（48×48） | 老浏览器和其他场合 |
 | `apple-touch-icon.png`（180×180） | iPhone / iPad “添加到主屏幕”；不透明、不带圆角（系统会自己裁） |
+| `icon-192.png`、`icon-512.png`（带圆角、四角透明） | 安卓“添加到桌面”的图标和开屏画面 |
+| `icon-maskable-512.png`（铺满、四周留边） | 安卓会把图标裁成圆形 / 水滴形时用 |
 
-最终版 SVG、生成全套图标的脚本（`node build-icons.mjs <输出目录> <源 SVG>`）和各版草稿在 `update_plan/网站图标/`，旧图标在它的 `旧图标/` 里。换图标后要把 `src/layouts/BaseLayout.astro` 里图标链接的 `?v=9` 一起加一，否则浏览器会一直显示缓存里的旧图标。
+手机把网站“添加到桌面”后，从桌面打开时的**开屏画面**由系统按 `/manifest.webmanifest`（`src/pages/manifest.webmanifest.ts` 构建时生成）来画：图标居中，底色是默认主题的页面底色（`src/lib/themes.ts` 的 `themeColor`），名字取自 `content/site.json`。系统读不到访客在站内选的主题，所以开屏底色不会跟着主题变。
+
+最终版 SVG、生成全套图标的脚本（`node build-icons.mjs <输出目录> <源 SVG>`）和各版草稿在 `update_plan/网站图标/`，旧图标在它的 `旧图标/` 里。换图标后要把 `src/layouts/BaseLayout.astro` 里图标链接的 `?v=9` 和 `src/pages/manifest.webmanifest.ts` 的 `ICON_VERSION` 一起加一，否则浏览器会一直显示缓存里的旧图标。
 
 **插画和背景底纹每套主题各一份**，放在 `public/images/themes/<主题名>/`，路径和尺寸登记在 `src/lib/themes.ts`：
 

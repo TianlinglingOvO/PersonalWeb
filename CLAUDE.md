@@ -39,7 +39,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 
 **页面**
 - 首页 `src/pages/index.astro` 是单页，由 Hero、About、Articles（最新 3 篇）、Timeline、Services、Connect 拼成；各集合的排序写在页面或 `src/lib/` 里，不在组件中。
-- `/articles/` 是文章列表（带分类筛选），`/articles/[slug]/` 是文章页（左侧切换文章、右侧目录、底部上一篇 / 下一篇和评论区），`/login/` 登录 / 注册，`/account/` 账号页（访问统计（仅站长）、回复我的、改密码、退出、注销），`/rss.xml` 和 `/sitemap.xml` 是构建时生成的静态文件。
+- `/articles/` 是文章列表（带分类筛选），`/articles/[slug]/` 是文章页（左侧切换文章、右侧目录、底部上一篇 / 下一篇和评论区），`/login/` 登录 / 注册，`/account/` 账号页（访问统计（仅站长）、回复我的、改密码、退出、注销），`/rss.xml`、`/sitemap.xml` 和 `/manifest.webmanifest`（网站清单：手机添加到桌面后的图标、名字和开屏底色，底色取默认主题的 `themeColor`）是构建时生成的静态文件。
 - 所有页面套用 `src/layouts/BaseLayout.astro`：启用 `<ClientRouter />`（View Transitions），带 Open Graph / Twitter 分享信息，在 `<html data-theme>` 上标记主题（`<head>` 内联脚本在绘制前恢复访客的选择），并在 body 底部加载唯一的客户端脚本 `src/scripts/ui.ts`。
 
 **客户端脚本 `src/scripts/`**
