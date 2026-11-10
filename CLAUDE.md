@@ -38,7 +38,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 - 图片：`src/lib/content-check.mjs`（Astro 集成）在构建开始时检查 `content/`、`src/` 里所有 `/images/...` 引用是否存在（大小写敏感），有问题直接让构建失败；`src/lib/markdown-images.mjs`（Sätteri 的 hast 插件）给 Markdown 图片补上 `width` / `height` / `loading="lazy"` / `decoding="async"`。两者都在 `astro.config.mjs` 里注册。Astro 7 默认用 Sätteri 处理 Markdown，`markdown.rehypePlugins` 这类 unified 插件不能直接用。
 
 **页面**
-- 首页 `src/pages/index.astro` 是单页，由 Hero、About、Timeline、Articles（最新 3 篇）、Services、Connect 拼成；各集合的排序写在页面或 `src/lib/` 里，不在组件中。
+- 首页 `src/pages/index.astro` 是单页，由 Hero、About、Articles（最新 3 篇）、Timeline、Services、Connect 拼成；各集合的排序写在页面或 `src/lib/` 里，不在组件中。
 - `/articles/` 是文章列表（带分类筛选），`/articles/[slug]/` 是文章页（左侧切换文章、右侧目录、底部上一篇 / 下一篇和评论区），`/login/` 登录 / 注册，`/account/` 账号页（访问统计（仅站长）、回复我的、改密码、退出、注销），`/rss.xml` 和 `/sitemap.xml` 是构建时生成的静态文件。
 - 所有页面套用 `src/layouts/BaseLayout.astro`：启用 `<ClientRouter />`（View Transitions），带 Open Graph / Twitter 分享信息，在 `<html data-theme>` 上标记主题（`<head>` 内联脚本在绘制前恢复访客的选择），并在 body 底部加载唯一的客户端脚本 `src/scripts/ui.ts`。
 
@@ -60,7 +60,7 @@ npm run admin -- users   # 站长管理账号：列用户、设站长、重置�
 - 首页插画用 `ThemeImage.astro` 按主题各输出一张、只显示当前主题的；只在某主题下显示的元素加 `data-theme-only`，隐藏规则由 `themes.ts` 的 `themeCss` 生成并内联进 `<head>`。插画全部懒加载，这样只下载当前主题的图；首屏插画由 `Hero.astro` 的内联脚本在绘制前只把当前主题那张改成立即加载，模板里不要直接写 eager。
 - 换色动画用 `startViewTransition`：新主题像斜向幕布推过去，边缘有一道主题色柔光；方向跟开关滑块一致（往右滑从左上角推到右下角，往左滑反过来）；动画中途再点开关会原路退回。“像素侵蚀”效果试过、站长否决了，不要再加回来。细节、新增主题的步骤见 AGENTS.md 第 3、7 节。设计方案存档在 `update_plan/Themes-Plans/`。
 
-**时间线（Section 02）**
+**时间线（Section 03）**
 - 排序在 `index.astro` 里完成，**时间正序**：order 越小越早（2006 出生在最前），`isFuture` 永远排在最后。
 - 电脑端（>860px）是**年历**：顶部年份标签（`role="tablist"`）切换年份，每年一张 12 个月的格子；同月多条经历在格子里显示为标题小胶囊（最多 `MAX_CHIPS` 条，超出显示“+N”），点月份后在右侧（<1100px 时在下方）显示当月全部完整卡片。同月有 `FOLD_FROM`（3）条及以上时折叠：只展开一张（默认第一张），其余收成一行“日期 + 标题”（`timeline-entry-row`），点哪行展开哪张；点年历小胶囊、`/#tl-…` 链接会展开对应那张。折叠只在电脑端，无 JS 时全部完整显示。高度只取决于当前月份，不会随条目总数变长。`Future` 是单独一页，没有月份格。
 - 手机端（≤860px）是按年份折叠的竖向时间线，同一套 DOM：隐藏年历，所有月份详情依次铺开；默认只展开最近一年和 Future；展开的年份只显示最近 `MOBILE_RECENT` 条，更早的收在“展开这一年更早的 N 条”里。

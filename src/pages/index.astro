@@ -27,8 +27,8 @@ const services = (await getCollection('services')).sort((a, b) => a.data.order -
 		<Hero latest={articles[0]} />
 		<About entry={aboutEntry} />
 	</div>
-	<Timeline timeline={timeline} articles={articles} />
 	<Articles articles={articles} />
+	<Timeline timeline={timeline} articles={articles} />
 	<Services services={services} />
 	<Connect />
 </BaseLayout>
