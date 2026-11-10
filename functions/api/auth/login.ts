@@ -24,14 +24,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
 	}
 
 	const cookie = await createSession(env, row.id);
-	// 顺手清理过期的登录状态和限流记录
+	// 顺手清理过期的登录状态（限流记录由 rateLimit 自己清理）
 	if (Math.random() < 0.1) {
 		const now = Math.floor(Date.now() / 1000);
-		waitUntil(
-			env.DB.batch([
-				env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),
-			]),
-		);
+		waitUntil(env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now).run());
 	}
 	return json({ user: publicUser({ id: row.id, username: row.username, isAdmin: row.is_admin === 1 }) }, 200, {
 		'Set-Cookie': cookie,

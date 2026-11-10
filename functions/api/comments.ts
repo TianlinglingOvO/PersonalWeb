@@ -29,9 +29,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 	if (content.length > MAX_LENGTH) return fail(`评论最多 ${MAX_LENGTH} 字`);
 
 	// 互不依赖的检查并行做，少几次往返
-	const [exists, allowed, target] = await Promise.all([
+	// 两道限流：每分钟 5 条防手滑连发，每小时 60 条防有人用一个账号长时间刷屏
+	const [exists, allowed, hourAllowed, target] = await Promise.all([
 		articleExists(env, request, slug),
 		rateLimit(env, `comment:${user.id}`, 5, 60),
+		rateLimit(env, `comment-hour:${user.id}`, 60, 3600),
 		replyTo
 			? env.DB.prepare('SELECT id, parent_id, user_id, deleted FROM comments WHERE id = ? AND slug = ?')
 					.bind(replyTo, slug)
@@ -40,6 +42,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 	]);
 	if (!exists) return fail('文章不存在', 404);
 	if (!allowed) return fail('评论太快啦，休息一分钟再发吧', 429);
+	if (!hourAllowed) return fail('这一小时发得太多啦，过一会儿再来吧', 429);
 
 	// 回复：挂到被回复评论所在的顶层评论下面；回复的是楼中楼里的某条时，记下“回复 @谁”
 	let parentId: number | null = null;
