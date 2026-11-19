@@ -117,9 +117,9 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论、浏览量
 * **计数类接口的共同规则**：
   * 浏览量与访问统计均在前端（`src/scripts/core/visitors.ts`）和服务端（`functions/_lib/visitors.ts` + 接口侧 `getUser`）双重排除站长本人、自动化浏览器与爬虫/HTTP 客户端；
   * 所有 `*.pages.dev` 部署（含预览部署和默认域名）只查询不计数，避免验收、爬虫或未携带正式域 Cookie 的访问污染正式数据库；
-  * `isSameOrigin()` 严格要求同源 `Origin` 或 `Referer` 并拦截 `Sec-Fetch-Site` 跨站请求，不放行无来源头的脚本请求；
-  * 访客按 `IP + UA + 北京时间日期` 每天去重、只存哈希不存原始 IP；`clientIp()` 对 IPv6 取小写去前导零的 `/64` 前缀，并将 `::ffff:a.b.c.d` 映射地址归一化为 IPv4；
-  * 计数与评论的 `articleExists()` 禁用重定向（`redirect: 'manual'`）并排除 `slug === 'index'`；`rateLimit()` 支持传入 `waitUntil` 在后台清理过期记录。
+  * `isSameOrigin()` 严格要求同源 `Origin` 或 `Referer` 并拦截 `Sec-Fetch-Site` 跨站请求（对浏览器侧及无来源头脚本生效；非浏览器脚本可自行伪造请求头，边缘抗刷依赖 Cloudflare 速率限制规则）；
+  * 访客按 `IP + UA + 北京时间日期` 每天去重、只存哈希不存原始 IP；`clientIp()` 对 IPv6 取小写去前导零的 `/64` 前缀，并将 `::ffff:a.b.c.d` 映射地址归一化为 IPv4（已知边界：持有 `/48` 或 `/56` 的客户端轮换 `/64` 前缀可绕过按 IP 限流）；
+  * 计数与评论的 `articleExists()` 禁用重定向（`redirect: 'manual'`）并排除 `slug === 'index'`；`pairedRateLimitStatements` / `guardedRateLimitStatement` 在单次 `DB.batch` 内做互不误扣的原子多桶限流，`maybeCleanupRateLimits` 以 5% 概率通过 `waitUntil` 后台清理过期记录。
 
 * **目录约定**：`functions/api/**` 每个文件对应一个接口；共用代码放 `functions/_lib/`（下划线目录不会变成路由）。`functions/` 有独立的 `tsconfig.json`，`npm run check` 会一并检查。
 * **绑定与配置**：`wrangler.toml` 是 Pages 配置的唯一来源（数据库绑定名 `DB`），不要在 Cloudflare 后台另改绑定。

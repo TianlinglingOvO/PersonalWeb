@@ -104,6 +104,76 @@ export async function readJson<T>(request: Request): Promise<Partial<T>> {
 	}
 }
 
+export interface RateBucket {
+	key: string;
+	limit: number;
+	windowSec: number;
+}
+
+/** 单桶计数 SQL（可单独执行或放入 DB.batch，返回当前窗口计数值） */
+export function rateLimitStatement(env: Env, key: string, now: number, windowSec: number) {
+	return env.DB.prepare(
+		`INSERT INTO rate_limits (key, count, window_start) VALUES (?1, 1, ?2)
+		 ON CONFLICT (key) DO UPDATE SET
+			count = CASE WHEN window_start <= ?3 THEN 1 ELSE count + 1 END,
+			window_start = CASE WHEN window_start <= ?3 THEN ?2 ELSE window_start END
+		 RETURNING count`,
+	).bind(key, now, now - windowSec);
+}
+
+/** 仅当两个限流桶均未超限时才同时 +1，避免其中一项已超限时误扣另一项配额；后续语句可凭 changes() > 0 判断是否放行 */
+export function pairedRateLimitStatements(env: Env, first: RateBucket, second: RateBucket, now: number) {
+	const firstSql = `INSERT INTO rate_limits (key, count, window_start)
+		SELECT ?1, 1, ?2
+		WHERE COALESCE((SELECT count FROM rate_limits WHERE key = ?1 AND window_start > ?3), 0) < ?4
+		  AND COALESCE((SELECT count FROM rate_limits WHERE key = ?5 AND window_start > ?6), 0) < ?7
+		ON CONFLICT (key) DO UPDATE SET
+			count = CASE WHEN window_start <= ?3 THEN 1 ELSE count + 1 END,
+			window_start = CASE WHEN window_start <= ?3 THEN ?2 ELSE window_start END`;
+	const secondSql = `INSERT INTO rate_limits (key, count, window_start)
+		SELECT ?1, 1, ?2 WHERE changes() > 0
+		ON CONFLICT (key) DO UPDATE SET
+			count = CASE WHEN window_start <= ?3 THEN 1 ELSE count + 1 END,
+			window_start = CASE WHEN window_start <= ?3 THEN ?2 ELSE window_start END`;
+	return [
+		env.DB.prepare(firstSql).bind(
+			first.key,
+			now,
+			now - first.windowSec,
+			first.limit,
+			second.key,
+			now - second.windowSec,
+			second.limit,
+		),
+		env.DB.prepare(secondSql).bind(second.key, now, now - second.windowSec),
+	];
+}
+
+/** 在 DB.batch 中串联附加限流桶：仅当前序语句已放行（changes() > 0）且本桶未超限时 +1 */
+export function guardedRateLimitStatement(env: Env, bucket: RateBucket, now: number) {
+	return env.DB.prepare(
+		`INSERT INTO rate_limits (key, count, window_start)
+		SELECT ?1, 1, ?2
+		WHERE changes() > 0
+		  AND COALESCE((SELECT count FROM rate_limits WHERE key = ?1 AND window_start > ?3), 0) < ?4
+		ON CONFLICT (key) DO UPDATE SET
+			count = CASE WHEN window_start <= ?3 THEN 1 ELSE count + 1 END,
+			window_start = CASE WHEN window_start <= ?3 THEN ?2 ELSE window_start END`,
+	).bind(bucket.key, now, now - bucket.windowSec, bucket.limit);
+}
+
+/** 偶尔顺手清理一天前的限流记录，避免被大量不同 IP / key 刷出过多行数 */
+export async function maybeCleanupRateLimits(
+	env: Env,
+	now: number,
+	waitUntil?: (promise: Promise<unknown>) => void,
+) {
+	if (Math.random() >= 0.05) return;
+	const cleanup = env.DB.prepare('DELETE FROM rate_limits WHERE window_start < ?').bind(now - 86400).run();
+	if (waitUntil) waitUntil(cleanup);
+	else await cleanup;
+}
+
 /** 固定窗口限流：windowSec 秒内超过 limit 次返回 false */
 export async function rateLimit(
 	env: Env,
@@ -113,20 +183,7 @@ export async function rateLimit(
 	waitUntil?: (promise: Promise<unknown>) => void,
 ) {
 	const now = Math.floor(Date.now() / 1000);
-	const row = await env.DB.prepare(
-		`INSERT INTO rate_limits (key, count, window_start) VALUES (?1, 1, ?2)
-		 ON CONFLICT (key) DO UPDATE SET
-			count = CASE WHEN window_start <= ?3 THEN 1 ELSE count + 1 END,
-			window_start = CASE WHEN window_start <= ?3 THEN ?2 ELSE window_start END
-		 RETURNING count`,
-	)
-		.bind(key, now, now - windowSec)
-		.first<{ count: number }>();
-	// 偶尔顺手清理一天前的限流记录，避免被大量不同 IP 刷出很多行
-	if (Math.random() < 0.01) {
-		const cleanup = env.DB.prepare('DELETE FROM rate_limits WHERE window_start < ?').bind(now - 86400).run();
-		if (waitUntil) waitUntil(cleanup);
-		else await cleanup;
-	}
+	const row = await rateLimitStatement(env, key, now, windowSec).first<{ count: number }>();
+	await maybeCleanupRateLimits(env, now, waitUntil);
 	return (row?.count ?? 1) <= limit;
 }

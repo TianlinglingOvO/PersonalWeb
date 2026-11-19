@@ -125,6 +125,7 @@ function client(name, { ip } = {}) {
 			cookie = pair.endsWith('=') ? '' : pair;
 		}
 		const text = await res.text();
+		/** @type {any} */
 		let data = text;
 		try {
 			data = JSON.parse(text);
@@ -153,6 +154,7 @@ async function runTests() {
 		.filter((f) => f.endsWith('.md'))
 		.sort()
 		.map((f) => f.replace(/\.md$/, ''));
+	if (slugs.length < 6) throw new Error(`冒烟测试至少需要 6 篇文章，当前只有 ${slugs.length} 篇`);
 	const [slug, slugRepeat, slugOther, slugLimit, slugIpv6, slugRef] = slugs;
 	const guest = client('guest');
 	const A = client('A');
@@ -253,7 +255,7 @@ async function runTests() {
 		const indexSlug = await guest('POST', '/api/views?slug=index');
 		return expect(bad.status === 400 && missing.status === 404 && indexSlug.status === 404, `${bad.status}/${missing.status}/${indexSlug.status}`);
 	});
-	await check('浏览量：去重优先不耗尽限流，单 IP 换 UA 刷单篇每小时最多 5 次', async () => {
+	await check('浏览量：去重先于计数限流，单分钟重放超过 120 次返回 429', async () => {
 		const repeatReader = client('repeat-reader', { ip: '198.51.100.10' });
 		let repeatOk = true;
 		for (let i = 0; i < 60; i++) {
@@ -265,20 +267,35 @@ async function runTests() {
 		}
 		const nextArticle = await repeatReader('POST', `/api/views?slug=${slugOther}`);
 
+		const flooder = client('flooder', { ip: '198.51.100.13' });
+		const floodStatuses = [];
+		for (let i = 0; i < 121; i++) {
+			const r = await flooder('POST', `/api/views?slug=${slugRepeat}`);
+			floodStatuses.push(r.status);
+		}
+		const floodOk = floodStatuses.slice(0, 120).every((s) => s === 200) && floodStatuses[120] === 429;
+
+		return expect(
+			repeatOk && nextArticle.data.counted === true && nextArticle.data.count === 1 && floodOk,
+			`repeatOk=${repeatOk} next=${show(nextArticle)} floodLast=${JSON.stringify(floodStatuses.slice(-3))}`,
+		);
+	});
+	await check('浏览量：单 IP 换 UA 刷单篇每小时最多 15 次，且超限不误扣其他篇配额', async () => {
 		const rotCounts = [];
-		for (let i = 0; i < 6; i++) {
+		for (let i = 0; i < 16; i++) {
 			const r = await client(`ua-${i}`, { ip: '198.51.100.11' })('POST', `/api/views?slug=${slugLimit}`);
 			rotCounts.push(r.data);
 		}
 		const rotOk =
-			rotCounts.slice(0, 5).every((d, i) => d.counted === true && d.count === i + 1 && Boolean(d.day)) &&
-			rotCounts[5].counted === false &&
-			rotCounts[5].count === 5 &&
-			rotCounts[5].day === undefined;
+			rotCounts.slice(0, 15).every((d, i) => d.counted === true && d.count === i + 1 && Boolean(d.day)) &&
+			rotCounts[15].counted === false &&
+			rotCounts[15].count === 15 &&
+			rotCounts[15].day === undefined;
 
+		const otherArticle = await client('ua-16', { ip: '198.51.100.11' })('POST', `/api/views?slug=${slugOther}`);
 		return expect(
-			repeatOk && nextArticle.data.counted === true && nextArticle.data.count === 1 && rotOk,
-			`repeatOk=${repeatOk} next=${show(nextArticle)} rot=${JSON.stringify(rotCounts)}`,
+			rotOk && otherArticle.data.counted === true && otherArticle.data.count === 2,
+			`rot=${JSON.stringify(rotCounts.slice(-2))} other=${show(otherArticle)}`,
 		);
 	});
 	await check('浏览量：IPv6 前导零与 IPv4 映射地址归一化去重', async () => {
@@ -496,7 +513,7 @@ async function runTests() {
 			`${denied.status} ${show(selfVisit)} ${show(selfView)} ${r.status} ${JSON.stringify(r.data).slice(-200)}`,
 		);
 	});
-	await check('访问统计：单 IP 换 UA 刷 UV 每小时最多 10 位，已记录访客继续浏览不占配额', async () => {
+	await check('访问统计：单 IP 每小时最多 30 位新访客（超限仍计浏览），分钟级突发上限 60 次', async () => {
 		const admin = client('admin-stats');
 		const adminName = `adm${Date.now().toString(36).slice(-5)}`;
 		await admin('POST', '/api/auth/register', { username: adminName, password: 'secret789' });
@@ -504,12 +521,12 @@ async function runTests() {
 		const before = await admin('GET', '/api/visits');
 		const beforeUv = before.data.days.reduce((n, d) => n + d.uv, 0);
 
-		const results11 = [];
-		for (let i = 0; i < 11; i++) {
+		const results31 = [];
+		for (let i = 0; i < 31; i++) {
 			const r = await client(`rot-${i}`, { ip: '198.51.100.20' })('POST', '/api/visits', undefined, {
 				headers: { 'User-Agent': `VisitUA-${i}` },
 			});
-			results11.push(r.data.counted);
+			results31.push(r.data.counted);
 		}
 		const repeatSeen = await client('rot-0', { ip: '198.51.100.20' })('POST', '/api/visits', undefined, {
 			headers: { 'User-Agent': 'VisitUA-0' },
@@ -517,13 +534,24 @@ async function runTests() {
 
 		const after = await admin('GET', '/api/visits');
 		const afterUv = after.data.days.reduce((n, d) => n + d.uv, 0);
+
+		const burstClient = client('burst', { ip: '198.51.100.21' });
+		const burst = [];
+		for (let i = 0; i < 61; i++) {
+			const r = await burstClient('POST', '/api/visits', undefined, {
+				headers: { 'User-Agent': 'BurstUA/1.0' },
+			});
+			burst.push(r.data.counted);
+		}
+		const burstOk = burst.slice(0, 60).every(Boolean) && burst[60] === false;
+
 		return expect(
-			results11.slice(0, 10).every(Boolean) &&
-				results11[10] === false &&
+			results31.every(Boolean) &&
 				repeatSeen.data.counted === true &&
-				after.data.total - before.data.total === 11 &&
-				afterUv - beforeUv === 10,
-			`results11=${JSON.stringify(results11)} repeat=${show(repeatSeen)} pvDelta=${after.data.total - before.data.total} uvDelta=${afterUv - beforeUv}`,
+				after.data.total - before.data.total === 32 &&
+				afterUv - beforeUv === 30 &&
+				burstOk,
+			`results31=${results31.filter(Boolean).length}/31 repeat=${show(repeatSeen)} pvDelta=${after.data.total - before.data.total} uvDelta=${afterUv - beforeUv} burst60=${burst[59]} burst61=${burst[60]}`,
 		);
 	});
 }

@@ -3,13 +3,14 @@
 import { TransitionBeforeSwapEvent } from 'astro:transitions/client';
 import { isAdminVisitor, isAutomated, whenPageVisible } from '../core/visitors';
 
+const routeOf = (url: { pathname: string; search: string }) => url.pathname + url.search;
 let skipNextVisit = false;
-let lastCountedPath = '';
+let lastCountedRoute = '';
 
 export function setup() {
 	document.addEventListener('astro:before-swap', (e) => {
 		if (!(e instanceof TransitionBeforeSwapEvent)) return;
-		skipNextVisit = e.navigationType === 'traverse' || e.from.pathname === e.to.pathname;
+		skipNextVisit = e.navigationType === 'traverse' || routeOf(e.from) === routeOf(e.to);
 	});
 }
 
@@ -18,16 +19,17 @@ export function init(signal: AbortSignal) {
 	const skipped = skipNextVisit;
 	skipNextVisit = false;
 	if (import.meta.env.DEV || document.body.hasAttribute('data-no-visit') || isAutomated()) return;
+	const route = routeOf(location);
 	if (skipped) {
-		lastCountedPath = location.pathname;
+		lastCountedRoute = route;
 		return;
 	}
-	if (location.pathname === lastCountedPath) return;
+	if (route === lastCountedRoute) return;
 
 	whenPageVisible(() => {
 		void (async () => {
 			if ((await isAdminVisitor()) || signal.aborted) return;
-			lastCountedPath = location.pathname;
+			lastCountedRoute = route;
 			// keepalive：刚打开就马上离开的页面也能报出去；不挂 signal，换页不会把它取消
 			void fetch('/api/visits', { method: 'POST', credentials: 'same-origin', keepalive: true }).catch(() => {});
 		})();
