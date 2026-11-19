@@ -103,16 +103,18 @@ async function startServer() {
 }
 
 /** 一个“浏览器”：自己保存登录 Cookie */
-function client(name) {
+function client(name, { ip } = {}) {
 	let cookie = '';
-	return async (method, url, body, { origin = BASE } = {}) => {
+	return async (method, url, body, { origin = BASE, headers = {} } = {}) => {
 		const res = await fetch(BASE + url, {
 			method,
 			headers: {
-				Origin: origin,
+				...(origin === null ? {} : { Origin: origin }),
 				'User-Agent': `smoke-${name}`,
+				...(ip ? { 'CF-Connecting-IP': ip } : {}),
 				...(body ? { 'Content-Type': 'application/json' } : {}),
 				...(cookie ? { Cookie: cookie } : {}),
+				...headers,
 			},
 			body: body ? JSON.stringify(body) : undefined,
 			redirect: 'manual',
@@ -123,6 +125,7 @@ function client(name) {
 			cookie = pair.endsWith('=') ? '' : pair;
 		}
 		const text = await res.text();
+		/** @type {any} */
 		let data = text;
 		try {
 			data = JSON.parse(text);
@@ -147,10 +150,12 @@ const expect = (cond, detail) => (cond ? '' : detail);
 const show = (r) => JSON.stringify(r.data).slice(0, 200);
 
 async function runTests() {
-	const slug = readdirSync(path.join(ROOT, 'content/articles'))
+	const slugs = readdirSync(path.join(ROOT, 'content/articles'))
 		.filter((f) => f.endsWith('.md'))
-		.sort()[0]
-		.replace(/\.md$/, '');
+		.sort()
+		.map((f) => f.replace(/\.md$/, ''));
+	if (slugs.length < 6) throw new Error(`冒烟测试至少需要 6 篇文章，当前只有 ${slugs.length} 篇`);
+	const [slug, slugRepeat, slugOther, slugLimit, slugIpv6, slugRef] = slugs;
 	const guest = client('guest');
 	const A = client('A');
 	const A2 = client('A-phone');
@@ -164,10 +169,22 @@ async function runTests() {
 			const r = await guest('GET', url);
 			if (r.status !== 200) return `${url} 返回 ${r.status}`;
 		}
+		const home = await guest('GET', '/');
+		const login = await guest('GET', '/login/');
+		const account = await guest('GET', '/account/');
 		const rss = await guest('GET', '/rss.xml');
-		return expect(String(rss.data).includes(`/articles/${slug}/`), 'RSS 里没有文章链接');
+		return expect(
+			!String(home.data).includes('data-no-visit') &&
+				String(login.data).includes('data-no-visit') &&
+				String(account.data).includes('data-no-visit') &&
+				String(rss.data).includes(`/articles/${slug}/`),
+			'页面 data-no-visit 标记或 RSS 内容不符合预期',
+		);
 	});
-	await check('静态页：不存在的地址返回 404', async () => expect((await guest('GET', '/no-such-page/')).status === 404, '没有返回 404'));
+	await check('静态页：不存在的地址返回 404 且标记不计入访问统计', async () => {
+		const r = await guest('GET', '/no-such-page/');
+		return expect(r.status === 404 && String(r.data).includes('data-no-visit'), `status=${r.status}`);
+	});
 
 	// ---- 未登录 ----
 	await check('未登录：/api/auth/me 返回空', async () => {
@@ -186,18 +203,125 @@ async function runTests() {
 		const first = await guest('POST', `/api/views?slug=${slug}`);
 		const second = await guest('POST', `/api/views?slug=${slug}`);
 		const batch = await guest('GET', `/api/views?slugs=${slug},no_such_article`);
-		return expect(first.data.count === 1 && second.data.count === 1 && batch.data[slug] === 1, `${show(first)} ${show(second)} ${show(batch)}`);
+		return expect(
+			first.data.count === 1 &&
+				first.data.counted === true &&
+				/^\d{4}-\d{2}-\d{2}$/.test(first.data.day) &&
+				second.data.count === 1 &&
+				second.data.counted === false &&
+				second.data.day === first.data.day &&
+				batch.data[slug] === 1,
+			`${show(first)} ${show(second)} ${show(batch)}`,
+		);
 	});
-	await check('浏览量：跨站请求和爬虫不计数', async () => {
+	await check('浏览量：跨站、缺来源、爬虫不计数，同源 Referer 可放行', async () => {
 		const csrf = await client('other')('POST', `/api/views?slug=${slug}`, undefined, { origin: 'https://evil.example' });
-		const bot = await client('Googlebot/2.1')('POST', `/api/views?slug=${slug}`);
+		const noOrigin = await client('no-origin')('POST', `/api/views?slug=${slug}`, undefined, { origin: null });
+		const crossSite = await client('cross')('POST', `/api/views?slug=${slug}`, undefined, {
+			headers: { 'Sec-Fetch-Site': 'cross-site' },
+		});
+		const bot = await client('bot')('POST', `/api/views?slug=${slug}`, undefined, {
+			headers: { 'User-Agent': 'Googlebot/2.1' },
+		});
+		const preview = await client('preview')('POST', `/api/views?slug=${slug}`, undefined, {
+			headers: { 'User-Agent': 'BingPreview/1.0b' },
+		});
+		const curlReq = await client('curl')('POST', `/api/views?slug=${slug}`, undefined, {
+			headers: { 'User-Agent': 'curl/8.5.0' },
+		});
+		const refOnly = await client('ref-reader', { ip: '198.51.100.12' })('POST', `/api/views?slug=${slugRef}`, undefined, {
+			origin: null,
+			headers: { Referer: `${BASE}/articles/${slugRef}/` },
+		});
 		const after = await guest('GET', `/api/views?slugs=${slug}`);
-		return expect(csrf.status === 403 && bot.data.count === 1 && after.data[slug] === 1, `${csrf.status} ${show(bot)} ${show(after)}`);
+		return expect(
+			csrf.status === 403 &&
+				noOrigin.status === 403 &&
+				crossSite.status === 403 &&
+				bot.data.count === 1 &&
+				bot.data.counted === false &&
+				preview.data.count === 1 &&
+				curlReq.data.count === 1 &&
+				refOnly.status === 200 &&
+				refOnly.data.counted === true &&
+				refOnly.data.count === 1 &&
+				after.data[slug] === 1,
+			`${csrf.status}/${noOrigin.status}/${crossSite.status} ${show(bot)} ${show(refOnly)} ${show(after)}`,
+		);
 	});
-	await check('浏览量：不存在的文章不计数', async () => {
+	await check('浏览量：不存在的文章（含 index）不计数', async () => {
 		const bad = await guest('POST', '/api/views?slug=../etc');
 		const missing = await guest('POST', '/api/views?slug=no_such_article');
-		return expect(bad.status === 400 && missing.status === 404, `${bad.status}/${missing.status}`);
+		const indexSlug = await guest('POST', '/api/views?slug=index');
+		return expect(bad.status === 400 && missing.status === 404 && indexSlug.status === 404, `${bad.status}/${missing.status}/${indexSlug.status}`);
+	});
+	await check('浏览量：去重先于计数限流，单分钟重放超过 120 次返回 429', async () => {
+		const repeatReader = client('repeat-reader', { ip: '198.51.100.10' });
+		let repeatOk = true;
+		for (let i = 0; i < 60; i++) {
+			const r = await repeatReader('POST', `/api/views?slug=${slugRepeat}`);
+			if (r.status !== 200 || r.data.count !== 1 || r.data.counted !== (i === 0) || !r.data.day) {
+				repeatOk = false;
+				break;
+			}
+		}
+		const nextArticle = await repeatReader('POST', `/api/views?slug=${slugOther}`);
+
+		const flooder = client('flooder', { ip: '198.51.100.13' });
+		const floodStatuses = [];
+		for (let i = 0; i < 121; i++) {
+			const r = await flooder('POST', `/api/views?slug=${slugRepeat}`);
+			floodStatuses.push(r.status);
+		}
+		const floodOk = floodStatuses.slice(0, 120).every((s) => s === 200) && floodStatuses[120] === 429;
+
+		return expect(
+			repeatOk && nextArticle.data.counted === true && nextArticle.data.count === 1 && floodOk,
+			`repeatOk=${repeatOk} next=${show(nextArticle)} floodLast=${JSON.stringify(floodStatuses.slice(-3))}`,
+		);
+	});
+	await check('浏览量：单 IP 换 UA 刷单篇每小时最多 15 次，且超限不误扣其他篇配额', async () => {
+		const rotCounts = [];
+		for (let i = 0; i < 16; i++) {
+			const r = await client(`ua-${i}`, { ip: '198.51.100.11' })('POST', `/api/views?slug=${slugLimit}`);
+			rotCounts.push(r.data);
+		}
+		const rotOk =
+			rotCounts.slice(0, 15).every((d, i) => d.counted === true && d.count === i + 1 && Boolean(d.day)) &&
+			rotCounts[15].counted === false &&
+			rotCounts[15].count === 15 &&
+			rotCounts[15].day === undefined;
+
+		const otherArticle = await client('ua-16', { ip: '198.51.100.11' })('POST', `/api/views?slug=${slugOther}`);
+		return expect(
+			rotOk && otherArticle.data.counted === true && otherArticle.data.count === 2,
+			`rot=${JSON.stringify(rotCounts.slice(-2))} other=${show(otherArticle)}`,
+		);
+	});
+	await check('浏览量：IPv6 前导零与 IPv4 映射地址归一化去重', async () => {
+		const v6a = await client('v6', { ip: '240e:03b7:0012:00a0::1' })('POST', `/api/views?slug=${slugIpv6}`, undefined, {
+			headers: { 'User-Agent': 'IPv6Reader/1.0' },
+		});
+		const v6b = await client('v6', { ip: '240E:3B7:12:A0::2' })('POST', `/api/views?slug=${slugIpv6}`, undefined, {
+			headers: { 'User-Agent': 'IPv6Reader/1.0' },
+		});
+		const v4m = await client('v4m', { ip: '::ffff:203.0.113.9' })('POST', `/api/views?slug=${slugIpv6}`, undefined, {
+			headers: { 'User-Agent': 'MappedReader/1.0' },
+		});
+		const v4 = await client('v4', { ip: '203.0.113.9' })('POST', `/api/views?slug=${slugIpv6}`, undefined, {
+			headers: { 'User-Agent': 'MappedReader/1.0' },
+		});
+		return expect(
+			v6a.data.counted === true &&
+				v6a.data.count === 1 &&
+				v6b.data.counted === false &&
+				v6b.data.count === 1 &&
+				v4m.data.counted === true &&
+				v4m.data.count === 2 &&
+				v4.data.counted === false &&
+				v4.data.count === 2,
+			`${show(v6a)} ${show(v6b)} ${show(v4m)} ${show(v4)}`,
+		);
 	});
 
 	// ---- 访问统计：计数 ----
@@ -207,11 +331,32 @@ async function runTests() {
 		const other = await client('visitor-2')('POST', '/api/visits');
 		return expect(first.data.counted === true && second.data.counted === true && other.data.counted === true, `${show(first)} ${show(second)} ${show(other)}`);
 	});
-	await check('访问统计：跨站请求和爬虫不计数，未登录看不到统计', async () => {
+	await check('访问统计：跨站、缺来源和爬虫不计数，未登录看不到统计', async () => {
 		const csrf = await client('other')('POST', '/api/visits', undefined, { origin: 'https://evil.example' });
-		const bot = await client('Baiduspider')('POST', '/api/visits');
+		const noOrigin = await client('no-origin')('POST', '/api/visits', undefined, { origin: null });
+		const crossSite = await client('cross')('POST', '/api/visits', undefined, {
+			headers: { 'Sec-Fetch-Site': 'cross-site' },
+		});
+		const bot = await client('bot')('POST', '/api/visits', undefined, {
+			headers: { 'User-Agent': 'Baiduspider' },
+		});
+		const preview = await client('preview')('POST', '/api/visits', undefined, {
+			headers: { 'User-Agent': 'BingPreview/1.0b' },
+		});
+		const curlReq = await client('curl')('POST', '/api/visits', undefined, {
+			headers: { 'User-Agent': 'curl/8.5.0' },
+		});
 		const stats = await guest('GET', '/api/visits');
-		return expect(csrf.status === 403 && bot.data.counted === false && stats.status === 401, `${csrf.status} ${show(bot)} ${stats.status}`);
+		return expect(
+			csrf.status === 403 &&
+				noOrigin.status === 403 &&
+				crossSite.status === 403 &&
+				bot.data.counted === false &&
+				preview.data.counted === false &&
+				curlReq.data.counted === false &&
+				stats.status === 401,
+			`${csrf.status}/${noOrigin.status}/${crossSite.status} ${show(bot)} ${show(preview)} ${show(curlReq)} ${stats.status}`,
+		);
 	});
 
 	// ---- 注册 / 登录 ----
@@ -250,11 +395,12 @@ async function runTests() {
 		topId = r.data.id;
 		return expect(r.status === 201 && r.data.count === 1 && r.data.comments[0]?.content === '冒烟测试：第一条评论', show(r));
 	});
-	await check('评论：空内容、超长内容、不存在的文章被拒绝', async () => {
+	await check('评论：空内容、超长内容、不存在的文章（含 index）被拒绝', async () => {
 		const empty = await A('POST', '/api/comments', { slug, content: '   ' });
 		const long = await A('POST', '/api/comments', { slug, content: '字'.repeat(1001) });
 		const missing = await A('POST', '/api/comments', { slug: 'no_such_article', content: 'hi' });
-		return expect(empty.status === 400 && long.status === 400 && missing.status === 404, `${empty.status}/${long.status}/${missing.status}`);
+		const indexSlug = await A('POST', '/api/comments', { slug: 'index', content: 'hi' });
+		return expect(empty.status === 400 && long.status === 400 && missing.status === 404 && indexSlug.status === 404, `${empty.status}/${long.status}/${missing.status}/${indexSlug.status}`);
 	});
 	await check('评论：其他网站发来的请求被拒绝（防 CSRF）', async () => {
 		const r = await A('POST', '/api/comments', { slug, content: 'csrf' }, { origin: 'https://evil.example' });
@@ -337,14 +483,15 @@ async function runTests() {
 		);
 	});
 
-	// ---- 访问统计：站长查看 ----
-	await check('访问统计：普通用户不能看；设为站长后能看到最近 30 天，本人的浏览不计数', async () => {
-		const C = client('C');
+	// ---- 访问统计：站长查看 & 防刷 ----
+	await check('访问统计：普通用户不能看；设为站长后能看到最近 30 天，本人浏览和阅读均不计数', async () => {
+		const C = client('C', { ip: '198.51.100.99' });
 		const nameC = `owner${Date.now().toString(36).slice(-5)}`;
 		await C('POST', '/api/auth/register', { username: nameC, password: 'secret789' });
 		const denied = await C('GET', '/api/visits');
 		await sql(`UPDATE users SET is_admin = 1 WHERE username_key = '${nameC.toLowerCase()}'`);
-		const self = await C('POST', '/api/visits');
+		const selfVisit = await C('POST', '/api/visits');
+		const selfView = await C('POST', `/api/views?slug=${slugRef}`);
 		const r = await C('GET', '/api/visits');
 		// 前面的 3 次浏览（guest 两次、visitor-2 一次）一般都记在今天；测试正好跨过北京时间零点时会分到相邻两天，
 		// 所以按“有数据的那几天”核对，而不是死盯最后一天
@@ -353,14 +500,58 @@ async function runTests() {
 		const sameDay = counted.length === 1;
 		return expect(
 			denied.status === 403 &&
-				self.data.counted === false &&
+				selfVisit.data.counted === false &&
+				selfView.data.counted === false &&
+				selfView.data.count === 1 &&
+				selfView.data.day === undefined &&
 				r.status === 200 &&
 				r.data.days.length === 30 &&
 				pv === 3 &&
 				(!sameDay || counted[0].uv === 2) &&
 				r.data.total === 3 &&
 				r.data.since === counted[0]?.day,
-			`${denied.status} ${show(self)} ${r.status} ${JSON.stringify(r.data).slice(-200)}`,
+			`${denied.status} ${show(selfVisit)} ${show(selfView)} ${r.status} ${JSON.stringify(r.data).slice(-200)}`,
+		);
+	});
+	await check('访问统计：单 IP 每小时最多 30 位新访客（超限仍计浏览），分钟级突发上限 60 次', async () => {
+		const admin = client('admin-stats');
+		const adminName = `adm${Date.now().toString(36).slice(-5)}`;
+		await admin('POST', '/api/auth/register', { username: adminName, password: 'secret789' });
+		await sql(`UPDATE users SET is_admin = 1 WHERE username_key = '${adminName.toLowerCase()}'`);
+		const before = await admin('GET', '/api/visits');
+		const beforeUv = before.data.days.reduce((n, d) => n + d.uv, 0);
+
+		const results31 = [];
+		for (let i = 0; i < 31; i++) {
+			const r = await client(`rot-${i}`, { ip: '198.51.100.20' })('POST', '/api/visits', undefined, {
+				headers: { 'User-Agent': `VisitUA-${i}` },
+			});
+			results31.push(r.data.counted);
+		}
+		const repeatSeen = await client('rot-0', { ip: '198.51.100.20' })('POST', '/api/visits', undefined, {
+			headers: { 'User-Agent': 'VisitUA-0' },
+		});
+
+		const after = await admin('GET', '/api/visits');
+		const afterUv = after.data.days.reduce((n, d) => n + d.uv, 0);
+
+		const burstClient = client('burst', { ip: '198.51.100.21' });
+		const burst = [];
+		for (let i = 0; i < 61; i++) {
+			const r = await burstClient('POST', '/api/visits', undefined, {
+				headers: { 'User-Agent': 'BurstUA/1.0' },
+			});
+			burst.push(r.data.counted);
+		}
+		const burstOk = burst.slice(0, 60).every(Boolean) && burst[60] === false;
+
+		return expect(
+			results31.every(Boolean) &&
+				repeatSeen.data.counted === true &&
+				after.data.total - before.data.total === 32 &&
+				afterUv - beforeUv === 30 &&
+				burstOk,
+			`results31=${results31.filter(Boolean).length}/31 repeat=${show(repeatSeen)} pvDelta=${after.data.total - before.data.total} uvDelta=${afterUv - beforeUv} burst60=${burst[59]} burst61=${burst[60]}`,
 		);
 	});
 }

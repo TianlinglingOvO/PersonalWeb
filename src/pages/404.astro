@@ -4,7 +4,7 @@ import { site } from '../lib/site';
 import { themeIds, themes } from '../lib/themes';
 ---
 
-<BaseLayout title={`页面不存在 · ${site.name}`} description="这个地址没有对应的页面。">
+<BaseLayout title={`页面不存在 · ${site.name}`} description="这个地址没有对应的页面。" noindex>
 	<script is:inline>
 		// 自动容错：如果输入的链接包含大写或缺少末尾斜杠，自动尝试跳转到标准的小写文章地址
 		const pathname = window.location.pathname;
