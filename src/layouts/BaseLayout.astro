@@ -13,13 +13,15 @@ interface Props {
 	description?: string;
 	/** 登录页、账号页这类不需要被搜索引擎收录的页面 */
 	noindex?: boolean;
+	/** 是否计入全站访问统计（默认跟随 !noindex：404、登录页、账号页不计入） */
+	trackVisit?: boolean;
 	/** 分享卡片类型：文章页传 article */
 	type?: 'website' | 'article';
 	/** 文章发布时间，写进分享信息 */
 	publishedTime?: Date;
 }
 
-const { noindex = false, type = 'website', publishedTime } = Astro.props;
+const { noindex = false, trackVisit = !noindex, type = 'website', publishedTime } = Astro.props;
 const title = Astro.props.title ?? site.title;
 const description = Astro.props.description ?? site.description;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
@@ -70,7 +72,7 @@ const shareImage = new URL(site.avatar, Astro.site ?? Astro.url);
 			document.documentElement.classList.add('js');
 		</script>
 	</head>
-	<body class="page-bg">
+	<body class="page-bg" data-no-visit={trackVisit ? undefined : ''}>
 		<div id="page-progress" class="page-progress" transition:persist aria-hidden="true"></div>
 		<a class="skip-link" href="#main">跳到正文</a>
 		<Header />

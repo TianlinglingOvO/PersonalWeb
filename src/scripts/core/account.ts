@@ -9,14 +9,20 @@ export interface Account {
 
 const ACCOUNT_KEY = 'sutady:account';
 let accountRequest: Promise<Account | null> | null = null;
+// 内存态优先于 localStorage：隐私模式 / 禁用存储时仍能在当前 SPA 会话里记住已确认的状态
+let knownAccount: Account | null | undefined;
 
-// 上次的登录状态记在本地，先用它渲染顶栏，避免“登录”闪一下再变成用户名
-export function cachedAccount(): Account | null {
+function readStoredAccount(): Account | null {
 	try {
 		return JSON.parse(localStorage.getItem(ACCOUNT_KEY) ?? 'null');
 	} catch {
 		return null;
 	}
+}
+
+// 上次的登录状态记在本地，先用它渲染顶栏，避免“登录”闪一下再变成用户名
+export function cachedAccount(): Account | null {
+	return knownAccount !== undefined ? knownAccount : readStoredAccount();
 }
 
 function storeAccount(account: Account | null) {
@@ -32,15 +38,17 @@ function storeAccount(account: Account | null) {
 export function getAccount() {
 	accountRequest ??= api<{ user: Account | null }>('/api/auth/me')
 		.then(({ user }) => {
+			knownAccount = user;
 			storeAccount(user);
 			return user;
 		})
-		.catch(() => cachedAccount());
+		.catch(() => (knownAccount !== undefined ? knownAccount : readStoredAccount()));
 	return accountRequest;
 }
 
 /** 登录 / 注册 / 退出后调用：更新缓存并通知顶栏、评论区、登录页刷新 */
 export function setAccount(account: Account | null) {
+	knownAccount = account;
 	accountRequest = Promise.resolve(account);
 	storeAccount(account);
 	document.dispatchEvent(new CustomEvent('account-change'));

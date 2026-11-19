@@ -114,7 +114,12 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论、浏览量
 
 浏览量、全站访问统计（只有站长能在 `/account/` 看到）、账号（用户名 + 密码）、文章评论（含楼中楼）和回复提醒由 `functions/` 下的接口提供，数据存在 D1 数据库 `sutady-db`。
 
-* **计数类接口的共同规则**：浏览量和访问统计都只认同源请求，预览部署、爬虫和站长本人不计数，访客按 IP + UA 每天去重、只存哈希不存原始 IP，判断逻辑统一放在 `functions/_lib/visitors.ts`，不要在接口里各写一份。
+* **计数类接口的共同规则**：
+  * 浏览量与访问统计均在前端（`src/scripts/core/visitors.ts`）和服务端（`functions/_lib/visitors.ts` + 接口侧 `getUser`）双重排除站长本人、自动化浏览器与爬虫/HTTP 客户端；
+  * 所有 `*.pages.dev` 部署（含预览部署和默认域名）只查询不计数，避免验收、爬虫或未携带正式域 Cookie 的访问污染正式数据库；
+  * `isSameOrigin()` 严格要求同源 `Origin` 或 `Referer` 并拦截 `Sec-Fetch-Site` 跨站请求，不放行无来源头的脚本请求；
+  * 访客按 `IP + UA + 北京时间日期` 每天去重、只存哈希不存原始 IP；`clientIp()` 对 IPv6 取小写去前导零的 `/64` 前缀，并将 `::ffff:a.b.c.d` 映射地址归一化为 IPv4；
+  * 计数与评论的 `articleExists()` 禁用重定向（`redirect: 'manual'`）并排除 `slug === 'index'`；`rateLimit()` 支持传入 `waitUntil` 在后台清理过期记录。
 
 * **目录约定**：`functions/api/**` 每个文件对应一个接口；共用代码放 `functions/_lib/`（下划线目录不会变成路由）。`functions/` 有独立的 `tsconfig.json`，`npm run check` 会一并检查。
 * **绑定与配置**：`wrangler.toml` 是 Pages 配置的唯一来源（数据库绑定名 `DB`），不要在 Cloudflare 后台另改绑定。
@@ -141,13 +146,13 @@ npm run smoke   # 改了 functions/、migrations/ 或账号、评论、浏览量
 ### 脚本 `src/scripts/`
 
 * `ui.ts` 是唯一入口，只做“接线”：调用各模块的 `setup()`（整个会话只执行一次，注册文档级的事件委托和换页钩子），并在每次换页（`astro:page-load`）时依次调用各模块的 `init(signal)`。
-* `core/` 放和具体页面无关的工具：DOM 查询与新建元素（`dom.ts` 的 `$` / `$all` / `el`）、动效、滚动总线、提示、确认弹窗、接口请求、登录状态、相对时间等。
+* `core/` 放和具体页面无关的工具：DOM 查询与新建元素（`dom.ts` 的 `$` / `$all` / `el`）、动效、滚动总线、提示、确认弹窗、接口请求、登录状态、相对时间、访客守卫（`visitors.ts`）等。
 * `features/` 每个文件负责一块功能（顶栏、时间线、评论……），对外只导出 `setup` / `init`。新功能就新建一个文件，再在 `ui.ts` 的列表里登记一行。
 * 启用了 ClientRouter，换页时脚本不会重新加载：`init(signal)` 里新加的监听器、Observer、定时器都必须挂到 `signal` 上（`{ signal }` 或 `signal.addEventListener('abort', …)`），否则来回换页后会重复绑定。
 * 首次打开页面时，`init` 会被脚本加载和 `astro:page-load` 各触发一次，`ui.ts` 用当前 `<body>` 去重（换页时 Astro 会替换整个 body）。不要删掉这个去重，否则每个接口都会被调用两次。
 * 滚动统一走 `core/scroll.ts` 的 `subscribeScroll(cb, signal)`，不要自己再给 `window` 加 scroll 监听。
 * 显示 / 隐藏统一用 `hidden` 属性（全局 `[hidden]` 是 `display: none !important`）；需要确认的操作用 `core/dialog.ts` 的 `confirmDialog()`，不要用浏览器自带的 `confirm()`。
-* 组件和脚本之间通过 `data-*` 属性对接，改 DOM 结构时同步检查对应的模块。
+* 组件和脚本之间通过 `data-*` 属性对接（如 `BaseLayout` 的 `trackVisit` 默认随 `!noindex` 控制是否输出 `data-no-visit` 以跳过全站访问统计），改 DOM 结构时同步检查对应的模块。
 
 ### 构建期工具 `src/lib/`
 
